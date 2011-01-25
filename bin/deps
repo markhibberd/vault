@@ -24,7 +24,7 @@ inScalazHome ::
   (FilePath -> IO a)
   -> IO a
 inScalazHome a =
-  scalazHome >>= flip chdir a
+  scalazHome >>= chdir a
 
 scalazJars ::
   [FilePath]
@@ -33,13 +33,17 @@ scalazJars =
   (\p -> "core" </> "target" </> "scala_2.8.1" </> p)
   [
     "scalaz-core_2.8.1-5.1-SNAPSHOT.jar"
-  ]
+  , "scalaz-core_2.8.1-5.1-SNAPSHOT-test-sources.jar"
+  , "scalaz-core_2.8.1-5.1-SNAPSHOT-sources.jar"
+  , "scalaz-core_2.8.1-5.1-SNAPSHOT-docs.jar"
+  , "scalaz-core_2.8.1-5.1-SNAPSHOT-test.jar"
+  ]  
   
 main ::
   IO ()
 main = 
   inScalazHome $ \c ->
-    do x <- system "./sbt package"
+    do x <- system "./sbt package-all"
        if x == ExitSuccess
          then mapM_ (\p -> copyFile p (c </> "lib" </> "run" </> "scalaz" </> takeFileName p)) scalazJars
          else exitWith x
@@ -49,8 +53,8 @@ main =
 
 -- | Change to the given directory, then execute the given action using the original directory, then change back to the original directory.
 chdir ::
-  FilePath -- ^ The directory to change to.
-  -> (FilePath -> IO a)  -- ^ The action to execute in the given directory.
+  (FilePath -> IO a)  -- ^ The action to execute in the given directory.
+  -> FilePath -- ^ The directory to change to.
   -> IO a  -- ^ The result of executing the given action.
-chdir d a =
+chdir a d =
     bracket getCurrentDirectory setCurrentDirectory (\c -> setCurrentDirectory d >> a c)

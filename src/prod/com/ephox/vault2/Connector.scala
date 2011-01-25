@@ -27,7 +27,7 @@ object Connector {
 
   implicit def ConnectorPure[M[_]](implicit pp: Pure[M]): Pure[({type λ[α]=Connector[M, α]})#λ] = new Pure[({type λ[α]=Connector[M, α]})#λ] {
     def pure[A](a: => A) =
-      connector(c => a.η[SQLValue].η[M])
+      connector(_ => a.η[SQLValue].η[M])
   }
 
   implicit def ConnectorApply[M[_]](implicit app: Apply[M], ftr: Functor[M]): Apply[({type λ[α]=Connector[M, α]})#λ] = new Apply[({type λ[α]=Connector[M, α]})#λ] {
