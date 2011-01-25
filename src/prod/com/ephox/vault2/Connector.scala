@@ -21,9 +21,12 @@ object Connector {
   }
 
   implicit def ConnectorFunctor[M[_]](implicit ff: Functor[M]): Functor[({type λ[α]=Connector[M, α]})#λ] = new Functor[({type λ[α]=Connector[M, α]})#λ] {
-    def fmap[A, B](k: Connector[M, A], f: A => B) = new Connector[M, B] {
-      val connect = (c: Connection) => k(c) map (_ map f)
-    }
+    def fmap[A, B](k: Connector[M, A], f: A => B) =
+      connector((c: Connection) => k(c) map (_ map f))
   }
 
+  implicit def ConnectorPure[M[_]](implicit pp: Pure[M]): Pure[({type λ[α]=Connector[M, α]})#λ] = new Pure[({type λ[α]=Connector[M, α]})#λ] {
+    def pure[A](a: => A) =
+      connector(c => a.η[SQLValue].η[M])
+  }
 }
