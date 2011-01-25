@@ -30,13 +30,9 @@ scalazJars ::
   [FilePath]
 scalazJars =
   fmap
-  (\p -> "core" </> "target" </> "scala_2.8.0.Beta1" </> p)
+  (\p -> "core" </> "target" </> "scala_2.8.1" </> p)
   [
-    "scalaz-core_2.8.0.Beta1-5.0-SNAPSHOT-test-sources.jar"
-  , "scalaz-core_2.8.0.Beta1-5.0-SNAPSHOT-javadoc.jar"
-  , "scalaz-core_2.8.0.Beta1-5.0-SNAPSHOT-test.jar"
-  , "scalaz-core_2.8.0.Beta1-5.0-SNAPSHOT-sources.jar"
-  , "scalaz-core_2.8.0.Beta1-5.0-SNAPSHOT.jar"
+    "scalaz-core_2.8.1-5.1-SNAPSHOT.jar"
   ]
   
 main ::
