@@ -29,7 +29,8 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="scala-2.8.1" level="project" />
-    <orderEntry type="library" name="scala-testing" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="scala-testing" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="scalaz" level="project" />
   </component>
 </module>
 
