@@ -20,19 +20,16 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
-      <library name="libs">
+      <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/lib/test" />
-          <root url="file://$MODULE_DIR$/lib/run" />
+          <root url="jar://$MODULE_DIR$/lib/run/hsqldb.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MODULE_DIR$/lib/src/scalaz-core_2.8.0-5.0-sources.jar!/" />
-        </SOURCES>
-        <jarDirectory url="file://$MODULE_DIR$/lib/run" recursive="false" />
-        <jarDirectory url="file://$MODULE_DIR$/lib/test" recursive="false" />
+        <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="scala-2.8.1" level="project" />
+    <orderEntry type="library" name="scala-testing" level="project" />
   </component>
 </module>
 

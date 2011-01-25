@@ -59,7 +59,7 @@ object Transaction {
 
    def executeDmls(tx: Connection)(dmls: List[DmlStatement]): Either[SQLException, Int] =
       dmls.foldLeft[Either[SQLException, Int]](Right(0)) {
-        (acc, stmt) =>
+        case (acc, stmt) =>
           for {
             c1 <- acc.right
             c2 <- executeDml(tx)(stmt).right
