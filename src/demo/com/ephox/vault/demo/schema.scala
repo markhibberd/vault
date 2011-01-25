@@ -2,12 +2,6 @@ package com.ephox.vault.demo
 
 import com.ephox.vault._
 
-//case class Album(id: Int, name: String, songs: List[Song], artist: Band)
-//case class Song(id: Int, name: String, albumId: Int)
-//case class Band(id: Int, name: String)
-//case class BandMuso(id: Int, bandId: Int, musoId: Int)
-//case class Muso(id: Int, name: String, instrument: String)
-
 object schema {
   import DdlStatement._
 

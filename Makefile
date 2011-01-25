@@ -11,7 +11,7 @@ CLS_PROD = gen/classes/prod
 CLS_TEST = gen/classes/test
 CLS_DEMO = gen/classes/demo
 
-CP_BASE = lib/run/\*:lib/test/\*
+CP_BASE = lib/run/\*:lib/run/scalaz/\*:lib/test/\*
 CP_PROD = ${CP_BASE}:${CLS_PROD}
 CP_TEST = ${CP_PROD}:${CLS_TEST}
 
@@ -64,7 +64,7 @@ ${TAR}: doc ${JAR} ${JAR_SRC} ${TAR_IMAGE} ${TAR_IMAGE}/lib ${TAR_IMAGE}/doc/xra
 	cp -r ${SRC_DEMO} ${TAR_IMAGE}/. && \
 	cp -r ${XRAY_PROD} ${TAR_IMAGE}/doc/xray/prod && \
 	cp -r ${XRAY_DEMO} ${TAR_IMAGE}/doc/xray/demo && \
-	cp lib/run/*.jar ${TAR_IMAGE}/lib && \
+	cp lib/run/*.jar lib/run/scalaz/*.jar ${TAR_IMAGE}/lib && \
 	cp ${JAR} ${JAR_SRC} ${TAR_IMAGE} && \
 	cp README ${TAR_IMAGE} && \
 	cp -r ${LICENSES} ${TAR_IMAGE} && \
