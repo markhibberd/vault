@@ -58,15 +58,10 @@ object SQLValue {
       f fold (err(_), ff => a fold (err(_), aa => value(ff(aa))))
   }
 
-  implicit val SQLValueApplicative: Applicative[SQLValue] = Applicative.applicative
-
   implicit val SQLValueBind: Bind[SQLValue] = new Bind[SQLValue] {
     def bind[A, B](a: SQLValue[A], f: A => SQLValue[B]) =
       a fold (err(_), f)
   }
-
-  implicit val SQLValueMonad: Monad[SQLValue] = Monad.monad
-
 
   implicit val SQLValueEach: Each[SQLValue] = new Each[SQLValue] {
     def each[A](e: SQLValue[A], f: A => Unit) =
