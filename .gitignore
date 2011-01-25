@@ -1,3 +1,5 @@
 gen
 *.iws
 out
+.idea/workspace.xml
+.idea/ant.xml
