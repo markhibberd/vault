@@ -74,7 +74,7 @@ dist: clean ${TAR}
 
 doc: ${DOC_PROD}
 	(cd ${SRC_PROD} && \
-	find io -name "*.scala" | xargs -s 30000 \
+	find com -name "*.scala" | xargs -s 30000 \
 		scaladoc \
 			-doc-title "scaladoc for [${MODULE} ${VERSION}]" \
 			-doc-version ${VERSION} \
