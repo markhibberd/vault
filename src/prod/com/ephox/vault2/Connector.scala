@@ -34,4 +34,11 @@ object Connector {
     def apply[A, B](f: Connector[M, A => B], a: Connector[M, A]) =
       connector(c => f(c).<**>(a(c))(SQLValue.SQLValueApply(_, _)))
   }
+
+  implicit def ConnectorBind[M[_]](implicit mnd: Monad[M]): Bind[({type λ[α]=Connector[M, α]})#λ] = new Bind[({type λ[α]=Connector[M, α]})#λ] {
+    def bind[A, B](a: Connector[M, A], f: A => Connector[M, B]) =
+      connector((c: Connection) =>
+        a(c) >>= ((z: SQLValue[A]) =>
+          z fold (e => SQLValue.err(e).pure[M], a => f(a).connect(c))))
+  }
 }
