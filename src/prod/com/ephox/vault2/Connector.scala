@@ -4,11 +4,13 @@ import java.sql.Connection
 import scalaz._
 import Scalaz._
 
-
 sealed trait Connector[A] {
   val connect: Connection => SQLValue[A]
 
   def apply(c: Connection) = connect(c)
+
+  def bracket[B, C](after: (=> A) => Connector[B], k: (=> A) => Connector[C]): Connector[C] =
+    this >>= (a => try { k(a) } finally { after(a) })
 }
 
 object Connector {
