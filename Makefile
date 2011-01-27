@@ -78,7 +78,7 @@ doc: ${DOC_PROD}
 		scaladoc \
 			-doc-title "scaladoc for [${MODULE} ${VERSION}]" \
 			-doc-version ${VERSION} \
-			-classpath ../../lib/run/\*:../../${CLS_PROD} \
+			-classpath ../../lib/run/\*:../../lib/run/scalaz/\*:../../${CLS_PROD} \
 			-d ../../${DOC_PROD})
 
 ${HASH_JAR}:
@@ -100,4 +100,4 @@ ${DIRECTORIES}:
 	mkdir -p $@
 
 clean:
-	rm -rf ${GEN}; find . -name "*~" -o -name "*.core" -print0 | xargs --no-run-if-empty -0 rm 
+	rm -rf ${GEN}; find . -name "*~" -o -name "*.core" -print0 | xargs --no-run-if-empty -0 rm
