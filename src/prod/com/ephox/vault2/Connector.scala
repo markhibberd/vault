@@ -58,5 +58,12 @@ object Connector {
     tryConnector(_.close)
 
   val executeQuery: String => Connector[ResultSet] =
-    (sql: String) => tryConnector(_.createStatement.executeQuery(sql))
+    (sql: String) => tryConnector(c => {
+      val s = c.createStatement
+      try {
+        s.executeQuery(sql)
+      } finally {
+        s.close
+      }
+  })
 }
