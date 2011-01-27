@@ -1,4 +1,4 @@
-package com.ephox.vault
+package com.ephox.vault.row
 
 import com.ephox.vault2.SQLValue
 import java.sql._
