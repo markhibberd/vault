@@ -1,9 +1,8 @@
 package com.ephox.vault2
 
-import SQLValue._
 import scalaz._
 import Scalaz._
-import java.sql.{SQLException, Connection}
+import java.sql.{ResultSet, SQLException, Connection}
 
 sealed trait Connector[A] {
   val connect: Connection => SQLValue[A]
@@ -16,8 +15,10 @@ sealed trait Connector[A] {
     this >>= (a => try { k(a) } finally { after(a) })
 
   def finaly[B](b: => Connector[B]): Connector[A] =
-    connector(c => try { apply(c) } finally { b })
+    connector(c => try { apply(c) } finally { b(c) })
 
+  def finalyClose: Connector[A] =
+    finaly(close)
 }
 
 object Connector {
@@ -52,4 +53,10 @@ object Connector {
     def bind[A, B](a: Connector[A], f: A => Connector[B]) =
       connector(c => a(c) >>= (a => f(a)(c)))
   }
+
+  val close: Connector[Unit] =
+    tryConnector(_.close)
+
+  val executeQuery: String => Connector[ResultSet] =
+    (sql: String) => tryConnector(_.createStatement.executeQuery(sql))
 }
