@@ -1,7 +1,7 @@
 package com.ephox.vault
 
 import java.util.Date
-import java.sql.{Timestamp, Time}
+import java.sql.{ResultSet, Timestamp, Time}
 
 trait Row {
   import scalaz._
