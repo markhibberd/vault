@@ -4,6 +4,7 @@ import scalaz._
 import Scalaz._
 import com.ephox.vault2.ResultSetConnector._
 import com.ephox.vault2.Connector._
+import java.sql.Connection
 
 object Vault2Demo {
   case class Person(name: String, age: Int)
@@ -22,13 +23,8 @@ object Vault2Demo {
       Person(name, age)
     })
 
-  def main(args: Array[String]) {
-    if(args.length < 3)
-      System.err.println("<dbfile> <username> <password>")
-    else {
-      def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
-
-      val c = connection
+  def setupData(c: Connection) = {
+    try {
       val n = c.createStatement.executeUpdate("CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)")
       val p = c.prepareStatement("INSERT INTO PERSON(name, age) VALUES (?,?)")
 
@@ -38,8 +34,21 @@ object Vault2Demo {
         val r = p.executeUpdate
         println("Inserted " + per + " with result " + r)
       }}
+    } finally {
+      c.close
+    }
+  }
 
-      // End setup
+  def main(args: Array[String]) {
+    if(args.length < 3)
+      System.err.println("<dbfile> <username> <password>")
+    else {
+      def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
+
+      // Initialise data
+      setupData(connection)
+
+      val c = connection
 
       val z = PersonResultSetConnector -|> IterV.head <|- executeQuery("SELECT * FROM PERSON").finalyClose
       val firstPerson = (z connect c) ∘ (_.run)
