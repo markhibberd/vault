@@ -1,18 +1,17 @@
 package com.ephox.vault2
 
-import java.sql.ResultSet
 import scalaz._
 import Scalaz._
-
+import SQLValue._
+import java.sql.ResultSet
 
 sealed trait ResultSetConnector[A] {
   val rsConnect: ResultSet => Connector[A]
 
+  import ResultSetConnector._
+
   def apply(rs: ResultSet) =
     rsConnect(rs)
-
-  import SQLValue._
-  import ResultSetConnector._
 
   def enumerate[T](iter: IterV[A, T]): ResultSetConnector[IterV[A, T]] =
       resultSetConnector (rs => {

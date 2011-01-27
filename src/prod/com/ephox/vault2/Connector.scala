@@ -1,16 +1,23 @@
 package com.ephox.vault2
 
-import java.sql.Connection
+import SQLValue._
 import scalaz._
 import Scalaz._
+import java.sql.{SQLException, Connection}
 
 sealed trait Connector[A] {
   val connect: Connection => SQLValue[A]
+
+  import Connector._
 
   def apply(c: Connection) = connect(c)
 
   def bracket[B, C](after: (=> A) => Connector[B], k: (=> A) => Connector[C]): Connector[C] =
     this >>= (a => try { k(a) } finally { after(a) })
+
+  def finaly[B](b: => Connector[B]): Connector[A] =
+    connector(c => try { apply(c) } finally { b })
+
 }
 
 object Connector {
@@ -20,6 +27,12 @@ object Connector {
     val connect = f
   }
 
+  def valueConnector[A](f: Connection => A): Connector[A] =
+    connector(f(_).η[SQLValue])
+
+  def tryConnector[A](f: Connection => A): Connector[A] =
+    connector(c => try { value(f(c)) } catch { case e: SQLException => err(e) })
+
   implicit def ConnectorFunctor: Functor[Connector] = new Functor[Connector] {
     def fmap[A, B](k: Connector[A], f: A => B) =
       connector((c: Connection) => k(c) map f)
@@ -27,7 +40,7 @@ object Connector {
 
   implicit def ConnectorPure[M[_]]: Pure[Connector] = new Pure[Connector] {
     def pure[A](a: => A) =
-      connector(_ => a.η[SQLValue])
+      valueConnector(_ => a)
   }
 
   implicit def ConnectorApply[M[_]]: Apply[Connector] = new Apply[Connector] {
