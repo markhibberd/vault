@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import java.util.Date
 import java.sql.{ResultSet, Timestamp, Time}
+import com.ephox.vault2.SQLValue
 
 trait Row {
   import scalaz._
@@ -40,5 +41,15 @@ object Row {
     def fold[A](
       row: List[(String, String, Cell)] => A
     ): A = row(value)
+  }
+
+  def read(rs: ResultSet): SQLValue[Row] = {
+    val meta = rs.getMetaData
+    val count = meta.getColumnCount
+    val rows =
+      for (i <- 1 to count)
+         yield PossibleCell.read(rs, i)
+
+    error("todo - implement Functor over PossibleCell and use to map and produce row.")
   }
 }
