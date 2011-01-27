@@ -12,16 +12,25 @@ sealed trait Connector[A] {
   def apply(c: Connection) = connect(c)
 
   def bracket[B, C](after: (=> A) => Connector[B], k: (=> A) => Connector[C]): Connector[C] =
-    this >>= (a => try { k(a) } finally { after(a) })
+    this >>= (a => try {
+      k(a)
+    } finally {
+      after(a)
+    })
 
   def finaly[B](b: => Connector[B]): Connector[A] =
-    connector(c => try { apply(c) } finally { b(c) })
+    connector(c => try {
+      apply(c)
+    } finally {
+      b(c)
+    })
 
   def finalyClose: Connector[A] =
     finaly(close)
 }
 
 object Connector {
+
   import SQLValue._
 
   def connector[A](f: Connection => SQLValue[A]): Connector[A] = new Connector[A] {
@@ -32,7 +41,11 @@ object Connector {
     connector(f(_).η[SQLValue])
 
   def tryConnector[A](f: Connection => A): Connector[A] =
-    connector(c => try { value(f(c)) } catch { case e: SQLException => err(e) })
+    connector(c => try {
+      value(f(c))
+    } catch {
+      case e: SQLException => err(e)
+    })
 
   implicit def ConnectorFunctor: Functor[Connector] = new Functor[Connector] {
     def fmap[A, B](k: Connector[A], f: A => B) =
@@ -58,12 +71,5 @@ object Connector {
     tryConnector(_.close)
 
   val executeQuery: String => Connector[ResultSet] =
-    (sql: String) => tryConnector(c => {
-      val s = c.createStatement
-      try {
-        s.executeQuery(sql)
-      } finally {
-        s.close
-      }
-  })
+    sql => tryConnector(_.createStatement.executeQuery(sql))
 }
