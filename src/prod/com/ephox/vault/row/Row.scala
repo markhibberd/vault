@@ -1,7 +1,6 @@
-package com.ephox.vault
+package com.ephox.vault.row
 
-import java.util.Date
-import java.sql.{ResultSet, Timestamp, Time}
+import java.sql.ResultSet
 import com.ephox.vault2.SQLValue
 
 trait Row {
