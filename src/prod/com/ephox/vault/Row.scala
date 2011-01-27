@@ -7,38 +7,38 @@ trait Row {
   import scalaz._
   import Scalaz._
   import Row._
-  import MaybeColumn._
+  import PossibleCell._
 
   def fold[A](
-    row: List[(String, String, Column)] => A
+    row: List[(String, String, Cell)] => A
   ): A
 
-  def ++(col: (String, String, Column)) =
-    fold(r => row(r ++ List(col)))
+  def ++(column: (String, String, Cell)) =
+    fold(r => row(r ++ List(column)))
 
   // FIX I have left this at 1 indexed, as per jdbc, consider change?
-  def byIndex(index: Int): MaybeColumn =
+  def byIndex(index: Int): PossibleCell =
     fold(row => {
         val d = row.drop(index - 1)
-        if (d.isEmpty) noColumn else someColumn(d.head._3)
+        if (d.isEmpty) nocell else somecell(d.head._3)
       })
 
-  def byName(name: String): MaybeColumn =
+  def byName(name: String): PossibleCell =
     find((_, n, _) => name == n)
 
-  def byTableName(table: String, name: String): MaybeColumn =
+  def byTableName(table: String, name: String): PossibleCell =
     find((t, n, _) => (table == t) && (name == n))
 
-  def find(f: (String, String, Column) => Boolean): MaybeColumn =
-    fold(row => row.find({case (t, n, c) => f(t, n, c)}).fold(c => someColumn(c._3), noColumn))
+  def find(f: (String, String, Cell) => Boolean): PossibleCell =
+    fold(row => row.find({case (t, n, c) => f(t, n, c)}).fold(c => somecell(c._3), nocell))
 }
 
 object Row {
   def empty = row(List())
 
-  def row(value: List[(String, String, Column)]): Row = new Row {
+  def row(value: List[(String, String, Cell)]): Row = new Row {
     def fold[A](
-      row: List[(String, String, Column)] => A
+      row: List[(String, String, Cell)] => A
     ): A = row(value)
   }
 }

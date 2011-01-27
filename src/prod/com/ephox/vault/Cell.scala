@@ -3,7 +3,7 @@ package com.ephox.vault
 import java.util.Date
 import java.sql.{Timestamp, Time}
 
-trait Column {
+trait Cell {
   def fold[A](
     nul: => A,
     boolean: Boolean => A,
@@ -18,8 +18,8 @@ trait Column {
     date: Date => A): A
 }
 
-object Column {
-  def nul: Column = new Column {
+object Cell {
+  def nul: Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -34,7 +34,7 @@ object Column {
       date: Date => A): A = nul
   }
 
-  def boolean(value: Boolean): Column = new Column {
+  def boolean(value: Boolean): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -49,7 +49,7 @@ object Column {
       date: Date => A): A = boolean(value)
   }
 
-  def string(value: String): Column = new Column {
+  def string(value: String): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -64,7 +64,7 @@ object Column {
       date: Date => A): A = string(value)
   }
 
-  def int(value: Int): Column = new Column {
+  def int(value: Int): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -79,7 +79,7 @@ object Column {
       date: Date => A): A = int(value)
   }
 
-  def bigint(value: BigInt): Column = new Column {
+  def bigint(value: BigInt): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -94,7 +94,7 @@ object Column {
       date: Date => A): A = bigint(value)
   }
 
-  def float(value: Float): Column = new Column {
+  def float(value: Float): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -109,7 +109,7 @@ object Column {
       date: Date => A): A = float(value)
   }
 
-  def double(value: Double): Column = new Column {
+  def double(value: Double): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -124,7 +124,7 @@ object Column {
       date: Date => A): A = double(value)
   }
 
-  def bigdecimal(value: BigDecimal): Column = new Column {
+  def bigdecimal(value: BigDecimal): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -139,7 +139,7 @@ object Column {
       date: Date => A): A = bigdecimal(value)
   }
 
-  def time(value: Time): Column = new Column {
+  def time(value: Time): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -154,7 +154,7 @@ object Column {
       date: Date => A): A = time(value)
   }
 
-  def timestamp(value: Timestamp): Column = new Column {
+  def timestamp(value: Timestamp): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
@@ -169,7 +169,7 @@ object Column {
       date: Date => A): A = timestamp(value)
   }
 
-  def date(value: Date): Column = new Column {
+  def date(value: Date): Cell = new Cell {
     def fold[A](
       nul: => A,
       boolean: Boolean => A,
