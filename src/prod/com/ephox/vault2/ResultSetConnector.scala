@@ -17,6 +17,9 @@ sealed trait ResultSetConnector[A] {
   def <|-(rs: ResultSet) =
     rsConnect(rs)
 
+  def <||-(ct: Connector[ResultSet]): Connector[A] =
+    connector(c => ct(c) flatMap (apply(_) connect c))
+
   def -|>[T](iter: IterV[A, T]): ResultSetConnector[IterV[A, T]] =
       resultSetConnector (rs => {
         def loop(i: IterV[A, T]): Connector[IterV[A, T]] =
