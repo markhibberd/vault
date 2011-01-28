@@ -53,7 +53,7 @@ object Vault2Demo {
       val personConnect =
         personConnector executeQuery "SELECT * FROM PERSON"
 
-      val firstPerson = personConnect.commitRollback(connection)
+      val firstPerson = personConnect(connection)
 
       println(firstPerson fold (
                             e => e
