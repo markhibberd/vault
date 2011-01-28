@@ -28,7 +28,7 @@ sealed trait Connector[A] {
   def finalyClose: Connector[A] =
     finaly(close)
 
-  def commitRollback(withError: Throwable => Connector[A]): Connector[A] =
+  def commitRollback: Connector[A] =
     connector(c => try {
       val r = connect(c)
       c.commit
