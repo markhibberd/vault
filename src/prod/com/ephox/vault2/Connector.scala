@@ -2,7 +2,7 @@ package com.ephox.vault2
 
 import scalaz._
 import Scalaz._
-import java.sql.{ResultSet, SQLException, Connection}
+import java.sql._
 
 sealed trait Connector[A] {
   val connect: Connection => SQLValue[A]
@@ -72,4 +72,28 @@ object Connector {
 
   val executeQuery: String => Connector[ResultSet] =
     sql => tryConnector(_.createStatement.executeQuery(sql))
+
+  def withPreparedStatement[A](k: PreparedStatement => A): String => Connector[A] =
+    sql => tryConnector(
+      c => {
+        val st = c.prepareStatement(sql)
+
+        try {
+          k(st)
+        } finally {
+          st.close
+        }
+      })
+
+  def withResultSet[A](k: ResultSet => A): ResultSet => Connector[A] =
+    r =>
+      tryConnector(_ => try {
+        k(r)
+      } finally {
+        r.close
+      })
+
+  def withExecuteQuery[A]: String => (ResultSet => A) => Connector[A] =
+    sql => k =>
+      withPreparedStatement(_.executeQuery)(sql) flatMap (withResultSet(k))
 }
