@@ -47,13 +47,9 @@ object Vault2Demo {
       // Initialise data
       setupData(connection)
 
-      val personConnector =
-        PersonResultSetConnector -|>> IterV.head
-
-      val personConnect =
-        personConnector executeQuery "SELECT * FROM PERSON"
-
-      val firstPerson = personConnect(connection)
+      val personConnector = PersonResultSetConnector -|>> IterV.head
+      val personConnect = personConnector executeQuery "SELECT * FROM PERSON"
+      val firstPerson = personConnect.finalyClose(connection)
 
       println(firstPerson fold (
                             e => e
