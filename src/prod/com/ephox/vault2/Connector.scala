@@ -3,6 +3,7 @@ package com.ephox.vault2
 import scalaz._
 import Scalaz._
 import java.sql._
+import SQLValue._
 
 sealed trait Connector[A] {
   val connect: Connection => SQLValue[A]
@@ -28,6 +29,11 @@ sealed trait Connector[A] {
   def finalyClose: Connector[A] =
     finaly(close)
 
+  /**
+   * Commits the connection and if this fails with an exception then rollback the connection.
+   *
+   * If the failure is an `SQLException` then this is returned in the `SQLValue`, otherwise, the exception is rethrown.
+   */
   def commitRollback: Connector[A] =
     connector(c => try {
       val r = connect(c)
@@ -36,7 +42,7 @@ sealed trait Connector[A] {
     } catch {
       case ex: SQLException => {
         c.rollback
-        SQLValue.err(ex)
+        err(ex)
       }
       case ex => {
         c.rollback
@@ -46,9 +52,6 @@ sealed trait Connector[A] {
 }
 
 object Connector {
-
-  import SQLValue._
-
   def connector[A](f: Connection => SQLValue[A]): Connector[A] = new Connector[A] {
     val connect = f
   }
