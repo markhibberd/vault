@@ -27,6 +27,22 @@ sealed trait Connector[A] {
 
   def finalyClose: Connector[A] =
     finaly(close)
+
+  def commitRollback(withError: Throwable => Connector[A]): Connector[A] =
+    connector(c => try {
+      val r = connect(c)
+      c.commit
+      r
+    } catch {
+      case ex: SQLException => {
+        c.rollback
+        SQLValue.err(ex)
+      }
+      case ex => {
+        c.rollback
+        throw ex
+      }
+    })
 }
 
 object Connector {
