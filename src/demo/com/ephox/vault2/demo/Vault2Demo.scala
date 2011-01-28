@@ -3,10 +3,7 @@ package com.ephox.vault2.demo
 import scalaz._
 import Scalaz._
 import com.ephox.vault2.ResultSetConnector._
-import com.ephox.vault2.Connector._
-import com.ephox.vault2.SQLValue._
-import java.sql.{SQLException, ResultSet, PreparedStatement, Connection}
-import com.ephox.vault2.{SQLValue, ResultSetConnector}
+import java.sql.Connection
 
 object Vault2Demo {
   case class Person(name: String, age: Int)
@@ -41,19 +38,6 @@ object Vault2Demo {
     }
   }
 
-  // todo ResultSetConnector[A] => String => Connector[A]
-  def executeQuery[A](sql: String, withResultSet: ResultSet => Connection => SQLValue[A]): Connection => SQLValue[A] =
-    (c: Connection) =>
-        withSQLResource(
-            value    = c.prepareStatement(sql)
-          , evaluate = (s: PreparedStatement) =>
-              withSQLResource(
-                value    = s.executeQuery
-              , evaluate = (r: ResultSet) => withResultSet(r)(c)
-              )
-          )
-
-
   def main(args: Array[String]) {
     if(args.length < 3)
       System.err.println("<dbfile> <username> <password>")
@@ -63,17 +47,13 @@ object Vault2Demo {
       // Initialise data
       setupData(connection)
 
-      val firstPerson = withSQLResource(
-        value = connection
-      , evaluate =
-            executeQuery(
-              sql           = "SELECT * FROM PERSON"
-            , withResultSet = (r: ResultSet) => (c: Connection) => {
-                  val z = PersonResultSetConnector -|> IterV.head <|- r
-                  (z connect c) ∘ (_.run)
-              }
-            )
-      )
+      val personConnector =
+        PersonResultSetConnector -|>> IterV.head
+
+      val personConnect =
+        personConnector executeQuery "SELECT * FROM PERSON"
+
+      val firstPerson = personConnect.commitRollback(connection)
 
       println(firstPerson fold (
                             e => e
