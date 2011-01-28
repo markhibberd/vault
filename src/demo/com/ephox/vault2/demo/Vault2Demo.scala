@@ -4,8 +4,9 @@ import scalaz._
 import Scalaz._
 import com.ephox.vault2.ResultSetConnector._
 import com.ephox.vault2.Connector._
-import java.sql.Connection
-import com.ephox.vault2.ResultSetConnector
+import com.ephox.vault2.SQLValue._
+import java.sql.{SQLException, ResultSet, PreparedStatement, Connection}
+import com.ephox.vault2.{SQLValue, ResultSetConnector}
 
 object Vault2Demo {
   case class Person(name: String, age: Int)
@@ -40,6 +41,19 @@ object Vault2Demo {
     }
   }
 
+  // todo ResultSetConnector[A] => String => Connector[A]
+  def executeQuery[A](sql: String, withResultSet: ResultSet => Connection => SQLValue[A]): Connection => SQLValue[A] =
+    (c: Connection) =>
+        withSQLResource(
+            value    = c.prepareStatement(sql)
+          , evaluate = (s: PreparedStatement) =>
+              withSQLResource(
+                value    = s.executeQuery
+              , evaluate = (r: ResultSet) => withResultSet(r)(c)
+              )
+          )
+
+
   def main(args: Array[String]) {
     if(args.length < 3)
       System.err.println("<dbfile> <username> <password>")
@@ -49,18 +63,22 @@ object Vault2Demo {
       // Initialise data
       setupData(connection)
 
-      val c = connection
-
-      val z = PersonResultSetConnector -|> IterV.head <|- executeQuery("SELECT * FROM PERSON").finalyClose
-
-      val firstPerson = (z connect c) ∘ (_.run)
+      val firstPerson = withSQLResource(
+        value = connection
+      , evaluate =
+            executeQuery(
+              sql           = "SELECT * FROM PERSON"
+            , withResultSet = (r: ResultSet) => (c: Connection) => {
+                  val z = PersonResultSetConnector -|> IterV.head <|- r
+                  (z connect c) ∘ (_.run)
+              }
+            )
+      )
 
       println(firstPerson fold (
-            e => e
-          , p => p
-          ))
-
-      println("Connection is " + (if(c.isClosed) "" else " not ") + "closed")
+                            e => e
+                          , p => p
+                          ))
     }
   }
 }

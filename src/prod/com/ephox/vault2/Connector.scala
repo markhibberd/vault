@@ -70,9 +70,6 @@ object Connector {
   val close: Connector[Unit] =
     tryConnector(_.close)
 
-  val executeQuery: String => Connector[ResultSet] =
-    sql => tryConnector(_.createStatement.executeQuery(sql))
-
   def withPreparedStatement[A](k: PreparedStatement => A): String => Connector[A] =
     sql => tryConnector(
       c => {
