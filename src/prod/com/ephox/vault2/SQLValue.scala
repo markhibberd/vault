@@ -41,6 +41,20 @@ object SQLValue {
     def fold[X](err: SQLException => X, va: A => X) = va(v)
   }
 
+  def tryValue[A](a: => A): SQLValue[A] =
+    try {
+      value(a)
+    } catch {
+      case e: SQLException => err(e)
+    }
+
+  def withSQLResource[T, R](
+                          value: => T
+                        , evaluate: T => SQLValue[R]
+                        , whenClosing: Throwable => Unit = _ => ()
+                        )(implicit r: Resource[T]): SQLValue[R] =
+    withResource(value, evaluate, { case e: SQLException => err(e) }, whenClosing)
+
   implicit def SQLValueInjective = Injective[SQLValue]
 
   implicit val SQLValueFunctor: Functor[SQLValue] = new Functor[SQLValue] {

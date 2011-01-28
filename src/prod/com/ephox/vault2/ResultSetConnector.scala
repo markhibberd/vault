@@ -4,7 +4,7 @@ import scalaz._
 import Scalaz._
 import Connector._
 import SQLValue._
-import java.sql.ResultSet
+import java.sql.{Connection, SQLException, ResultSet}
 
 sealed trait ResultSetConnector[A] {
   val rsConnect: ResultSet => Connector[A]
@@ -14,8 +14,8 @@ sealed trait ResultSetConnector[A] {
   def apply(rs: ResultSet) =
     rsConnect(rs)
 
-  def <|-(ct: Connector[ResultSet]): Connector[A] =
-    connector(c => ct(c) flatMap (apply(_) connect c))
+  def <|-(rs: ResultSet) =
+    rsConnect(rs)
 
   def -|>[T](iter: IterV[A, T]): ResultSetConnector[IterV[A, T]] =
       resultSetConnector (rs => {
@@ -33,9 +33,12 @@ object ResultSetConnector {
     val rsConnect = f
   }
 
+  def tryResultSetConnector[A](f: ResultSet => Connection => A): ResultSetConnector[A] =
+    resultSetConnector((r: ResultSet) => tryConnector(c => f(r)(c)))
+
   implicit def ResultSetConnectorFunctor: Functor[ResultSetConnector] = new Functor[ResultSetConnector] {
     def fmap[A, B](k: ResultSetConnector[A], f: A => B) =
-      error("")
+      resultSetConnector((r: ResultSet) => k(r) map f)
   }
 
   implicit def ResultSetConnectorPure[M[_]]: Pure[ResultSetConnector] = new Pure[ResultSetConnector] {
