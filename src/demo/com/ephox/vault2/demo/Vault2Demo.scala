@@ -5,6 +5,7 @@ import Scalaz._
 import com.ephox.vault2.ResultSetConnector._
 import com.ephox.vault2.Connector._
 import java.sql.Connection
+import com.ephox.vault2.ResultSetConnector
 
 object Vault2Demo {
   case class Person(name: String, age: Int)
@@ -51,6 +52,7 @@ object Vault2Demo {
       val c = connection
 
       val z = PersonResultSetConnector -|> IterV.head <|- executeQuery("SELECT * FROM PERSON").finalyClose
+
       val firstPerson = (z connect c) ∘ (_.run)
 
       println(firstPerson fold (
