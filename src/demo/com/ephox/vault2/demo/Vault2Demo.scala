@@ -24,7 +24,8 @@ object Vault2Demo {
 
   def setupData(c: Connection) = {
     try {
-      val n = c.createStatement.executeUpdate("CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)")
+      c.createStatement.executeUpdate("DROP TABLE IF EXISTS PERSON")
+      c.createStatement.executeUpdate("CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)")
       val p = c.prepareStatement("INSERT INTO PERSON(name, age) VALUES (?,?)")
 
       data foreach { case per@Person(name, age) => {
