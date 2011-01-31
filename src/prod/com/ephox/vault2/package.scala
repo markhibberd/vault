@@ -3,9 +3,15 @@ package com.ephox
 import scalaz._
 import Scalaz._
 import java.sql.{PreparedStatement, ResultSet, SQLException, Connection}
-import vault2.{ResultSetConnector, SQLValue, Connector}
+import vault2.{StringQuery, ResultSetConnector, SQLValue, Connector}
 
 package object vault2 {
+  implicit def StringStringQuery(s: String): StringQuery =
+    StringQuery.stringQuery(s)
+
+  implicit def StringQueryString(sql: StringQuery): String =
+    sql.sql
+
   def sqlErr[A](e: SQLException): SQLValue[A] =
     SQLValue.err(e)
 
@@ -17,6 +23,7 @@ package object vault2 {
       sqlValue(a)
     } catch {
       case e: SQLException => sqlErr(e)
+      case e               => throw e
     }
 
   def withSQLResource[T, R](
@@ -36,11 +43,7 @@ package object vault2 {
     connector(f(_).η[SQLValue])
 
   def tryConnector[A](f: Connection => A): Connector[A] =
-    connector(c => try {
-      sqlValue(f(c))
-    } catch {
-      case e: SQLException => sqlErr(e)
-    })
+    connector(c => tryValue(f(c)))
 
   val close: Connector[Unit] =
     tryConnector(_.close)

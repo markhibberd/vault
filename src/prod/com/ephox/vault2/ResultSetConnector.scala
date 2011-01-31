@@ -2,9 +2,7 @@ package com.ephox.vault2
 
 import scalaz._
 import Scalaz._
-import Connector._
-import SQLValue._
-import java.sql.{PreparedStatement, Connection, ResultSet}
+import java.sql.ResultSet
 
 sealed trait ResultSetConnector[A] {
   val rsConnect: ResultSet => Connector[A]
@@ -27,22 +25,11 @@ sealed trait ResultSetConnector[A] {
         loop(iter)
       })
 
-  def -|>>[T](iter: IterV[A, T]) =
+  def -|>>[T](iter: IterV[A, T]): ResultSetConnector[T] =
     resultSetConnection(r => c => {
-          val z = -|>(IterV.head) <|- r
+          val z = -|>(iter) <|- r
           (z connect c) ∘ (_.run)
       })
-
-  def executeQuery(sql: String): Connector[A] =
-    connector(c => withSQLResource(
-                     value = c.prepareStatement(sql)
-                   , evaluate = (s: PreparedStatement) =>
-                       withSQLResource(
-                         value    = s.executeQuery
-                       , evaluate = (r: ResultSet) => rsConnect(r)(c)
-                       )
-                   )
-    )
 }
 
 object ResultSetConnector {
@@ -61,8 +48,10 @@ object ResultSetConnector {
   }
 
   implicit def ResultSetConnectorApply[M[_]]: Apply[ResultSetConnector] = new Apply[ResultSetConnector] {
-    def apply[A, B](f: ResultSetConnector[A => B], a: ResultSetConnector[A]) =
+    def apply[A, B](f: ResultSetConnector[A => B], a: ResultSetConnector[A]) = {
+      import Connector._
       resultSetConnector(c => a(c) <*> f(c))
+    }
   }
 
   implicit def ResultSetConnectorBind[M[_]]: Bind[ResultSetConnector] = new Bind[ResultSetConnector] {
