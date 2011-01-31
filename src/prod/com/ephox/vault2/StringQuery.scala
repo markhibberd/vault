@@ -15,12 +15,15 @@ sealed trait StringQuery {
                        )
                    ))
 
-  def executeUpdate[A](f: Int => Connector[A]): Connector[A] =
+  def executeUpdate[A]: Connector[Int] =
     connector(c => withSQLResource(
                      value = c.createStatement
                    , evaluate = (s: Statement) =>
-                       f(s executeUpdate sql)(c)
+                       tryValue(s executeUpdate sql)
                    ))
+
+  def prepareStatement[A](k: java.sql.PreparedStatement => Connector[A]) : Connector[A] =
+    connector(c => withSQLResource(c prepareStatement sql, (s: PreparedStatement) => k(s)(c)))
 }
 
 object StringQuery {

@@ -48,30 +48,6 @@ package object vault2 {
   val close: Connector[Unit] =
     tryConnector(_.close)
 
-  def withPreparedStatement[A](k: PreparedStatement => A): String => Connector[A] =
-    sql => tryConnector(
-      c => {
-        val st = c.prepareStatement(sql)
-
-        try {
-          k(st)
-        } finally {
-          st.close
-        }
-      })
-
-  def withResultSet[A](k: ResultSet => A): ResultSet => Connector[A] =
-    r =>
-      tryConnector(_ => try {
-        k(r)
-      } finally {
-        r.close
-      })
-
-  def withExecuteQuery[A]: String => (ResultSet => A) => Connector[A] =
-    sql => k =>
-      withPreparedStatement(_.executeQuery)(sql) flatMap (withResultSet(k))
-
   def resultSetConnector[A](f: ResultSet => Connector[A]): ResultSetConnector[A] =
     ResultSetConnector.resultSetConnector(f)
 
