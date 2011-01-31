@@ -21,7 +21,7 @@ object Vault2Demo {
       Person(name, age)
     })
 
-  def setupData = {
+  def setupData =
     for {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
@@ -36,7 +36,6 @@ object Vault2Demo {
            })
       _ <- close
     } yield a :: b :: p
-  }
 
   def main(args: Array[String]) {
     if(args.length < 3)
