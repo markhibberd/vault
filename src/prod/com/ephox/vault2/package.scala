@@ -24,7 +24,10 @@ package object vault2 {
                         , evaluate: T => SQLValue[R]
                         , whenClosing: Throwable => Unit = _ => ()
                         )(implicit r: Resource[T]): SQLValue[R] =
-    withResource(value, evaluate, { case e: SQLException => sqlErr(e) }, whenClosing)
+    withResource(value, evaluate, {
+      case e: SQLException => sqlErr(e)
+      case e               => throw e
+    }, whenClosing)
 
   def connector[A](f: Connection => SQLValue[A]): Connector[A] =
     Connector.connector(f)
