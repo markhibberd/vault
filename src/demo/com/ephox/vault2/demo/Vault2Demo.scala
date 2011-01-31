@@ -2,7 +2,7 @@ package com.ephox.vault2.demo
 
 import scalaz._
 import Scalaz._
-import com.ephox.vault2.ResultSetConnector._
+import com.ephox.vault2._
 import java.sql.Connection
 
 object Vault2Demo {
@@ -43,15 +43,22 @@ object Vault2Demo {
     if(args.length < 3)
       System.err.println("<dbfile> <username> <password>")
     else {
+      // use file-based database
       def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
 
-      // Initialise data
+      // initialise data
       setupData(connection)
 
+      // get the head of the query results
       val personConnector = PersonResultSetConnector -|>> IterV.head
-      val personConnect = personConnector executeQuery "SELECT * FROM PERSON"
-      val firstPerson = personConnect.finalyClose(connection)
 
+      // select all persons
+      val personConnect = personConnector executeQuery "SELECT * FROM PERSON"
+
+      // get result and close connection
+      val firstPerson = personConnect finalyClose connection
+
+      // print the result
       println(firstPerson fold (
                             e => e
                           , p => p

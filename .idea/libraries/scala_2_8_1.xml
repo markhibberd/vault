@@ -3,13 +3,10 @@
     <CLASSES>
       <root url="jar:///opt/scala-2.8.1.final/lib/scala-compiler.jar!/" />
       <root url="jar:///opt/scala-2.8.1.final/lib/scala-library.jar!/" />
-      <root url="jar://$USER_HOME$/lib/scala/2.8.1/lib/scala-compiler.jar!/" />
-      <root url="jar://$USER_HOME$/lib/scala/2.8.1/lib/scala-library.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$USER_HOME$/lib/scala/2.8.1/src/scala-library-src.jar!/" />
-      <root url="jar://$USER_HOME$/lib/scala/2.8.1/src/scala-compiler-src.jar!/" />
+      <root url="jar:///opt/scala-2.8.1.final/src/scala-library-src.jar!/" />
     </SOURCES>
   </library>
 </component>

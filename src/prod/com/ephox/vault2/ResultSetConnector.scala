@@ -50,9 +50,6 @@ object ResultSetConnector {
     val rsConnect = f
   }
 
-  def tryResultSetConnector[A](f: ResultSet => Connection => A): ResultSetConnector[A] =
-    resultSetConnector((r: ResultSet) => tryConnector(c => f(r)(c)))
-
   implicit def ResultSetConnectorFunctor: Functor[ResultSetConnector] = new Functor[ResultSetConnector] {
     def fmap[A, B](k: ResultSetConnector[A], f: A => B) =
       resultSetConnector((r: ResultSet) => k(r) map f)
@@ -72,18 +69,4 @@ object ResultSetConnector {
     def bind[A, B](a: ResultSetConnector[A], f: A => ResultSetConnector[B]) =
       resultSetConnector(c => a(c) >>= (a => f(a)(c)))
   }
-
-  def constantResultSetConnector[A](c: => Connector[A]): ResultSetConnector[A] =
-    resultSetConnector(_ => c)
-
-  def rResultSetConnector[A](f: ResultSet => A): ResultSetConnector[A] =
-    resultSetConnector(f(_).η[Connector])
-
-  def resultSetConnection[A](f: ResultSet => Connection => SQLValue[A]): ResultSetConnector[A] = new ResultSetConnector[A] {
-    val rsConnect = (r: ResultSet) => connector(f(r))
-  }
-
-  // WARNING: side-effects on rs
-  val next = resultSetConnector((rs: ResultSet) =>
-    rs.next.η[Connector])
 }
