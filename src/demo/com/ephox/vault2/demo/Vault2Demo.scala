@@ -22,7 +22,7 @@ object Vault2Demo {
     })
 
   def setupData =
-    for {
+    (for {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
       p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement (s => {
@@ -35,7 +35,7 @@ object Vault2Demo {
              }
            })
       _ <- close
-    } yield a :: b :: p
+    } yield a :: b :: p).commitRollback
 
   def main(args: Array[String]) {
     if(args.length < 3)
@@ -45,7 +45,7 @@ object Vault2Demo {
       def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
 
       // initialise data
-      setupData(connection)
+      println(setupData(connection))
 
       // get the head of the query results
       val personConnector = PersonResultSetConnector -|>> IterV.head
