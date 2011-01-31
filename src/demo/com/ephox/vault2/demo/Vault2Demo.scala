@@ -3,7 +3,6 @@ package com.ephox.vault2.demo
 import scalaz._
 import Scalaz._
 import com.ephox.vault2._
-import java.sql.Connection
 
 object Vault2Demo {
   case class Person(name: String, age: Int)
@@ -22,21 +21,21 @@ object Vault2Demo {
       Person(name, age)
     })
 
-  def setupData(c: Connection) = {
-    try {
-      c.createStatement.executeUpdate("DROP TABLE IF EXISTS PERSON")
-      c.createStatement.executeUpdate("CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)")
-      val p = c.prepareStatement("INSERT INTO PERSON(name, age) VALUES (?,?)")
-
-      data foreach { case per@Person(name, age) => {
-        p.setString(1, name)
-        p.setInt(2, age)
-        val r = p.executeUpdate
-        println("Inserted " + per + " with result " + r)
-      }}
-    } finally {
-      c.close
-    }
+  def setupData = {
+    for {
+      a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
+      b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
+      p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement (s => {
+             import Connector._
+             data ↦ { case per@Person(name, age) => {
+                 s.setString(1, name)
+                 s.setInt(2, age)
+                 tryValue(s.executeUpdate).η[Connector]
+               }
+             }
+           })
+      _ <- close
+    } yield a :: b :: p
   }
 
   def main(args: Array[String]) {
