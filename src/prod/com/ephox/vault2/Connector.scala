@@ -39,13 +39,13 @@ sealed trait Connector[A] {
       c.commit
       r
     } catch {
-      case ex: SQLException => {
+      case e: SQLException => {
         c.rollback
-        sqlErr(ex)
+        sqlErr(e)
       }
-      case ex => {
+      case e => {
         c.rollback
-        throw ex
+        throw e
       }
     })
 }

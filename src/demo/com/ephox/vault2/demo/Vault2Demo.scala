@@ -53,7 +53,7 @@ object Vault2Demo {
       val personConnector = PersonResultSetConnector -|>> IterV.head
 
       // select all persons
-      val personConnect = personConnector executeQuery "SELECT * FROM PERSON"
+      val personConnect = "SELECT * FROM PERSON" executeQuery personConnector
 
       // get result and close connection
       val firstPerson = personConnect finalyClose connection
