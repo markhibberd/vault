@@ -35,7 +35,7 @@ object Vault2Demo {
                }
              }
            })
-    } yield a :: b :: p
+    } yield a + b + p.sum
 
   def main(args: Array[String]) {
     if(args.length < 3)
@@ -51,13 +51,17 @@ object Vault2Demo {
       val personConnect = "SELECT * FROM PERSON" executeQuery personConnector
 
       // initialise data
-      setupData commitRollbackClose connection map ((_: List[Int]).sum) printStackTraceOr (n => println(n + " rows affected"))
+      setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
 
       // get result and close connection
       val firstPerson = personConnect finalyClose connection
 
       // print the result
-      firstPerson printStackTraceOr println
+      firstPerson printStackTraceOr (p =>
+        println(p match {
+          case Some(p) => p.toString
+          case None    => "No person"
+        }))
     }
   }
 }
