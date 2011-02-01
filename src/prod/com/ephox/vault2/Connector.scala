@@ -48,6 +48,9 @@ sealed trait Connector[A] {
         throw e
       }
     })
+
+  def commitRollbackClose: Connector[A] =
+    commitRollback.finalyClose
 }
 
 object Connector {

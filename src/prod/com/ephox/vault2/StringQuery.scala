@@ -22,7 +22,7 @@ sealed trait StringQuery {
                        tryValue(s executeUpdate sql)
                    ))
 
-  def prepareStatement[A](k: java.sql.PreparedStatement => Connector[A]) : Connector[A] =
+  def prepareStatement[A](k: PreparedStatement => Connector[A]) : Connector[A] =
     connector(c => withSQLResource(c prepareStatement sql, (s: PreparedStatement) => k(s)(c)))
 }
 
