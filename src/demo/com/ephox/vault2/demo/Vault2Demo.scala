@@ -27,7 +27,8 @@ object Vault2Demo {
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
       p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement (s => {
              import Connector._
-             data traverse { case per@Person(name, age) => {
+             data traverse {
+               case Person(name, age) => {
                  s.setString(1, name)
                  s.setInt(2, age)
                  tryConnector(_ => s.executeUpdate)
