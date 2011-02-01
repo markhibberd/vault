@@ -22,7 +22,7 @@ object Vault2Demo {
     })
 
   def setupData =
-    (for {
+    for {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
       p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement (s => {
@@ -30,12 +30,11 @@ object Vault2Demo {
              data ↦ { case per@Person(name, age) => {
                  s.setString(1, name)
                  s.setInt(2, age)
-                 tryValue(s.executeUpdate).η[Connector]
+                 tryConnector(_ => s.executeUpdate)
                }
              }
            })
-      _ <- close
-    } yield a :: b :: p).commitRollback
+    } yield a :: b :: p
 
   def main(args: Array[String]) {
     if(args.length < 3)
@@ -45,7 +44,7 @@ object Vault2Demo {
       def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
 
       // initialise data
-      println(setupData(connection))
+      setupData commitRollbackClose connection map ((_: List[Int]).sum) foreach (n => println(n + " rows affected"))
 
       // get the head of the query results
       val personConnector = PersonResultSetConnector -|>> IterV.head
@@ -57,10 +56,10 @@ object Vault2Demo {
       val firstPerson = personConnect finalyClose connection
 
       // print the result
-      println(firstPerson fold (
-                            e => e
-                          , p => p
-                          ))
+      firstPerson fold (
+                         e => e.printStackTrace
+                       , p => println(p)
+                       )
     }
   }
 }
