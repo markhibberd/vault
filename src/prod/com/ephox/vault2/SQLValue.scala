@@ -30,6 +30,9 @@ sealed trait SQLValue[A] {
 
   def toValidation =
     fold(success(_), failure(_))
+
+  def printStackTraceOr(f: A => Unit) =
+    fold(_.printStackTrace, f)
 }
 
 object SQLValue {
@@ -41,7 +44,7 @@ object SQLValue {
     def fold[X](err: SQLException => X, va: A => X) = va(v)
   }
 
-  implicit def SQLValueInjective = Injective[SQLValue]
+  implicit val SQLValueInjective = Injective[SQLValue]
 
   implicit val SQLValueFunctor: Functor[SQLValue] = new Functor[SQLValue] {
     def fmap[A, B](r: SQLValue[A], f: A => B) =
@@ -97,6 +100,14 @@ object SQLValue {
 
   implicit val SQLValueEmpty: Empty[SQLValue] = new Empty[SQLValue] {
     def empty[A] = err(new SQLException)
+  }
+
+  implicit def SQLValueShow[A](s: Show[A]): Show[SQLValue[A]] = new Show[SQLValue[A]] {
+    def show(a: SQLValue[A]) =
+      a fold(
+              e => ("err(" + e + ")").toList
+            , a => ("value(" + (s show a mkString) + ")").toList
+            )
   }
 
   implicit def SQLValueEqual[A: Equal]: Equal[SQLValue[A]] = {

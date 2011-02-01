@@ -27,7 +27,7 @@ object Vault2Demo {
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
       p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement (s => {
              import Connector._
-             data ↦ { case per@Person(name, age) => {
+             data traverse { case per@Person(name, age) => {
                  s.setString(1, name)
                  s.setInt(2, age)
                  tryConnector(_ => s.executeUpdate)
@@ -43,23 +43,20 @@ object Vault2Demo {
       // use file-based database
       def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
 
-      // initialise data
-      setupData commitRollbackClose connection map ((_: List[Int]).sum) foreach (n => println(n + " rows affected"))
-
       // get the head of the query results
       val personConnector = PersonResultSetConnector -|>> IterV.head
 
       // select all persons
       val personConnect = "SELECT * FROM PERSON" executeQuery personConnector
 
+      // initialise data
+      setupData commitRollbackClose connection map ((_: List[Int]).sum) printStackTraceOr (n => println(n + " rows affected"))
+
       // get result and close connection
       val firstPerson = personConnect finalyClose connection
 
       // print the result
-      firstPerson fold (
-                         e => e.printStackTrace
-                       , p => println(p)
-                       )
+      firstPerson printStackTraceOr println
     }
   }
 }
