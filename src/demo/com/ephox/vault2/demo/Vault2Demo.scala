@@ -31,7 +31,7 @@ object Vault2Demo {
                case (n, Person(name, age)) => {
                  s.setString(1, name)
                  s.setInt(2, age)
-                 tryValue(s.executeUpdate) ∘ (n+)
+                 s.tryExecuteUpdate ∘ (n+)
                }
              }))
     } yield a + b + q

@@ -2,8 +2,8 @@ package com.ephox
 
 import scalaz._
 import Scalaz._
-import java.sql.{ResultSet, SQLException, Connection}
-import vault2.{StringQuery, ResultSetConnector, SQLValue, Connector}
+import java.sql.{PreparedStatement, ResultSet, SQLException, Connection}
+import vault2._
 
 package object vault2 {
   implicit def StringStringQuery(s: String): StringQuery =
@@ -12,15 +12,22 @@ package object vault2 {
   implicit def StringQueryString(sql: StringQuery): String =
     sql.sql
 
+  implicit def PreparedStatementPreparedStatementW(t: PreparedStatement): PreparedStatementW =
+    PreparedStatementW.PreparedStatementPreparedStatementW(t)
+
+  implicit def PreparedStatementWPreparedStatement(t: PreparedStatementW): PreparedStatement =
+    t.s
+
   def sqlErr[A](e: SQLException): SQLValue[A] =
     SQLValue.err(e)
 
+  // alias for η specialised to SQLValue
   def sqlValue[A](v: A): SQLValue[A] =
     SQLValue.value(v)
 
   def tryValue[A](a: => A): SQLValue[A] =
     try {
-      sqlValue(a)
+      a.η[SQLValue]
     } catch {
       case e: SQLException => sqlErr(e)
       case e               => throw e
