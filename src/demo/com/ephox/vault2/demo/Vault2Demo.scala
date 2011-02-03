@@ -12,6 +12,7 @@ object Vault2Demo {
           "Bob" -> 45
         , "Mary" -> 78
         , "Fred" -> 99
+        , "Jack" -> 9999
         ) map { case (name, age) => Person(name, age) }
 
   val PersonResultSetConnector =
@@ -25,17 +26,15 @@ object Vault2Demo {
     for {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
-      p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement (s => {
-             import Connector._
-             data traverse {
-               case Person(name, age) => {
+      q <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement (s =>
+             constantConnector(data.foldLeftM(0) {
+               case (n, Person(name, age)) => {
                  s.setString(1, name)
                  s.setInt(2, age)
-                 tryConnector(_ => s.executeUpdate)
+                 tryValue(s.executeUpdate) ∘ (n+)
                }
-             }
-           })
-    } yield a + b + p.sum
+             }))
+    } yield a + b + q
 
   def main(args: Array[String]) {
     if(args.length < 3)
