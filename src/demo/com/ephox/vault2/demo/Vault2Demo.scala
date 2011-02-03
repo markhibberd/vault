@@ -26,15 +26,14 @@ object Vault2Demo {
     for {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
-      q <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement (s =>
-             constantConnector(data.foldLeftM(0) {
-               case (n, Person(name, age)) => {
+      p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement
+             (s => s.foreachStatement(data, (p: Person) => p match {
+               case Person(name, age) => ({
                  s.setString(1, name)
                  s.setInt(2, age)
-                 s.tryExecuteUpdate ∘ (n+)
-               }
+               })
              }))
-    } yield a + b + q
+    } yield a + b + p
 
   def main(args: Array[String]) {
     if(args.length < 3)
