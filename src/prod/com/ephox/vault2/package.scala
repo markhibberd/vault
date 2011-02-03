@@ -2,7 +2,7 @@ package com.ephox
 
 import scalaz._
 import Scalaz._
-import java.sql.{PreparedStatement, ResultSet, SQLException, Connection}
+import java.sql.{ResultSet, SQLException, Connection}
 import vault2.{StringQuery, ResultSetConnector, SQLValue, Connector}
 
 package object vault2 {
@@ -38,6 +38,9 @@ package object vault2 {
 
   def connector[A](f: Connection => SQLValue[A]): Connector[A] =
     Connector.connector(f)
+
+  def constantConnector[A](v: => SQLValue[A]): Connector[A] =
+    connector(_ => v)
 
   def valueConnector[A](f: Connection => A): Connector[A] =
     connector(f(_).η[SQLValue])
