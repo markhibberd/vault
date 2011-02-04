@@ -77,4 +77,42 @@ package object vault2 {
   val next = resultSetConnector((rs: ResultSet) =>
     rs.next.η[Connector])
 
+  val sqlTypes = Set(
+                      ArrayType
+                    , BigIntType
+                    , BinaryType
+                    , BitType
+                    , BlobType
+                    , BooleanType
+                    , CharType
+                    , ClobType
+                    , DataLinkType
+                    , DateType
+                    , DecimalType
+                    , DistinctType
+                    , DoubleType
+                    , FloatType
+                    , IntegerType
+                    , JavaObjectType
+                    , LongNVarCharType
+                    , LongVarBinaryType
+                    , LongVarCharType
+                    , NCharType
+                    , NClobType
+                    , NullType
+                    , NumericType
+                    , NVarCharType
+                    , OtherType
+                    , RealType
+                    , RefType
+                    , RowIdType
+                    , SmallIntType
+                    , SqlXmlType
+                    , StructType
+                    , TimeType
+                    , TimestampType
+                    , TinyIntType
+                    , VarBinaryType
+                    , VarCharType
+                    )
 }
