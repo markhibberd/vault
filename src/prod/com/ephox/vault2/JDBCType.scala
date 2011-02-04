@@ -15,7 +15,7 @@ sealed trait JDBCType {
              , longType: Long => X
              , floatType: Float => X
              , doubleType: Double => X
-             , bigDecimalType: BigDecimal => X
+             , bigDecimalType: java.math.BigDecimal => X
              , stringType: String => X
              , bytesType: Array[Byte] => X
              , dateType: Date => X
@@ -77,7 +77,7 @@ private case class IntJDBCType(value: Int) extends JDBCType
 private case class LongJDBCType(value: Long) extends JDBCType
 private case class FloatJDBCType(value: Float) extends JDBCType
 private case class DoubleJDBCType(value: Double) extends JDBCType
-private case class BigDecimalJDBCType(value: BigDecimal) extends JDBCType
+private case class BigDecimalJDBCType(value: java.math.BigDecimal) extends JDBCType
 private case class StringJDBCType(value: String) extends JDBCType
 private case class BytesJDBCType(value: Array[Byte]) extends JDBCType
 private case class DateJDBCType(value: Date) extends JDBCType
@@ -108,7 +108,7 @@ object JDBCType {
   def longType(value: Long): JDBCType = LongJDBCType(value)
   def floatType(value: Float): JDBCType = FloatJDBCType(value)
   def doubleType(value: Double): JDBCType = DoubleJDBCType(value)
-  def bigDecimalType(value: BigDecimal): JDBCType = BigDecimalJDBCType(value)
+  def bigDecimalType(value: java.math.BigDecimal): JDBCType = BigDecimalJDBCType(value)
   def stringType(value: String): JDBCType = StringJDBCType(value)
   def bytesType(value: Array[Byte]): JDBCType = BytesJDBCType(value)
   def dateType(value: Date): JDBCType = DateJDBCType(value)
