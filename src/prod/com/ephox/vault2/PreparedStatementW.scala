@@ -21,7 +21,10 @@ sealed trait PreparedStatementW {
   def foreachStatement[T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): Connector[Int] =
     executeStatements(as, (a: A) => k(a).η[Connector])
 
-  def set[F[_]](values: F[JDBCType])(implicit fold: Foldable[F]) =
+  def set(values: JDBCType*) =
+    setValues(values.toList)
+
+  def setValues[F[_]](values: F[JDBCType])(implicit fold: Foldable[F]) =
     values.foldl(1) {
       case (n, v) => {
         v.fold(
