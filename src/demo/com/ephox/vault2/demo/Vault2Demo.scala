@@ -28,10 +28,9 @@ object Vault2Demo {
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
       p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement
              (s => s.foreachStatement(data, (p: Person) => p match {
-               case Person(name, age) => ({
-                 s.setString(1, name)
-                 s.setInt(2, age)
-               })
+               case Person(name, age) => {
+                 s.set(stringType(name), intType(age))
+               }
              }))
     } yield a + b + p
 

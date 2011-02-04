@@ -2,8 +2,11 @@ package com.ephox
 
 import scalaz._
 import Scalaz._
-import java.sql.{PreparedStatement, ResultSet, SQLException, Connection}
 import vault2._
+import java.io.{Reader, InputStream}
+import java.sql.{Date, Clob, Blob, Ref, Timestamp, Time, PreparedStatement, ResultSet, SQLException, Connection}
+import java.net.URL
+import java.util.Calendar
 
 package object vault2 {
   implicit def StringStringQuery(s: String): StringQuery =
@@ -76,6 +79,36 @@ package object vault2 {
   // WARNING: side-effects on rs
   val next = resultSetConnector((rs: ResultSet) =>
     rs.next.η[Connector])
+
+  def nullType(typ: SQLType) = JDBCType.nullType(typ)
+  def booleanType(value: Boolean) = JDBCType.booleanType(value)
+  def byteType(value: Byte) = JDBCType.byteType(value)
+  def shortType(value: Short) = JDBCType.shortType(value)
+  def intType(value: Int) = JDBCType.intType(value)
+  def longType(value: Long) = JDBCType.longType(value)
+  def floatType(value: Float) = JDBCType.floatType(value)
+  def doubleType(value: Double) = JDBCType.doubleType(value)
+  def bigDecimalType(value: java.math.BigDecimal) = JDBCType.bigDecimalType(value)
+  def stringType(value: String) = JDBCType.stringType(value)
+  def bytesType(value: Array[Byte]) = JDBCType.bytesType(value)
+  def dateType(value: Date) = JDBCType.dateType(value)
+  def timeType(value: Time) = JDBCType.timeType(value)
+  def timestampType(value: Timestamp) = JDBCType.timestampType(value)
+  def asciiStreamType(value: InputStream, length: Int) = JDBCType.asciiStreamType(value, length)
+  def unicodeStreamType(value: InputStream, length: Int) = JDBCType.unicodeStreamType(value, length)
+  def binaryStreamType(value: InputStream, length: Int) = JDBCType.binaryStreamType(value, length)
+  def objectTypeType(value: AnyRef, typ: SQLType) = JDBCType.objectTypeType(value, typ)
+  def objectType(value: AnyRef) = JDBCType.objectType(value)
+  def characterStreamType(value: Reader, length: Int) = JDBCType.characterStreamType(value, length)
+  def refType(value: Ref) = JDBCType.refType(value)
+  def blobType(value: Blob) = JDBCType.blobType(value)
+  def clobType(value: Clob) = JDBCType.clobType(value)
+  def arrayType(value: java.sql.Array) = JDBCType.arrayType(value)
+  def calendarDateType(value: Date, cal: Calendar) = JDBCType.calendarDateType(value, cal)
+  def calendarTimeType(value: Time, cal: Calendar) = JDBCType.calendarTimeType(value, cal)
+  def calendarTimestampType(value: Timestamp, cal: Calendar) = JDBCType.calendarTimestampType(value, cal)
+  def userNullType(typ: SQLType, name: String) = JDBCType.userNullType(typ, name)
+  def urlType(value: URL) = JDBCType.urlType(value)
 
   val sqlTypes = Set(
                       ArrayType
