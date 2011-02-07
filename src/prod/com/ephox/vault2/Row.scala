@@ -11,6 +11,8 @@ sealed trait Row {
   type ObjectTypeMap = java.util.Map[String, Class[_]]
   type Cal = Calendar
 
+  def -|>[A, T](a: RowAccessor[A]): IterV[A, T] => RowAccess[IterV[A, T]]
+
   def arrayIndex(columnIndex: Int): RowAccess[java.sql.Array]
   def arrayLabel(columnLabel: String): RowAccess[java.sql.Array]
 
@@ -111,6 +113,18 @@ object Row {
       } catch {
         case e: SQLException => rowAccessErr(e)
         case x => throw x
+      }
+
+    def -|>[A, T](ra: RowAccessor[A]) =
+      iter => {
+        def loop(i: IterV[A, T]): RowAccess[IterV[A, T]] =
+          i.fold((a, ip) => i.η[RowAccess],
+                 k => {
+                   val hasMore = r.next
+                   if (hasMore) ra.access(Row.resultSetRow(r)) flatMap (t => loop(k(IterV.El(t))))
+                   else i.η[RowAccess]
+                 })
+        loop(iter)
       }
 
     def arrayIndex(columnIndex: Int) =
