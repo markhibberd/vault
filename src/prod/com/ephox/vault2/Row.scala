@@ -8,9 +8,6 @@ import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, SQLExcep
 import java.net.URL
 
 sealed trait Row {
-  type ObjectTypeMap = java.util.Map[String, Class[_]]
-  type Cal = Calendar
-
   def -|>[A, T](a: RowAccessor[A]): IterV[A, T] => RowAccess[IterV[A, T]]
 
   def arrayIndex(columnIndex: Int): RowAccess[java.sql.Array]
@@ -45,8 +42,8 @@ sealed trait Row {
 
   def dateIndex(columnIndex: Int): RowAccess[Date]
   def dateLabel(columnLabel: String): RowAccess[Date]
-  def dateIndexCal(columnIndex: Int, cal: Cal): RowAccess[Date]
-  def dateLabelCal(columnLabel: String, cal: Cal): RowAccess[Date]
+  def dateIndexCal(columnIndex: Int, cal: Row.Cal): RowAccess[Date]
+  def dateLabelCal(columnLabel: String, cal: Row.Cal): RowAccess[Date]
 
   def doubleIndex(columnIndex: Int): RowAccess[Double]
   def doubleLabel(columnLabel: String): RowAccess[Double]
@@ -71,8 +68,8 @@ sealed trait Row {
 
   def objectIndex(columnIndex: Int): RowAccess[AnyRef]
   def objectLabel(columnLabel: String): RowAccess[AnyRef]
-  def objectMapIndex(columnIndex: Int, m: ObjectTypeMap): RowAccess[AnyRef]
-  def objectMapLabel(columnLabel: String, m: ObjectTypeMap): RowAccess[AnyRef]
+  def objectMapIndex(columnIndex: Int, m: Row.ObjectTypeMap): RowAccess[AnyRef]
+  def objectMapLabel(columnLabel: String, m: Row.ObjectTypeMap): RowAccess[AnyRef]
 
   def refIndex(columnIndex: Int): RowAccess[Ref]
   def refLabel(columnLabel: String): RowAccess[Ref]
@@ -91,19 +88,22 @@ sealed trait Row {
 
   def timeIndex(columnIndex: Int): RowAccess[Time]
   def timeLabel(columnLabel: String): RowAccess[Time]
-  def timeIndexCal(columnIndex: Int, cal: Cal): RowAccess[Time]
-  def timeLabelCal(columnLabel: String, cal: Cal): RowAccess[Time]
+  def timeIndexCal(columnIndex: Int, cal: Row.Cal): RowAccess[Time]
+  def timeLabelCal(columnLabel: String, cal: Row.Cal): RowAccess[Time]
 
   def timestampIndex(columnIndex: Int): RowAccess[Timestamp]
   def timestampLabel(columnLabel: String): RowAccess[Timestamp]
-  def timestampIndexCal(columnIndex: Int, cal: Cal): RowAccess[Timestamp]
-  def timestampLabelCal(columnLabel: String, cal: Cal): RowAccess[Timestamp]
+  def timestampIndexCal(columnIndex: Int, cal: Row.Cal): RowAccess[Timestamp]
+  def timestampLabelCal(columnLabel: String, cal: Row.Cal): RowAccess[Timestamp]
 
   def urlIndex(columnIndex: Int): RowAccess[URL]
   def urlLabel(columnLabel: String): RowAccess[URL]
 }
 
 object Row {
+  type ObjectTypeMap = java.util.Map[String, Class[_]]
+  type Cal = Calendar
+
   private[vault2] def resultSetRow(r: ResultSet): Row = new Row {
     private def tryRowAccess[A](a: => A): RowAccess[A] =
       try {
