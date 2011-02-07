@@ -4,9 +4,9 @@ import scalaz._
 import Scalaz._
 import vault2._
 import java.io.{Reader, InputStream}
-import java.sql.{Date, Clob, Blob, Ref, Timestamp, Time, PreparedStatement, ResultSet, SQLException, Connection}
 import java.net.URL
 import java.util.Calendar
+import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, PreparedStatement, ResultSet, SQLException, Connection}
 
 package object vault2 {
   implicit def StringStringQuery(s: String): StringQuery =
@@ -163,4 +163,93 @@ package object vault2 {
                     , VarBinaryType
                     , VarCharType
                     )
+
+    def arrayIndex(columnIndex: Int): RowAccessor[java.sql.Array] = rowAccessor(_.arrayIndex(columnIndex))
+    def arrayLabel(columnLabel: String): RowAccessor[java.sql.Array] = rowAccessor(_.arrayLabel(columnLabel))
+
+    def asciiStreamIndex(columnIndex: Int): RowAccessor[InputStream] = rowAccessor(_.asciiStreamIndex(columnIndex))
+    def asciiStreamLabel(columnLabel: String): RowAccessor[InputStream] = rowAccessor(_.asciiStreamLabel(columnLabel))
+
+    def bigDecimalIndex(columnIndex: Int): RowAccessor[java.math.BigDecimal] = rowAccessor(_.bigDecimalIndex(columnIndex))
+    def bigDecimalLabel(columnLabel: String): RowAccessor[java.math.BigDecimal] = rowAccessor(_.bigDecimalLabel(columnLabel))
+
+    def binaryStreamIndex(columnIndex: Int): RowAccessor[InputStream] = rowAccessor(_.binaryStreamIndex(columnIndex))
+    def binaryStreamLabel(columnLabel: String): RowAccessor[InputStream] = rowAccessor(_.binaryStreamLabel(columnLabel))
+
+    def blobIndex(columnIndex: Int): RowAccessor[Blob] = rowAccessor(_.blobIndex(columnIndex))
+    def blobLabel(columnLabel: String): RowAccessor[Blob] = rowAccessor(_.blobLabel(columnLabel))
+
+    def booleanIndex(columnIndex: Int): RowAccessor[Boolean] = rowAccessor(_.booleanIndex(columnIndex))
+    def booleanLabel(columnLabel: String): RowAccessor[Boolean] = rowAccessor(_.booleanLabel(columnLabel))
+
+    def byteIndex(columnIndex: Int): RowAccessor[Byte] = rowAccessor(_.byteIndex(columnIndex))
+    def byteLabel(columnLabel: String): RowAccessor[Byte] = rowAccessor(_.byteLabel(columnLabel))
+
+    def bytesIndex(columnIndex: Int): RowAccessor[Array[Byte]] = rowAccessor(_.bytesIndex(columnIndex))
+    def bytesLabel(columnLabel: String): RowAccessor[Array[Byte]] = rowAccessor(_.bytesLabel(columnLabel))
+
+    def characterStreamIndex(columnIndex: Int): RowAccessor[Reader] = rowAccessor(_.characterStreamIndex(columnIndex))
+    def characterStreamLabel(columnLabel: String): RowAccessor[Reader] = rowAccessor(_.characterStreamLabel(columnLabel))
+
+    def clobIndex(columnIndex: Int): RowAccessor[Clob] = rowAccessor(_.clobIndex(columnIndex))
+    def clobLabel(columnLabel: String): RowAccessor[Clob] = rowAccessor(_.clobLabel(columnLabel))
+
+    def dateIndex(columnIndex: Int): RowAccessor[Date] = rowAccessor(_.dateIndex(columnIndex))
+    def dateLabel(columnLabel: String): RowAccessor[Date] = rowAccessor(_.dateLabel(columnLabel))
+    def dateIndexCal(columnIndex: Int, cal: Row.Cal): RowAccessor[Date] = rowAccessor(_.dateIndexCal(columnIndex, cal))
+    def dateLabelCal(columnLabel: String, cal: Row.Cal): RowAccessor[Date] = rowAccessor(_.dateLabelCal(columnLabel, cal))
+
+    def doubleIndex(columnIndex: Int): RowAccessor[Double] = rowAccessor(_.doubleIndex(columnIndex))
+    def doubleLabel(columnLabel: String): RowAccessor[Double] = rowAccessor(_.doubleLabel(columnLabel))
+
+    def floatIndex(columnIndex: Int): RowAccessor[Float] = rowAccessor(_.floatIndex(columnIndex))
+    def floatLabel(columnLabel: String): RowAccessor[Float] = rowAccessor(_.floatLabel(columnLabel))
+
+    def intIndex(columnIndex: Int): RowAccessor[Int] = rowAccessor(_.intIndex(columnIndex))
+    def intLabel(columnLabel: String): RowAccessor[Int] = rowAccessor(_.intLabel(columnLabel))
+
+    def longIndex(columnIndex: Int): RowAccessor[Long] = rowAccessor(_.longIndex(columnIndex))
+    def longLabel(columnLabel: String): RowAccessor[Long] = rowAccessor(_.longLabel(columnLabel))
+
+    def ncharacterStreamIndex(columnIndex: Int): RowAccessor[Reader] = rowAccessor(_.ncharacterStreamIndex(columnIndex))
+    def ncharacterStreamLabel(columnLabel: String): RowAccessor[Reader] = rowAccessor(_.ncharacterStreamLabel(columnLabel))
+
+    def nclobIndex(columnIndex: Int): RowAccessor[Clob] = rowAccessor(_.nclobIndex(columnIndex))
+    def nclobLabel(columnLabel: String): RowAccessor[Clob] = rowAccessor(_.nclobLabel(columnLabel))
+
+    def nstringIndex(columnIndex: Int): RowAccessor[String] = rowAccessor(_.nstringIndex(columnIndex))
+    def nstringLabel(columnLabel: String): RowAccessor[String] = rowAccessor(_.nstringLabel(columnLabel))
+
+    def objectIndex(columnIndex: Int): RowAccessor[AnyRef] = rowAccessor(_.objectIndex(columnIndex))
+    def objectLabel(columnLabel: String): RowAccessor[AnyRef] = rowAccessor(_.objectLabel(columnLabel))
+    def objectMapIndex(columnIndex: Int, m: Row.ObjectTypeMap): RowAccessor[AnyRef] = rowAccessor(_.objectMapIndex(columnIndex, m))
+    def objectMapLabel(columnLabel: String, m: Row.ObjectTypeMap): RowAccessor[AnyRef] = rowAccessor(_.objectMapLabel(columnLabel, m))
+
+    def refIndex(columnIndex: Int): RowAccessor[Ref] = rowAccessor(_.refIndex(columnIndex))
+    def refLabel(columnLabel: String): RowAccessor[Ref] = rowAccessor(_.refLabel(columnLabel))
+
+    def rowIdIndex(columnIndex: Int): RowAccessor[RowId] = rowAccessor(_.rowIdIndex(columnIndex))
+    def rowIdLabel(columnLabel: String): RowAccessor[RowId] = rowAccessor(_.rowIdLabel(columnLabel))
+
+    def shortIndex(columnIndex: Int): RowAccessor[Short] = rowAccessor(_.shortIndex(columnIndex))
+    def shortLabel(columnLabel: String): RowAccessor[Short] = rowAccessor(_.shortLabel(columnLabel))
+
+    def sqlxmlIndex(columnIndex: Int): RowAccessor[SQLXML] = rowAccessor(_.sqlxmlIndex(columnIndex))
+    def sqlxmlLabel(columnLabel: String): RowAccessor[SQLXML] = rowAccessor(_.sqlxmlLabel(columnLabel))
+
+    def stringIndex(columnIndex: Int): RowAccessor[String] = rowAccessor(_.stringIndex(columnIndex))
+    def stringLabel(columnLabel: String): RowAccessor[String] = rowAccessor(_.stringLabel(columnLabel))
+
+    def timeIndex(columnIndex: Int): RowAccessor[Time] = rowAccessor(_.timeIndex(columnIndex))
+    def timeLabel(columnLabel: String): RowAccessor[Time] = rowAccessor(_.timeLabel(columnLabel))
+    def timeIndexCal(columnIndex: Int, cal: Row.Cal): RowAccessor[Time] = rowAccessor(_.timeIndexCal(columnIndex, cal))
+    def timeLabelCal(columnLabel: String, cal: Row.Cal): RowAccessor[Time] = rowAccessor(_.timeLabelCal(columnLabel, cal))
+
+    def timestampIndex(columnIndex: Int): RowAccessor[Timestamp] = rowAccessor(_.timestampIndex(columnIndex))
+    def timestampLabel(columnLabel: String): RowAccessor[Timestamp] = rowAccessor(_.timestampLabel(columnLabel))
+    def timestampIndexCal(columnIndex: Int, cal: Row.Cal): RowAccessor[Timestamp] = rowAccessor(_.timestampIndexCal(columnIndex, cal))
+    def timestampLabelCal(columnLabel: String, cal: Row.Cal): RowAccessor[Timestamp] = rowAccessor(_.timestampLabelCal(columnLabel, cal))
+
+    def urlIndex(columnIndex: Int): RowAccessor[URL] = rowAccessor(_.urlIndex(columnIndex))
+    def urlLabel(columnLabel: String): RowAccessor[URL] = rowAccessor(_.urlLabel(columnLabel))
 }
