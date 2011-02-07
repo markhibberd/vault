@@ -39,6 +39,15 @@ package object vault2 {
   def rowAccessValue[A](a: SQLValue[A]): RowAccess[A] =
     a.fold(RowAccess.err(_), RowAccess.value(_))
 
+  def tryRowAccessValue[A](a: => A): RowAccess[A] =
+    rowAccessValue(tryValue(a))
+
+  def rowAccessErr[A](e: SQLException): RowAccess[A] =
+    rowAccessValue(sqlErr(e))
+
+  def rowAccessNull[A]: RowAccess[A] =
+    RowAccess.nul[A]
+
   def withSQLResource[T, R](
                           value: => T
                         , evaluate: T => SQLValue[R]
