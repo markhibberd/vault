@@ -7,17 +7,17 @@ import Scalaz._
 sealed trait SQLValue[A] {
   def fold[X](err: SQLException => X, value: A => X): X
 
-  def isSQLException =
+  def isError =
     fold(_ => true, _ => false)
 
   def isValue =
-    !isSQLException
+    !isError
 
-  def getSQLException =
+  def getError =
     fold(Some(_), _ => None)
 
-  def getSQLExceptionOr(e: => SQLException) =
-    getSQLException getOrElse e
+  def getErrorOr(e: => SQLException) =
+    getError getOrElse e
 
   def getValue =
     fold(_ => None, Some(_))
@@ -68,7 +68,7 @@ object SQLValue {
 
   implicit val SQLValueEach: Each[SQLValue] = new Each[SQLValue] {
     def each[A](e: SQLValue[A], f: A => Unit) =
-      e fold (x => (), f)
+      e fold (_ => (), f)
   }
 
   implicit val SQLValueIndex: Index[SQLValue] = new Index[SQLValue] {

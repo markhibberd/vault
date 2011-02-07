@@ -36,6 +36,9 @@ package object vault2 {
       case e               => throw e
     }
 
+  def rowAccessValue[A](a: SQLValue[A]): RowAccess[A] =
+    a.fold(RowAccess.err(_), RowAccess.value(_))
+
   def withSQLResource[T, R](
                           value: => T
                         , evaluate: T => SQLValue[R]
