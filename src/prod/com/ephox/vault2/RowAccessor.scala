@@ -27,26 +27,6 @@ sealed trait RowAccessor[A] {
 
   def -||>[T](iter: IterV[A, T]): String => java.sql.Connection => RowAccess[T] =
     sql => con => -|>(iter)(sql)(con) map (_.run)
-
-
-  def zz[T](iter: IterV[A, T]): String => java.sql.Connection => RowAccess[T] =
-    sql => con => {
-      val st = con prepareStatement sql
-      try {
-        val r = st.executeQuery
-        try {
-          val row = Row.resultSetRow(r)
-          val it = row.iterate[A, T](this)
-          it(iter) map (_.run)
-
-        } finally {
-          r.close
-        }
-      } finally {
-        st.close
-      }
-
-    }
 }
 
 object RowAccessor {
