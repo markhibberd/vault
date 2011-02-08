@@ -36,14 +36,15 @@ package object vault2 {
       case e               => throw e
     }
 
-  def rowAccessValue[A](a: SQLValue[A]): RowAccess[A] =
-    a.fold(RowAccess.err(_), RowAccess.value(_))
-
   def tryRowAccessValue[A](a: => A): RowAccess[A] =
-    rowAccessValue(tryValue(a))
+    tryValue(a).toRowAccess
+
+  // alias for η specialised to RowAccess
+  def rowAccessValue[A](a: A): RowAccess[A] =
+    RowAccess.value(a)
 
   def rowAccessErr[A](e: SQLException): RowAccess[A] =
-    rowAccessValue(sqlErr(e))
+    sqlErr(e).toRowAccess
 
   def rowAccessNull[A]: RowAccess[A] =
     RowAccess.nul[A]
