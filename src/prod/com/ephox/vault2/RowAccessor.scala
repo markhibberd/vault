@@ -6,7 +6,7 @@ import Scalaz._
 sealed trait RowAccessor[A] {
   val access: Row => RowAccess[A]
 
-  def -|>[T](r: Row): IterV[A, T] => RowAccess[IterV[A, T]] =
+  def <|-[T](r: Row): IterV[A, T] => RowAccess[IterV[A, T]] =
     r -|> this
 }
 
