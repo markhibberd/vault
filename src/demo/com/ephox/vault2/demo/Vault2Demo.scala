@@ -38,6 +38,18 @@ object Vault2Demo {
                }))
       } yield a + b + p
 
+  def firstPair[A]: IterV[A, Option[(A, A)]] =
+    for {
+      a <- IterV.head
+      b <- IterV.peek
+    } yield
+       for {
+         x <- a
+         y <- b
+       } yield (x, y)
+
+  def repeat[A, T](x: IterV[A, T]): IterV[A, IterV[A, T]] = error("")
+
   def main(args: Array[String]) {
     if(args.length < 3)
       System.err.println("<dbfile> <username> <password>")
@@ -48,17 +60,23 @@ object Vault2Demo {
       // get the head of the query results for a Person
       val row = PersonRowAccess -||> IterV.head
 
-      // select all persons
-      val withQuery = row <|- "SELECT * FROM PERSON"
+      // get the first pair of the query results for a Person
+      val personPair = PersonRowAccess -||> firstPair
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
 
       // get result and close connection
-      val firstPerson = withQuery finalyClose connection
+      val firstPerson = (row <|- "SELECT * FROM PERSON") finalyClose connection
 
-      // print the result
+      // get result and close connection
+      val firstPairPerson = (personPair <|- "SELECT * FROM PERSON") finalyClose connection
+
+      // print the first person result
       firstPerson.println
+
+      // print the first pair of person result
+      firstPairPerson.println
     }
   }
 }
