@@ -52,6 +52,9 @@ package object vault2 {
   def rowAccessor[A](f: Row => RowAccess[A]): RowAccessor[A] =
     RowAccessor.rowAccessor(f)
 
+  def sqlRowAccess[A](f: String => RowConnector[A]): SQLRowAccess[A] =
+    SQLRowAccess.sqlRowAccess(f)
+
   def withSQLResource[T, R](
                           value: => T
                         , evaluate: T => SQLValue[R]

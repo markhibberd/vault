@@ -105,11 +105,11 @@ object SQLValue {
     def empty[A] = err(new SQLException)
   }
 
-  implicit def SQLValueShow[A](s: Show[A]): Show[SQLValue[A]] = new Show[SQLValue[A]] {
+  implicit def SQLValueShow[A: Show]: Show[SQLValue[A]] = new Show[SQLValue[A]] {
     def show(a: SQLValue[A]) =
       a fold(
-              e => ("err(" + e + ")").toList
-            , a => ("value(" + (s show a mkString) + ")").toList
+              e => ("error(" + e + ")").toList
+            , a => ("value(" + a.shows + ")").toList
             )
   }
 
