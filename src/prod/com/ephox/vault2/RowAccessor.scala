@@ -6,8 +6,27 @@ import Scalaz._
 sealed trait RowAccessor[A] {
   val access: Row => RowAccess[A]
 
-  def -|>[T](r: Row): IterV[A, T] => RowAccess[IterV[A, T]] =
-    r -|> this
+  def -|>[T](iter: IterV[A, T]): String => java.sql.Connection => RowAccess[IterV[A, T]] =
+    sql => con => try {
+      val st = con prepareStatement sql
+      try {
+        val r = st.executeQuery
+        try {
+          Row.resultSetRow(r).iterate[A, T](this)(iter)
+        } finally {
+          r.close
+        }
+      } finally {
+        st.close
+      }
+    } catch {
+      case e: java.sql.SQLException => rowAccessErr(e)
+      case x                        => throw x
+    }
+
+
+  def -||>[T](iter: IterV[A, T]): String => java.sql.Connection => RowAccess[T] =
+    sql => con => -|>(iter)(sql)(con) map (_.run)
 }
 
 object RowAccessor {

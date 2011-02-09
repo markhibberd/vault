@@ -8,19 +8,19 @@ import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, SQLExcep
 import java.net.URL
 
 sealed trait Row {
-  def -|>[A, T](a: RowAccessor[A]): IterV[A, T] => RowAccess[IterV[A, T]]
+  def iterate[A, T](a: RowAccessor[A]): IterV[A, T] => RowAccess[IterV[A, T]]
 
   def arrayIndex(columnIndex: Int): RowAccess[java.sql.Array]
   def arrayLabel(columnLabel: String): RowAccess[java.sql.Array]
 
-  def asciiStreamIndex(columnIndex: Int): RowAccess[InputStream]
-  def asciiStreamLabel(columnLabel: String): RowAccess[InputStream]
+  def asciiStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowAccess[A]
+  def asciiStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowAccess[A]
 
   def bigDecimalIndex(columnIndex: Int): RowAccess[java.math.BigDecimal]
   def bigDecimalLabel(columnLabel: String): RowAccess[java.math.BigDecimal]
 
-  def binaryStreamIndex(columnIndex: Int): RowAccess[InputStream]
-  def binaryStreamLabel(columnLabel: String): RowAccess[InputStream]
+  def binaryStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowAccess[A]
+  def binaryStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowAccess[A]
 
   def blobIndex(columnIndex: Int): RowAccess[Blob]
   def blobLabel(columnLabel: String): RowAccess[Blob]
@@ -34,8 +34,8 @@ sealed trait Row {
   def bytesIndex(columnIndex: Int): RowAccess[Array[Byte]]
   def bytesLabel(columnLabel: String): RowAccess[Array[Byte]]
 
-  def characterStreamIndex(columnIndex: Int): RowAccess[Reader]
-  def characterStreamLabel(columnLabel: String): RowAccess[Reader]
+  def characterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowAccess[A]
+  def characterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowAccess[A]
 
   def clobIndex(columnIndex: Int): RowAccess[Clob]
   def clobLabel(columnLabel: String): RowAccess[Clob]
@@ -57,8 +57,8 @@ sealed trait Row {
   def longIndex(columnIndex: Int): RowAccess[Long]
   def longLabel(columnLabel: String): RowAccess[Long]
 
-  def ncharacterStreamIndex(columnIndex: Int): RowAccess[Reader]
-  def ncharacterStreamLabel(columnLabel: String): RowAccess[Reader]
+  def ncharacterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowAccess[A]
+  def ncharacterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowAccess[A]
 
   def nclobIndex(columnIndex: Int): RowAccess[Clob]
   def nclobLabel(columnLabel: String): RowAccess[Clob]
@@ -115,7 +115,7 @@ object Row {
         case x => throw x
       }
 
-    def -|>[A, T](ra: RowAccessor[A]) =
+    def iterate[A, T](ra: RowAccessor[A]) =
       iter => {
         def loop(i: IterV[A, T]): RowAccess[IterV[A, T]] =
           i.fold((a, ip) => i.η[RowAccess],
@@ -132,20 +132,46 @@ object Row {
     def arrayLabel(columnLabel: String) =
       tryRowAccess(r.getArray(columnLabel))
 
-    def asciiStreamIndex(columnIndex: Int) =
-      tryRowAccess(r.getAsciiStream(columnIndex))
-    def asciiStreamLabel(columnLabel: String) =
-      tryRowAccess(r.getAsciiStream(columnLabel))
+    def asciiStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A) = {
+      val s = r.getAsciiStream(columnIndex)
+      try {
+        tryRowAccess(withInputStream(s))
+      } finally {
+        s.close
+      }
+    }
+
+    def asciiStreamLabel[A](columnLabel: String, withInputStream: InputStream => A) = {
+      val s = r.getAsciiStream(columnLabel)
+      try {
+        tryRowAccess(withInputStream(s))
+      } finally {
+        s.close
+      }
+    }
 
     def bigDecimalIndex(columnIndex: Int) =
       tryRowAccess(r.getBigDecimal(columnIndex))
     def bigDecimalLabel(columnLabel: String) =
       tryRowAccess(r.getBigDecimal(columnLabel))
 
-    def binaryStreamIndex(columnIndex: Int) =
-      tryRowAccess(r.getBinaryStream(columnIndex))
-    def binaryStreamLabel(columnLabel: String) =
-      tryRowAccess(r.getBinaryStream(columnLabel))
+    def binaryStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A) = {
+      val s = r.getBinaryStream(columnIndex)
+      try {
+        tryRowAccess(withInputStream(s))
+      } finally {
+        s.close
+      }
+    }
+
+    def binaryStreamLabel[A](columnLabel: String, withInputStream: InputStream => A) = {
+      val s = r.getBinaryStream(columnLabel)
+      try {
+        tryRowAccess(withInputStream(s))
+      } finally {
+        s.close
+      }
+    }
 
     def blobIndex(columnIndex: Int) =
       tryRowAccess(r.getBlob(columnIndex))
@@ -167,10 +193,23 @@ object Row {
     def bytesLabel(columnLabel: String) =
       tryRowAccess(r.getBytes(columnLabel))
 
-    def characterStreamIndex(columnIndex: Int) =
-      tryRowAccess(r.getCharacterStream(columnIndex))
-    def characterStreamLabel(columnLabel: String) =
-      tryRowAccess(r.getCharacterStream(columnLabel))
+    def characterStreamIndex[A](columnIndex: Int, withReader: Reader => A) = {
+      val s = r.getCharacterStream(columnIndex)
+      try {
+        tryRowAccess(withReader(s))
+      } finally {
+        s.close
+      }
+    }
+
+    def characterStreamLabel[A](columnLabel: String, withReader: Reader => A) = {
+      val s = r.getCharacterStream(columnLabel)
+      try {
+        tryRowAccess(withReader(s))
+      } finally {
+        s.close
+      }
+    }
 
     def clobIndex(columnIndex: Int) =
       tryRowAccess(r.getClob(columnIndex))
@@ -206,10 +245,23 @@ object Row {
     def longLabel(columnLabel: String) =
       tryRowAccess(r.getLong(columnLabel))
 
-    def ncharacterStreamIndex(columnIndex: Int) =
-      tryRowAccess(r.getNCharacterStream(columnIndex))
-    def ncharacterStreamLabel(columnLabel: String) =
-      tryRowAccess(r.getNCharacterStream(columnLabel))
+    def ncharacterStreamIndex[A](columnIndex: Int, withReader: Reader => A) = {
+      val s = r.getNCharacterStream(columnIndex)
+      try {
+        tryRowAccess(withReader(s))
+      } finally {
+        s.close
+      }
+    }
+
+    def ncharacterStreamLabel[A](columnLabel: String, withReader: Reader => A) = {
+      val s = r.getNCharacterStream(columnLabel)
+      try {
+        tryRowAccess(withReader(s))
+      } finally {
+        s.close
+      }
+    }
 
     def nclobIndex(columnIndex: Int) =
       tryRowAccess(r.getNClob(columnIndex))

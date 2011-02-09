@@ -31,6 +31,9 @@ sealed trait SQLValue[A] {
   def toValidation =
     fold(success(_), failure(_))
 
+  def toRowAccess: RowAccess[A] =
+    fold(rowAccessErr, RowAccess.value(_))
+
   def printStackTraceOr(f: A => Unit) =
     fold(_.printStackTrace, f)
 }

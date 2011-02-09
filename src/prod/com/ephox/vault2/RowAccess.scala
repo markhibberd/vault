@@ -49,12 +49,12 @@ object RowAccess {
 
   implicit val RowAccessFunctor: Functor[RowAccess] = new Functor[RowAccess] {
     def fmap[A, B](r: RowAccess[A], f: A => B) =
-      r fold (x => rowAccessValue(x ∘ f), nul)
+      r fold (x => (x ∘ f).toRowAccess, nul)
   }
 
   implicit val RowAccessPure: Pure[RowAccess] = new Pure[RowAccess] {
     def pure[A](a: => A) =
-      rowAccessValue(sqlValue(a))
+      sqlValue(a).toRowAccess
   }
 
   implicit val RowAccessApply: Apply[RowAccess] = new Apply[RowAccess] {
