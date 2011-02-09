@@ -49,7 +49,7 @@ object Vault2Demo {
       val row = PersonRowAccess -||> IterV.head
 
       // select all persons
-      val withQuery = PersonRowAccess -||> IterV.head <|- "SELECT * FROM PERSON"
+      val withQuery = row <|- "SELECT * FROM PERSON"
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
