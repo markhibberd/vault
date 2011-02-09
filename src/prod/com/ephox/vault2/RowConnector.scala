@@ -10,6 +10,22 @@ sealed trait RowConnector[A] {
 
   def apply(c: Connection) = connect(c)
 
+  def bracket[B, C](after: (=> A) => RowConnector[B], k: (=> A) => RowConnector[C]): RowConnector[C] =
+    this >>= (a => try {
+      k(a)
+    } finally {
+      after(a)
+    })
+
+  def finaly[B](b: => RowConnector[B]): RowConnector[A] =
+    RowConnector.rowConnector(c => try {
+      apply(c)
+    } finally {
+      b(c)
+    })
+
+  def finalyClose: RowConnector[A] =
+    finaly(closeRowConnector)
 }
 
 object RowConnector {
