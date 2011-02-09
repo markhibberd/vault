@@ -48,8 +48,6 @@ object Vault2Demo {
          y <- b
        } yield (x, y)
 
-  def repeat[A, T](x: IterV[A, T]): IterV[A, IterV[A, T]] = error("")
-
   def main(args: Array[String]) {
     if(args.length < 3)
       System.err.println("<dbfile> <username> <password>")
