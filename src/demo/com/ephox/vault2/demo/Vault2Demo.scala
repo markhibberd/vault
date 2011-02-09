@@ -19,7 +19,7 @@ object Vault2Demo {
         , "Jack" -> 9999
         ) map { case (name, age) => Person(name, age) }
 
-  val PersonRowAccess: RowAccessor[Person] =
+  val PersonRowAccess =
     for {
       name <- stringIndex(2)
       age  <- intIndex(3)
