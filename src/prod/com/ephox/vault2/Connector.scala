@@ -26,7 +26,7 @@ sealed trait Connector[A] {
     })
 
   def finalyClose: Connector[A] =
-    finaly(close)
+    finaly(closeConnector)
 
   /**
    * Commits the connection and if this fails with an exception then rollback the connection.
