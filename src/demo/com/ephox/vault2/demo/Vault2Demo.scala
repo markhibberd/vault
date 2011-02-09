@@ -7,6 +7,10 @@ import com.ephox.vault2._
 object Vault2Demo {
   case class Person(name: String, age: Int)
 
+  object Person {
+    implicit val ShowPerson: Show[Person] = showA
+  }
+
   val data =
     List(
           "Bob" -> 45
@@ -15,31 +19,34 @@ object Vault2Demo {
         , "Jack" -> 9999
         ) map { case (name, age) => Person(name, age) }
 
-  val PersonResultSetConnector =
-    rResultSetConnector (rs => {
-      val name = rs.getString(2)
-      val age = rs.getInt(3)
-      Person(name, age)
-    })
-
-  val PersonRowAccess: RowAccessor[Person] =
-    for{
+  val PersonRowAccess =
+    for {
       name <- stringIndex(2)
       age  <- intIndex(3)
     } yield Person(name, age)
 
 
     def setupData =
+      for {
+        a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
+        b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
+        p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement
+               (s => s.foreachStatement(data, (p: Person) => p match {
+                 case Person(name, age) => {
+                   s.set(stringType(name), intType(age))
+                 }
+               }))
+      } yield a + b + p
+
+  def firstPair[A]: IterV[A, Option[(A, A)]] =
     for {
-      a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
-      b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
-      p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement
-             (s => s.foreachStatement(data, (p: Person) => p match {
-               case Person(name, age) => {
-                 s.set(stringType(name), intType(age))
-               }
-             }))
-    } yield a + b + p
+      a <- IterV.head
+      b <- IterV.peek
+    } yield
+       for {
+         x <- a
+         y <- b
+       } yield (x, y)
 
   def main(args: Array[String]) {
     if(args.length < 3)
@@ -48,39 +55,26 @@ object Vault2Demo {
       // use file-based database
       def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
 
-      // get the head of the query results
-      val personConnector = PersonResultSetConnector -|>> IterV.head
+      // get the head of the query results for a Person
+      val row = PersonRowAccess -||> IterV.head
 
-      // select all persons
-      val personConnect = "SELECT * FROM PERSON" executeQuery personConnector
+      // get the first pair of the query results for a Person
+      val personPair = PersonRowAccess -||> firstPair
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
 
       // get result and close connection
-      val firstPerson = personConnect finalyClose connection
+      val firstPerson = (row <|- "SELECT * FROM PERSON") finalyClose connection
 
-      // print the result
-      firstPerson printStackTraceOr (p =>
-        println(p match {
-          case Some(p) => p.toString
-          case None    => "No person"
-        }))
+      // get result and close connection
+      val firstPairPerson = (personPair <|- "SELECT * FROM PERSON") finalyClose connection
 
+      // print the first person result
+      firstPerson.println
 
-      val c = connection
-
-      try {
-        val yy = PersonRowAccess -||> IterV.head
-        yy("SELECT * FROM PERSON")(c).foreach (p =>
-              println(p match {
-                case Some(p) => p.toString
-                case None    => "No person"
-              }))
-      } finally {
-        c.close
-      }
-
+      // print the first pair of person result
+      firstPairPerson.println
     }
   }
 }

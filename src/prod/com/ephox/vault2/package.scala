@@ -52,6 +52,9 @@ package object vault2 {
   def rowAccessor[A](f: Row => RowAccess[A]): RowAccessor[A] =
     RowAccessor.rowAccessor(f)
 
+  def sqlRowAccess[A](f: String => RowConnector[A]): SQLRowAccess[A] =
+    SQLRowAccess.sqlRowAccess(f)
+
   def withSQLResource[T, R](
                           value: => T
                         , evaluate: T => SQLValue[R]
@@ -74,8 +77,23 @@ package object vault2 {
   def tryConnector[A](f: Connection => A): Connector[A] =
     connector(c => tryValue(f(c)))
 
-  val close: Connector[Unit] =
+  val closeConnector: Connector[Unit] =
     tryConnector(_.close)
+
+  def rowConnector[A](f: Connection => RowAccess[A]): RowConnector[A] =
+    RowConnector.rowConnector(f)
+
+  def constantRowConnector[A](v: => RowAccess[A]): RowConnector[A] =
+    rowConnector(_ => v)
+
+  def valueRowConnector[A](f: Connection => A): RowConnector[A] =
+    rowConnector(f(_).η[RowAccess])
+
+  def tryRowConnector[A](f: Connection => A): RowConnector[A] =
+    rowConnector(c => tryRowAccessValue(f(c)))
+
+  val closeRowConnector: RowConnector[Unit] =
+    tryRowConnector(_.close)
 
   def resultSetConnector[A](f: ResultSet => Connector[A]): ResultSetConnector[A] =
     ResultSetConnector.resultSetConnector(f)
