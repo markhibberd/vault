@@ -77,6 +77,15 @@ package object vault2 {
   val close: Connector[Unit] =
     tryConnector(_.close)
 
+  def rowConnector[A](f: Connection => RowAccess[A]): RowConnector[A] =
+    RowConnector.rowConnector(f)
+
+  def constantRowConnector[A](v: => RowAccess[A]): RowConnector[A] =
+    rowConnector(_ => v)
+
+  def valueRowConnector[A](f: Connection => A): RowConnector[A] =
+    rowConnector(f(_).η[RowAccess])
+
   def resultSetConnector[A](f: ResultSet => Connector[A]): ResultSetConnector[A] =
     ResultSetConnector.resultSetConnector(f)
 
