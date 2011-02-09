@@ -22,7 +22,14 @@ object Vault2Demo {
       Person(name, age)
     })
 
-  def setupData =
+  val PersonRowAccess: RowAccessor[Person] =
+    for{
+      name <- stringIndex(2)
+      age  <- intIndex(3)
+    } yield Person(name, age)
+
+
+    def setupData =
     for {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
@@ -59,6 +66,21 @@ object Vault2Demo {
           case Some(p) => p.toString
           case None    => "No person"
         }))
+
+
+      val c = connection
+
+      try {
+        val yy = PersonRowAccess -||> IterV.head
+        yy("SELECT * FROM PERSON")(c).foreach (p =>
+              println(p match {
+                case Some(p) => p.toString
+                case None    => "No person"
+              }))
+      } finally {
+        c.close
+      }
+
     }
   }
 }

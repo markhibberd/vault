@@ -36,14 +36,15 @@ package object vault2 {
       case e               => throw e
     }
 
-  def rowAccessValue[A](a: SQLValue[A]): RowAccess[A] =
-    a.fold(RowAccess.err(_), RowAccess.value(_))
-
   def tryRowAccessValue[A](a: => A): RowAccess[A] =
-    rowAccessValue(tryValue(a))
+    tryValue(a).toRowAccess
+
+  // alias for η specialised to RowAccess
+  def rowAccessValue[A](a: A): RowAccess[A] =
+    RowAccess.value(a)
 
   def rowAccessErr[A](e: SQLException): RowAccess[A] =
-    rowAccessValue(sqlErr(e))
+    sqlErr(e).toRowAccess
 
   def rowAccessNull[A]: RowAccess[A] =
     RowAccess.nul[A]
@@ -167,14 +168,14 @@ package object vault2 {
     def arrayIndex(columnIndex: Int): RowAccessor[java.sql.Array] = rowAccessor(_.arrayIndex(columnIndex))
     def arrayLabel(columnLabel: String): RowAccessor[java.sql.Array] = rowAccessor(_.arrayLabel(columnLabel))
 
-    def asciiStreamIndex(columnIndex: Int): RowAccessor[InputStream] = rowAccessor(_.asciiStreamIndex(columnIndex))
-    def asciiStreamLabel(columnLabel: String): RowAccessor[InputStream] = rowAccessor(_.asciiStreamLabel(columnLabel))
+    def asciiStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowAccessor[A] = rowAccessor(_.asciiStreamIndex(columnIndex, withInputStream))
+    def asciiStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowAccessor[A] = rowAccessor(_.asciiStreamLabel(columnLabel, withInputStream))
 
     def bigDecimalIndex(columnIndex: Int): RowAccessor[java.math.BigDecimal] = rowAccessor(_.bigDecimalIndex(columnIndex))
     def bigDecimalLabel(columnLabel: String): RowAccessor[java.math.BigDecimal] = rowAccessor(_.bigDecimalLabel(columnLabel))
 
-    def binaryStreamIndex(columnIndex: Int): RowAccessor[InputStream] = rowAccessor(_.binaryStreamIndex(columnIndex))
-    def binaryStreamLabel(columnLabel: String): RowAccessor[InputStream] = rowAccessor(_.binaryStreamLabel(columnLabel))
+    def binaryStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowAccessor[A] = rowAccessor(_.binaryStreamIndex(columnIndex, withInputStream))
+    def binaryStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowAccessor[A] = rowAccessor(_.binaryStreamLabel(columnLabel, withInputStream))
 
     def blobIndex(columnIndex: Int): RowAccessor[Blob] = rowAccessor(_.blobIndex(columnIndex))
     def blobLabel(columnLabel: String): RowAccessor[Blob] = rowAccessor(_.blobLabel(columnLabel))
@@ -188,8 +189,8 @@ package object vault2 {
     def bytesIndex(columnIndex: Int): RowAccessor[Array[Byte]] = rowAccessor(_.bytesIndex(columnIndex))
     def bytesLabel(columnLabel: String): RowAccessor[Array[Byte]] = rowAccessor(_.bytesLabel(columnLabel))
 
-    def characterStreamIndex(columnIndex: Int): RowAccessor[Reader] = rowAccessor(_.characterStreamIndex(columnIndex))
-    def characterStreamLabel(columnLabel: String): RowAccessor[Reader] = rowAccessor(_.characterStreamLabel(columnLabel))
+    def characterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowAccessor[A] = rowAccessor(_.characterStreamIndex(columnIndex, withReader))
+    def characterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowAccessor[A] = rowAccessor(_.characterStreamLabel(columnLabel, withReader))
 
     def clobIndex(columnIndex: Int): RowAccessor[Clob] = rowAccessor(_.clobIndex(columnIndex))
     def clobLabel(columnLabel: String): RowAccessor[Clob] = rowAccessor(_.clobLabel(columnLabel))
@@ -211,8 +212,8 @@ package object vault2 {
     def longIndex(columnIndex: Int): RowAccessor[Long] = rowAccessor(_.longIndex(columnIndex))
     def longLabel(columnLabel: String): RowAccessor[Long] = rowAccessor(_.longLabel(columnLabel))
 
-    def ncharacterStreamIndex(columnIndex: Int): RowAccessor[Reader] = rowAccessor(_.ncharacterStreamIndex(columnIndex))
-    def ncharacterStreamLabel(columnLabel: String): RowAccessor[Reader] = rowAccessor(_.ncharacterStreamLabel(columnLabel))
+    def ncharacterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowAccessor[A] = rowAccessor(_.ncharacterStreamIndex(columnIndex, withReader))
+    def ncharacterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowAccessor[A] = rowAccessor(_.ncharacterStreamLabel(columnLabel, withReader))
 
     def nclobIndex(columnIndex: Int): RowAccessor[Clob] = rowAccessor(_.nclobIndex(columnIndex))
     def nclobLabel(columnLabel: String): RowAccessor[Clob] = rowAccessor(_.nclobLabel(columnLabel))
