@@ -94,12 +94,12 @@ object RowAccess {
       as foldV ((e: SQLException) => err(e).η[F], v => f(v) ∘ (value(_)), nul.η[F])
   }
 
-  implicit def RowAccessShow[A](s: Show[A]): Show[RowAccess[A]] = new Show[RowAccess[A]] {
+  implicit def RowAccessShow[A: Show]: Show[RowAccess[A]] = new Show[RowAccess[A]] {
     def show(a: RowAccess[A]) =
       a foldV (
-              e => ("err(" + e + ")").toList
-            , a => ("value(" + (s show a mkString) + ")").toList
-            , "null".toList
+              e => ("row-error(" + e + ")").toList
+            , a => ("row-value(" + a.shows + ")").toList
+            , "row-null".toList
             )
   }
 
