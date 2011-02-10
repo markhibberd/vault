@@ -25,20 +25,19 @@ object Vault2Demo {
       age  <- intIndex(3)
     } yield Person(name, age)
 
+  def setupData =
+    for {
+      a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
+      b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
+      p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement
+             (s => s.foreachStatement(data, (p: Person) => p match {
+               case Person(name, age) => {
+                 s.set(stringType(name), intType(age))
+               }
+             }))
+    } yield a + b + p
 
-    def setupData =
-      for {
-        a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
-        b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
-        p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement
-               (s => s.foreachStatement(data, (p: Person) => p match {
-                 case Person(name, age) => {
-                   s.set(stringType(name), intType(age))
-                 }
-               }))
-      } yield a + b + p
-
-  def firstPair[A]: IterV[A, Option[(A, A)]] =
+  def adjacent[A]: IterV[A, Option[(A, A)]] =
     for {
       a <- IterV.head
       b <- IterV.peek
@@ -59,7 +58,7 @@ object Vault2Demo {
       val row = PersonRowAccess -||> IterV.head
 
       // get the first pair of the query results for a Person
-      val personPair = PersonRowAccess -||> firstPair
+      val adjacentRow = PersonRowAccess -||> adjacent
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
@@ -68,13 +67,13 @@ object Vault2Demo {
       val firstPerson = (row <|- "SELECT * FROM PERSON") finalyClose connection
 
       // get result and close connection
-      val firstPairPerson = (personPair <|- "SELECT * FROM PERSON") finalyClose connection
+      val adjacentPerson = (adjacentRow <|- "SELECT * FROM PERSON") finalyClose connection
 
       // print the first person result
       firstPerson.println
 
       // print the first pair of person result
-      firstPairPerson.println
+      adjacentPerson.println
     }
   }
 }
