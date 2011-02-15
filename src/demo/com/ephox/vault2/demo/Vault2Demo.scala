@@ -41,26 +41,6 @@ object Vault2Demo {
              }))
     } yield a + b + p
 
-  def repeat[E, A, B](iter: IterV[E, A]): IterV[E, IterV[A, B] => IterV[A, B]] = {
-    def step(s: IterV[A, B] => IterV[A, B]): Input[E] => IterV[E, IterV[A, B] => IterV[A, B]] = {
-      case IterV.EOF() => IterV.Done(s, IterV.EOF.apply)
-      case IterV.Empty() => IterV.Cont(step(s))
-      case IterV.El(e) => iter match {
-        case IterV.Done(a, _) => IterV.Done(s compose {
-          case d@IterV.Done(_, _) => d
-          case IterV.Cont(k) => k(IterV.El(a))
-        }, IterV.El(e))
-        case IterV.Cont(k) => k(IterV.El(e)) >>= ((h: A) =>
-          repeat(iter) map ((t: IterV[A, B] => IterV[A, B]) =>
-            s compose {
-              case d@IterV.Done(_, _) => d
-              case IterV.Cont(ka) => t(ka(IterV.El(h)))
-            }))
-      }
-    }
-    IterV.Cont(step(x => x))
-  }
-
   def groupBy[A](pred: (A, A) => Boolean): IterV[A, List[A]] = {
     IterV.peek >>= {
       case None => IterV.Done(Nil, IterV.Empty.apply)
