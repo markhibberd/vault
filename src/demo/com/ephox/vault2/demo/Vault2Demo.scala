@@ -12,12 +12,12 @@ object Vault2Demo {
     }
   }
 
-  def optionIterV[A, B](b: B, f: A => IterV[A, B]): Option[A] => IterV[A, B] = {
+  def iterDoneOr[A, B](b: => B, f: A => IterV[A, B]): Option[A] => IterV[A, B] = {
     case None => IterV.Done(b, IterV.EOF.apply)
     case Some(a) => f(a)
   }
 
-  def peekOptionIterV[A, B](b: B, f: A => IterV[A, B]): IterV[A, B] = IterV.peek >>= optionIterV(b, f)
+  def peekOptionIterV[A, B](b: B, f: A => IterV[A, B]): IterV[A, B] = IterV.peek >>= iterDoneOr(b, f)
 
   def drop1Then[E, A](i: => IterV[E, A]): IterV[E, A] =
     IterV.drop(1) >>=| i
