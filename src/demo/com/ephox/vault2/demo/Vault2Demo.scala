@@ -5,50 +5,6 @@ import Scalaz._
 import com.ephox.vault2._
 
 object Vault2Demo {
-  def groupBy[A](pred: (A, A) => Boolean): IterV[A, List[A]] = {
-    IterV.peek >>= {
-      case None => IterV.Done(Nil, IterV.Empty.apply)
-      case Some(h) => takeWhile(pred(_, h))
-    }
-  }
-
-  def iterDoneOr[A, B](b: => B, f: A => IterV[A, B]): Option[A] => IterV[A, B] = {
-    case None => IterV.Done(b, IterV.EOF.apply)
-    case Some(a) => f(a)
-  }
-
-  def peekOptionIterV[A, B](b: B, f: A => IterV[A, B]): IterV[A, B] = IterV.peek >>= iterDoneOr(b, f)
-
-  def drop1Then[E, A](i: => IterV[E, A]): IterV[E, A] =
-    IterV.drop(1) >>=| i
-
-  def takeWhile[A](pred: A => Boolean): IterV[A, List[A]] = {
-    def peekStepOption(z: List[A]) = peekOptionIterV(z, step(z, _: A))
-
-    def step(acc: List[A], a: A): IterV[A, List[A]] = {
-      if (pred(a))
-        drop1Then(peekStepOption(acc ::: List(a)))
-      else
-        IterV.Done(acc, IterV.EOF.apply)
-    }
-    peekStepOption(Nil)
-  }
-
-  def repeatList[E,A](iter: IterV[E,A]): IterV[E, List[A]] = {
-	  def step(s: List[A]): Input[E] => IterV[E, List[A]] = {
-	    case IterV.EOF() => IterV.Done(s, IterV.EOF.apply)
-	    case IterV.Empty() => IterV.Cont(step(s))
-	    case IterV.El(e) => iter match {
-	      case IterV.Done(a, _) => IterV.Done(s ::: List(a), IterV.El(e))
-	      case IterV.Cont(k) => for {
-	        h <- k(IterV.El(e))
-	        t <- repeatList(iter)
-	      } yield s ++ (h :: t)
-	    }
-	  }
-	  IterV.Cont(step(Nil))
-	}
-
   case class Person(name: String, age: Int)
 
   object Person {
@@ -95,7 +51,7 @@ object Vault2Demo {
       val row = PersonRowAccess -||> IterV.head
 
       // Get a List of lists of people grouped by name.
-      val groupedByName = PersonRowAccess -||> repeatList(groupBy((p1: Person, p2: Person) => p1.name == p2.name))
+      val groupedByName = PersonRowAccess -||> IterV.repeat[Person, List[Person], List](IterV.groupBy[Person, List]((p1: Person, p2: Person) => p1.name == p2.name))
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
