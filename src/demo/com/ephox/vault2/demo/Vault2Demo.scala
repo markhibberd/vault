@@ -51,7 +51,7 @@ object Vault2Demo {
       val row = PersonRowAccess -||> IterV.head
 
       // Get a List of lists of people grouped by name.
-      val groupedByName = PersonRowAccess -||> IterV.repeat[Person, List[Person], List](IterV.groupBy[Person, List]((p1: Person, p2: Person) => p1.name == p2.name))
+      val groupedByName = PersonRowAccess -||> IterV.repeat[Person, List[Person], List](IterV.groupBy((p1: Person, p2: Person) => p1.name == p2.name))
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
