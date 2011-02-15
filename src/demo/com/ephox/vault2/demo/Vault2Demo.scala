@@ -60,13 +60,13 @@ object Vault2Demo {
       val firstPerson = (row <|- "SELECT * FROM PERSON") finalyClose connection
 
       // get result and close connection
-      val adjacentPerson = (groupedByName <|- "SELECT * FROM PERSON") finalyClose connection
+      val groupedByPerson = (groupedByName <|- "SELECT * FROM PERSON") finalyClose connection
 
       // print the first person result
       firstPerson.println
 
       // print the first pair of person result
-      adjacentPerson.println
+      groupedByPerson.println
     }
   }
 }
