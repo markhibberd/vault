@@ -50,8 +50,11 @@ object Vault2Demo {
       // get the head of the query results for a Person
       val row = PersonRowAccess -||> IterV.head
 
+      // compare Person by name for equality
+      val equalByName = ((_:Person).name).equaling
+
       // Get a List of lists of people grouped by name.
-      val groupedByName = PersonRowAccess -||> IterV.repeat[Person, List[Person], List](IterV.groupBy((p1: Person, p2: Person) => p1.name == p2.name))
+      val groupedByName = PersonRowAccess -||> IterV.repeat[Person, List[Person], List](IterV.groupBy(equalByName))
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
