@@ -14,12 +14,12 @@ sealed trait StringQuery {
                        tryValue(s executeUpdate sql)
                    ))
 
-  def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => Connector[A], withRow: Row => A => Int => Connector[B]): Connector[B] =
+  def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => Connector[B]): Connector[B] =
     connector(c => withSQLResource(
                      value = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
                    , evaluate = (s: PreparedStatement) => {
+                         val a = withStatement(s)
                          val o = for {
-                           a <- withStatement(s)
                            b <- {
                              val n = s.executeUpdate
                              val r = s.getGeneratedKeys
@@ -32,7 +32,7 @@ sealed trait StringQuery {
 
   def executeUpdateWithKeysSet[A, B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): Connector[B] =
     executeUpdateWithKeys(
-      withStatement = withStatement(_).η[Connector]
+      withStatement = withStatement(_)
     , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[Connector]
     )
 
