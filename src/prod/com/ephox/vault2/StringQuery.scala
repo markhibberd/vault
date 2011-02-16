@@ -19,11 +19,11 @@ sealed trait StringQuery {
                      value = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
                    , evaluate = (s: PreparedStatement) => {
                          val o = for {
-                           i <- withStatement(s)
+                           a <- withStatement(s)
                            b <- {
-                             val z = s.executeUpdate
-                             val k = s.getGeneratedKeys
-                             withRow(Row.resultSetRow(k))(i)(z)
+                             val n = s.executeUpdate
+                             val r = s.getGeneratedKeys
+                             withRow(Row.resultSetRow(r))(a)(n)
                            }
                          } yield b
                          o(c)
