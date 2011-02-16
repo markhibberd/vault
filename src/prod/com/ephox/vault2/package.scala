@@ -6,7 +6,7 @@ import vault2._
 import java.io.{Reader, InputStream}
 import java.net.URL
 import java.util.Calendar
-import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, PreparedStatement, ResultSet, SQLException, Connection}
+import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, PreparedStatement, SQLException, Connection}
 
 package object vault2 {
   implicit def StringStringQuery(s: String): StringQuery =
@@ -94,25 +94,6 @@ package object vault2 {
 
   val closeRowConnector: RowConnector[Unit] =
     tryRowConnector(_.close)
-
-  def resultSetConnector[A](f: ResultSet => Connector[A]): ResultSetConnector[A] =
-    ResultSetConnector.resultSetConnector(f)
-
-  def tryResultSetConnector[A](f: ResultSet => Connection => A): ResultSetConnector[A] =
-    resultSetConnector((r: ResultSet) => tryConnector(c => f(r)(c)))
-
-  def constantResultSetConnector[A](c: => Connector[A]): ResultSetConnector[A] =
-    resultSetConnector(_ => c)
-
-  def rResultSetConnector[A](f: ResultSet => A): ResultSetConnector[A] =
-    resultSetConnector(f(_).η[Connector])
-
-  def resultSetConnection[A](f: ResultSet => Connection => SQLValue[A]): ResultSetConnector[A] =
-    resultSetConnector(r => connector(f(r)))
-
-  // WARNING: side-effects on rs
-  val next = resultSetConnector((rs: ResultSet) =>
-    rs.next.η[Connector])
 
   def nullType(typ: SQLType) = JDBCType.nullType(typ)
   def booleanType(value: Boolean) = JDBCType.booleanType(value)
