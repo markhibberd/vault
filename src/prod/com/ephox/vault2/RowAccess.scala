@@ -38,7 +38,7 @@ object RowAccess {
 
   def value[A](a: A): RowAccess[A] = new RowAccess[A] {
     def fold[X](v: SQLValue[A] => X, nul: => X) =
-      v(sqlValue(a))
+      v(a.η[SQLValue])
   }
 
   def nul[A]: RowAccess[A] = new RowAccess[A] {
@@ -54,7 +54,7 @@ object RowAccess {
 
   implicit val RowAccessPure: Pure[RowAccess] = new Pure[RowAccess] {
     def pure[A](a: => A) =
-      sqlValue(a).toRowAccess
+      a.η[SQLValue].toRowAccess
   }
 
   implicit val RowAccessApply: Apply[RowAccess] = new Apply[RowAccess] {
