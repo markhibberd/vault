@@ -1,10 +1,10 @@
-package com.ephox.vault2.demo
+package com.ephox.vault.demo
 
 import scalaz._
 import Scalaz._
-import com.ephox.vault2._
+import com.ephox.vault._
 
-object Vault2Demo {
+object VaultDemo {
   case class Person(name: String, age: Int)
 
   object Person {
@@ -45,7 +45,7 @@ object Vault2Demo {
       System.err.println("<dbfile> <username> <password>")
     else {
       // use file-based database
-      def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
+      def connection = com.ephox.vault.Connect.hsqlfile(args(0), args(1), args(2)).nu
 
       // get the first of the query results for a Person
       val firstPerson = IterV.peek[Person]

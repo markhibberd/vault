@@ -1,8 +1,8 @@
-package com.ephox.vault2.demo
+package com.ephox.vault.demo
 
 import scalaz._
 import Scalaz._
-import com.ephox.vault2._
+import com.ephox.vault._
 
 object VaultJoinDemo {
   // one-to-many Album -> Song
@@ -78,7 +78,7 @@ object VaultJoinDemo {
       System.err.println("<dbfile> <username> <password>")
     else {
       // use file-based database
-      def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
+      def connection = com.ephox.vault.Connect.hsqlfile(args(0), args(1), args(2)).nu
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
