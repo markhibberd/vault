@@ -53,9 +53,6 @@ object VaultJoinDemo {
     sqls.traverse(_.executeUpdate) ∘ (_.sum)
   }
 
-  //   def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => Connector[A], withRow: Row => A => Int => Connector[B]): Connector[B] =
-  //   def executeUpdateWithKeysSet[A, B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): Connector[B] =
-
   def setupData = {
     val creates = List(
       "create table album (id IDENTITY, name VARCHAR(255), band_id INTEGER)"
@@ -65,7 +62,7 @@ object VaultJoinDemo {
     , "create table band_muso (id IDENTITY, band_id INTEGER, muso_id INTEGER)"
     )
 
-    val r = for {
+    for {
       n <- executeUpdates(creates)
       o <- "insert into muso(id, name, instrument) values (?,?,?)" prepareStatement (s => s.foreachStatement(Data.musos, (m: Muso) => m match {
              case Muso(id, name, instrument) => {
@@ -74,17 +71,6 @@ object VaultJoinDemo {
            }))
 
     } yield n + o
-
-    Data.bands map {
-        case Band(id, name) => "insert into band(id, name) values (?,?)".executeUpdateWithKeysSet(s => error(""), r => n => r.intIndex(1))
-    }
-
-    val j = "insert into band(id, name) values (?,?)".executeUpdateWithKeysSet(s => s.foreachStatement(Data.bands, (b: Band) => b match {
-             case Band(id, name) => {
-               s.set(intType(id), stringType(name))
-             }
-           }), r => n => r.intIndex(1))
-    r >>=| j
   }
 
   def main(args: Array[String]) {
