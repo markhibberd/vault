@@ -36,7 +36,7 @@ package object vault {
     tryValue(a).toRowAccess
 
   def rowAccessErr[A](e: SQLException): RowAccess[A] =
-    sqlErr(e).toRowAccess
+    RowAccess.err(e)
 
   def rowAccessNull[A]: RowAccess[A] =
     RowAccess.nul[A]
