@@ -1,4 +1,4 @@
-package com.ephox.vault2
+package com.ephox.vault
 
 import java.sql.Connection
 import scalaz._

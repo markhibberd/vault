@@ -1,4 +1,4 @@
-package com.ephox.vault2
+package com.ephox.vault
 
 import scalaz._
 import Scalaz._
@@ -104,7 +104,7 @@ object Row {
   type ObjectTypeMap = java.util.Map[String, Class[_]]
   type Cal = Calendar
 
-  private[vault2] def resultSetRow(r: ResultSet): Row = new Row {
+  private[vault] def resultSetRow(r: ResultSet): Row = new Row {
     private def tryRowAccess[A](a: => A): RowAccess[A] =
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)

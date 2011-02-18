@@ -2,13 +2,13 @@ package com.ephox
 
 import scalaz._
 import Scalaz._
-import vault2._
+import vault._
 import java.io.{Reader, InputStream}
 import java.net.URL
 import java.util.Calendar
 import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, PreparedStatement, SQLException, Connection}
 
-package object vault2 {
+package object vault {
   implicit def StringStringQuery(s: String): StringQuery =
     StringQuery.stringQuery(s)
 

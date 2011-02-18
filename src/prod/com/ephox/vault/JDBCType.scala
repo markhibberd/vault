@@ -1,4 +1,4 @@
-package com.ephox.vault2
+package com.ephox.vault
 
 import java.util.Calendar
 import java.io.{Reader, InputStream}
