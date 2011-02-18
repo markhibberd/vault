@@ -24,10 +24,6 @@ package object vault2 {
   def sqlErr[A](e: SQLException): SQLValue[A] =
     SQLValue.err(e)
 
-  // alias for η specialised to SQLValue
-  def sqlValue[A](v: A): SQLValue[A] =
-    SQLValue.value(v)
-
   def tryValue[A](a: => A): SQLValue[A] =
     try {
       a.η[SQLValue]
@@ -38,10 +34,6 @@ package object vault2 {
 
   def tryRowAccessValue[A](a: => A): RowAccess[A] =
     tryValue(a).toRowAccess
-
-  // alias for η specialised to RowAccess
-  def rowAccessValue[A](a: A): RowAccess[A] =
-    RowAccess.value(a)
 
   def rowAccessErr[A](e: SQLException): RowAccess[A] =
     sqlErr(e).toRowAccess
