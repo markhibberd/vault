@@ -47,29 +47,29 @@ object Vault2Demo {
       // use file-based database
       def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
 
-      // get the head of the query results for a Person
-      val row = PersonRowAccess -||> IterV.head
+      // get the first of the query results for a Person
+      val firstPerson = IterV.peek[Person]
 
       // compare Person by name for equality
       val equalByName = ((_:Person).name).equaling
 
       // Get a List of lists of people grouped by name.
-      val groupedByName = PersonRowAccess -||> IterV.repeat[Person, List[Person], List](IterV.groupBy(equalByName))
+      val groupedByName = IterV.repeat[Person, List[Person], List](IterV.groupBy(equalByName))
+
+      // combine the two person accessors
+      val combine = for {
+        h <- firstPerson
+        i <- groupedByName
+      } yield (h, i)
 
       // initialise data
       setupData commitRollbackClose connection printStackTraceOr (n => println(n + " rows affected"))
 
       // get result and close connection
-      val firstPerson = (row <|- "SELECT * FROM PERSON") finalyClose connection
+      val combinedPerson = PersonRowAccess -||> combine <|- "SELECT * FROM PERSON" finalyClose connection
 
-      // get result and close connection
-      val groupedByPerson = (groupedByName <|- "SELECT * FROM PERSON") finalyClose connection
-
-      // print the first person result
-      firstPerson.println
-
-      // print the first pair of person result
-      groupedByPerson.println
+      // print the result
+      combinedPerson.println
     }
   }
 }
