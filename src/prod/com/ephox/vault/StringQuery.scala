@@ -30,7 +30,7 @@ sealed trait StringQuery {
                      }
                    ))
 
-  def executeUpdateWithKeysSet[A, B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): Connector[B] =
+  def executeUpdateWithKeysSet[B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): Connector[B] =
     executeUpdateWithKeys(
       withStatement = withStatement(_)
     , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[Connector]
