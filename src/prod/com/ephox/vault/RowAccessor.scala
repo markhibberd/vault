@@ -26,6 +26,14 @@ sealed trait RowAccessor[A] {
 
   def -||>[T](iter: IterV[A, T]): SQLRowAccess[T] =
     -|>(iter) map (_.run)
+
+  def map[B](f: A => B): RowAccessor[B] = new RowAccessor[B] {
+    val access = (r: Row) => RowAccessor.this.access(r) map f
+  }
+
+  def flatMap[B](f: A => RowAccessor[B]): RowAccessor[B] = new RowAccessor[B] {
+    val access = (r: Row) => RowAccessor.this.access(r) flatMap (a => f(a).access(r))
+  }
 }
 
 trait RowAccessors {
@@ -35,7 +43,7 @@ trait RowAccessors {
 
   import java.io.{Reader, InputStream}
   import java.net.URL
-  import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, SQLException}
+  import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time}
 
   def arrayIndex(columnIndex: Int): RowAccessor[java.sql.Array] = rowAccessor(_.arrayIndex(columnIndex))
   def arrayLabel(columnLabel: String): RowAccessor[java.sql.Array] = rowAccessor(_.arrayLabel(columnLabel))
