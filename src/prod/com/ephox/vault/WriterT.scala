@@ -22,7 +22,7 @@ object WriterT {
 
   implicit def WriterTApply[M[_], W](implicit ma: Apply[M], ftr: Functor[M], ss: Semigroup[W]): Apply[({type λ[α]=WriterT[M, W, α]})#λ] = new Apply[({type λ[α]=WriterT[M, W, α]})#λ] {
     def apply[A, B](f: WriterT[M, W, A => B], a: WriterT[M, W, A]): WriterT[M, W, B] =
-      writerT[M, W, B](f.value.<**>(a.value) { case ((w1, fff), (w2, aaa)) => (w1 |+| w2, fff(aaa)) })
+      writerT[M, W, B](f.value.<**>(a.value) { case ((w2, fff), (w1, aaa)) => (w1 |+| w2, fff(aaa)) })
 
   }
 
