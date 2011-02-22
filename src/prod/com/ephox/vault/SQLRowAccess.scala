@@ -5,6 +5,12 @@ import Scalaz._
 
 sealed trait SQLRowAccess[A] {
   def <|-(sql: String): RowConnector[A]
+
+  def map[B](f: A => B): SQLRowAccess[B] =
+    sqlRowAccess(s => this <|- s map f)
+
+  def flatMap[B](f: A => SQLRowAccess[B]): SQLRowAccess[B] =
+    sqlRowAccess(s => (this <|- s) >>= (a => f(a) <|- s))
 }
 
 trait SQLRowAccesss {
