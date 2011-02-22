@@ -36,6 +36,16 @@ sealed trait SQLValue[A] {
 
   def printStackTraceOr(f: A => Unit) =
     fold(_.printStackTrace, f)
+
+  def map[B](f: A => B): SQLValue[B] = new SQLValue[B] {
+    def fold[X](err: SQLException => X, value: B => X) =
+      SQLValue.this.fold(err, value compose f)
+  }
+
+  def flatMap[B](f: A => SQLValue[B]): SQLValue[B] = new SQLValue[B] {
+    def fold[X](err: SQLException => X, value: B => X) =
+      SQLValue.this.fold(err, a => f(a) fold (err, value))
+  }
 }
 
 trait SQLValues {
