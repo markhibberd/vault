@@ -13,6 +13,9 @@ sealed trait ConnectorT[M[_], A] {
   def toKleisli:Kleisli[M, Connection, SQLValue[A]] =
     ☆(connect)
 
+  def map[B](f: A => B)(implicit ftr: Functor[M]): ConnectorT[M, B] = new ConnectorT[M, B] {
+    val connect = (c: Connection) => ConnectorT.this.connect(c) map (_ map f)
+  }
 }
 
 object ConnectorT {
