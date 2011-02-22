@@ -80,3 +80,44 @@ case object TimestampType extends SQLType
 case object TinyIntType extends SQLType
 case object VarBinaryType extends SQLType
 case object VarCharType extends SQLType
+
+trait SQLTypes {
+  val sqlTypes = Set(
+                      ArrayType
+                    , BigIntType
+                    , BinaryType
+                    , BitType
+                    , BlobType
+                    , BooleanType
+                    , CharType
+                    , ClobType
+                    , DataLinkType
+                    , DateType
+                    , DecimalType
+                    , DistinctType
+                    , DoubleType
+                    , FloatType
+                    , IntegerType
+                    , JavaObjectType
+                    , LongNVarCharType
+                    , LongVarBinaryType
+                    , LongVarCharType
+                    , NCharType
+                    , NClobType
+                    , NullType
+                    , NumericType
+                    , NVarCharType
+                    , OtherType
+                    , RealType
+                    , RefType
+                    , RowIdType
+                    , SmallIntType
+                    , SqlXmlType
+                    , StructType
+                    , TimeType
+                    , TimestampType
+                    , TinyIntType
+                    , VarBinaryType
+                    , VarCharType
+                    )
+}

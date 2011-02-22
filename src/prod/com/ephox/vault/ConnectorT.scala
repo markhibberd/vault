@@ -32,14 +32,14 @@ object ConnectorT {
 
   implicit def ConnectorTApply[M[_]](implicit app: Apply[M], ftr: Functor[M]): Apply[({type λ[α]=ConnectorT[M, α]})#λ] = new Apply[({type λ[α]=ConnectorT[M, α]})#λ] {
     def apply[A, B](f: ConnectorT[M, A => B], a: ConnectorT[M, A]) =
-      connectorT(c => f(c).<**>(a(c))(SQLValue.SQLValueApply(_, _)))
+      connectorT(c => f(c).<**>(a(c))(SQLValueApply(_, _)))
   }
 
   implicit def ConnectorTMonad[M[_]](implicit mnd: Monad[M]): Monad[({type λ[α]=ConnectorT[M, α]})#λ] = new Monad[({type λ[α]=ConnectorT[M, α]})#λ] {
     def bind[A, B](a: ConnectorT[M, A], f: A => ConnectorT[M, B]) =
       connectorT((c: Connection) =>
         a(c) >>= ((z: SQLValue[A]) =>
-          z fold (e => SQLValue.err(e).pure[M], a => f(a).connect(c))))
+          z fold (e => sqlError(e).pure[M], a => f(a).connect(c))))
 
     def pure[A](a: => A) = connectorT(_ => a.η[SQLValue].η[M])
   }

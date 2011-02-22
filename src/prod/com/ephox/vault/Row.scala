@@ -111,7 +111,7 @@ object Row {
         val z = a
         if(r.wasNull) rowAccessNull else z.η[RowAccess]
       } catch {
-        case e: SQLException => rowAccessErr(e)
+        case e: SQLException => rowAccessError(e)
         case x => throw x
       }
 

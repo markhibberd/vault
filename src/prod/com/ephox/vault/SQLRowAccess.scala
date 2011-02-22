@@ -7,7 +7,7 @@ sealed trait SQLRowAccess[A] {
   def <|-(sql: String): RowConnector[A]
 }
 
-object SQLRowAccess {
+trait SQLRowAccesss {
   def sqlRowAccess[A](f: String => RowConnector[A]): SQLRowAccess[A] = new SQLRowAccess[A] {
     def <|-(sql: String) =
       f(sql)
