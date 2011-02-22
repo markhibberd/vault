@@ -7,7 +7,7 @@ sealed trait RowAccessor[A] {
   val access: Row => RowAccess[A]
 
   def -|>[T](iter: IterV[A, T]): SQLRowAccess[IterV[A, T]] =
-    sqlRowAccess(sql => RowConnector.rowConnector(c => try {
+    sqlRowAccess(sql => rowConnector(c => try {
       val st = c prepareStatement sql
       try {
         val r = st.executeQuery
