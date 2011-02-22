@@ -35,7 +35,6 @@ trait RowAccessors {
 
   import java.io.{Reader, InputStream}
   import java.net.URL
-  import java.util.Calendar
   import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, SQLException}
 
   def arrayIndex(columnIndex: Int): RowAccessor[java.sql.Array] = rowAccessor(_.arrayIndex(columnIndex))
