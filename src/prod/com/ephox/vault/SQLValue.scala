@@ -32,41 +32,49 @@ sealed trait SQLValue[A] {
     fold(success(_), failure(_))
 
   def toRowAccess: RowAccess[A] =
-    fold(rowAccessErr, RowAccess.value(_))
+    fold(rowAccessError, rowAccessValue(_))
 
   def printStackTraceOr(f: A => Unit) =
     fold(_.printStackTrace, f)
 }
 
-object SQLValue {
-  def err[A](e: SQLException): SQLValue[A] = new SQLValue[A] {
+trait SQLValues {
+  def sqlError[A](e: SQLException): SQLValue[A] = new SQLValue[A] {
     def fold[X](err: SQLException => X, value: A => X) = err(e)
   }
 
-  def value[A](v: A): SQLValue[A] = new SQLValue[A] {
+  def sqlValue[A](v: A): SQLValue[A] = new SQLValue[A] {
     def fold[X](err: SQLException => X, va: A => X) = va(v)
   }
+
+  def trySQLValue[A](a: => A): SQLValue[A] =
+    try {
+      a.η[SQLValue]
+    } catch {
+      case e: SQLException => sqlError(e)
+      case e               => throw e
+    }
 
   implicit val SQLValueInjective = Injective[SQLValue]
 
   implicit val SQLValueFunctor: Functor[SQLValue] = new Functor[SQLValue] {
     def fmap[A, B](r: SQLValue[A], f: A => B) =
-      r fold (err(_), a => value(f(a)))
+      r fold (sqlError(_), a => sqlValue(f(a)))
   }
 
   implicit val SQLValuePure: Pure[SQLValue] = new Pure[SQLValue] {
     def pure[A](a: => A) =
-      value(a)
+      sqlValue(a)
   }
 
   implicit val SQLValueApply: Apply[SQLValue] = new Apply[SQLValue] {
     def apply[A, B](f: SQLValue[A => B], a: SQLValue[A]) =
-      f fold (err(_), ff => a fold (err(_), aa => value(ff(aa))))
+      f fold (sqlError(_), ff => a fold (sqlError(_), aa => sqlValue(ff(aa))))
   }
 
   implicit val SQLValueBind: Bind[SQLValue] = new Bind[SQLValue] {
     def bind[A, B](a: SQLValue[A], f: A => SQLValue[B]) =
-      a fold (err(_), f)
+      a fold (sqlError(_), f)
   }
 
   implicit val SQLValueEach: Each[SQLValue] = new Each[SQLValue] {
@@ -93,7 +101,7 @@ object SQLValue {
 
   implicit val SQLValueTraverse: Traverse[SQLValue] = new Traverse[SQLValue] {
     def traverse[F[_] : Applicative, A, B](f: A => F[B], as: SQLValue[A]): F[SQLValue[B]] =
-      as fold ((e: SQLException) => err(e).η[F], v => f(v) ∘ (value(_)))
+      as fold ((e: SQLException) => sqlError(e).η[F], v => f(v) ∘ (sqlValue(_)))
   }
 
   implicit val SQLValuePlus: Plus[SQLValue] = new Plus[SQLValue] {
@@ -102,7 +110,7 @@ object SQLValue {
   }
 
   implicit val SQLValueEmpty: Empty[SQLValue] = new Empty[SQLValue] {
-    def empty[A] = err(new SQLException)
+    def empty[A] = sqlError(new SQLException)
   }
 
   implicit def SQLValueShow[A: Show]: Show[SQLValue[A]] = new Show[SQLValue[A]] {
@@ -125,5 +133,5 @@ object SQLValue {
     Order.EitherOrder[SQLException, A] ∙ (_.toEither)
   }
 
-  implicit def SQLValueZero[A: Zero]: Zero[SQLValue[A]] = zero(value(∅[A]))
+  implicit def SQLValueZero[A: Zero]: Zero[SQLValue[A]] = zero(sqlValue(∅[A]))
 }

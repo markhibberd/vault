@@ -30,26 +30,29 @@ sealed trait RowAccess[A] {
     fold(_.printStackTraceOr(value), nul)
 }
 
-object RowAccess {
-  def err[A](e: SQLException): RowAccess[A] = new RowAccess[A] {
+trait RowAccesss {
+  def rowAccessError[A](e: SQLException): RowAccess[A] = new RowAccess[A] {
     def fold[X](v: SQLValue[A] => X, nul: => X) =
-      v(sqlErr(e))
+      v(sqlError(e))
   }
 
-  def value[A](a: A): RowAccess[A] = new RowAccess[A] {
+  def rowAccessValue[A](a: A): RowAccess[A] = new RowAccess[A] {
     def fold[X](v: SQLValue[A] => X, nul: => X) =
       v(a.η[SQLValue])
   }
 
-  def nul[A]: RowAccess[A] = new RowAccess[A] {
+  def rowAccessNull[A]: RowAccess[A] = new RowAccess[A] {
     def fold[X](v: SQLValue[A] => X, nul: => X) = nul
   }
+
+  def tryRowAccessValue[A](a: => A): RowAccess[A] =
+    trySQLValue(a).toRowAccess
 
   implicit val RowAccessInjective = Injective[RowAccess]
 
   implicit val RowAccessFunctor: Functor[RowAccess] = new Functor[RowAccess] {
     def fmap[A, B](r: RowAccess[A], f: A => B) =
-      r fold (x => (x ∘ f).toRowAccess, nul)
+      r fold (x => (x ∘ f).toRowAccess, rowAccessNull)
   }
 
   implicit val RowAccessPure: Pure[RowAccess] = new Pure[RowAccess] {
@@ -59,12 +62,12 @@ object RowAccess {
 
   implicit val RowAccessApply: Apply[RowAccess] = new Apply[RowAccess] {
     def apply[A, B](f: RowAccess[A => B], a: RowAccess[A]) =
-      f foldV (err(_), ff => a foldV (err(_), aa => value(ff(aa)), nul), nul)
+      f foldV (rowAccessError(_), ff => a foldV (rowAccessError(_), aa => rowAccessValue(ff(aa)), rowAccessNull), rowAccessNull)
   }
 
   implicit val RowAccessBind: Bind[RowAccess] = new Bind[RowAccess] {
     def bind[A, B](a: RowAccess[A], f: A => RowAccess[B]) =
-      a foldV (err(_), f, nul)
+      a foldV (rowAccessError(_), f, rowAccessNull)
   }
 
   implicit val RowAccessEach: Each[RowAccess] = new Each[RowAccess] {
@@ -91,7 +94,7 @@ object RowAccess {
 
   implicit val RowAccessTraverse: Traverse[RowAccess] = new Traverse[RowAccess] {
     def traverse[F[_] : Applicative, A, B](f: A => F[B], as: RowAccess[A]): F[RowAccess[B]] =
-      as foldV ((e: SQLException) => err(e).η[F], v => f(v) ∘ (value(_)), nul.η[F])
+      as foldV ((e: SQLException) => rowAccessError(e).η[F], v => f(v) ∘ (rowAccessValue(_)), rowAccessNull.η[F])
   }
 
   implicit def RowAccessShow[A: Show]: Show[RowAccess[A]] = new Show[RowAccess[A]] {
@@ -108,5 +111,5 @@ object RowAccess {
       a1 fold (t => a2 fold (u => t === u, false), a2.isNull)
   }
 
-  implicit def SQLValueZero[A: Zero]: Zero[RowAccess[A]] = zero(value(∅[A]))
+  implicit def RowAccessZero[A: Zero]: Zero[RowAccess[A]] = zero(rowAccessValue(∅[A]))
 }

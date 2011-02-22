@@ -11,7 +11,7 @@ sealed trait StringQuery {
     connector(c => withSQLResource(
                      value = c.createStatement
                    , evaluate = (s: Statement) =>
-                       tryValue(s executeUpdate sql)
+                       trySQLValue(s executeUpdate sql)
                    ))
 
   def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => Connector[B]): Connector[B] =
@@ -41,8 +41,11 @@ sealed trait StringQuery {
     connector(c => withSQLResource(c prepareStatement sql, (s: PreparedStatement) => k(s)(c)))
 }
 
-object StringQuery {
-  def stringQuery(s: String): StringQuery = new StringQuery {
+trait StringQuerys {
+  implicit def StringStringQuery(s: String): StringQuery = new StringQuery {
     val sql = s
   }
+
+  implicit def StringQueryString(sql: StringQuery): String =
+    sql.sql
 }

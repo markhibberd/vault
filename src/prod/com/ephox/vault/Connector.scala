@@ -7,12 +7,10 @@ import java.sql._
 sealed trait Connector[A] {
   val connect: Connection => SQLValue[A]
 
-  import Connector._
-
   def apply(c: Connection) = connect(c)
 
   def bracket[B, C](after: (=> A) => Connector[B], k: (=> A) => Connector[C]): Connector[C] =
-    this >>= (a => try {
+    flatMap (a => try {
       k(a)
     } finally {
       after(a)
@@ -41,7 +39,7 @@ sealed trait Connector[A] {
     } catch {
       case e: SQLException => {
         c.rollback
-        sqlErr(e)
+        sqlError(e)
       }
       case e => {
         c.rollback
@@ -51,12 +49,30 @@ sealed trait Connector[A] {
 
   def commitRollbackClose: Connector[A] =
     commitRollback.finalyClose
+
+  def map[B](f: A => B): Connector[B] =
+    connector(connect(_) map f)
+
+  def flatMap[B](f: A => Connector[B]) =
+    connector(c => connect(c) flatMap (f(_) connect c))
 }
 
-object Connector {
+trait Connectors {
   def connector[A](f: Connection => SQLValue[A]): Connector[A] = new Connector[A] {
     val connect = f
   }
+
+  def constantConnector[A](v: => SQLValue[A]): Connector[A] =
+    connector(_ => v)
+
+  def valueConnector[A](f: Connection => A): Connector[A] =
+    connector(f(_).η[SQLValue])
+
+  def tryConnector[A](f: Connection => A): Connector[A] =
+    connector(c => trySQLValue(f(c)))
+
+  val closeConnector: Connector[Unit] =
+    tryConnector(_.close)
 
   implicit def ConnectorFunctor: Functor[Connector] = new Functor[Connector] {
     def fmap[A, B](k: Connector[A], f: A => B) =
@@ -70,7 +86,6 @@ object Connector {
 
   implicit def ConnectorApply[M[_]]: Apply[Connector] = new Apply[Connector] {
     def apply[A, B](f: Connector[A => B], a: Connector[A]) = {
-      import SQLValue._
       connector(c => a(c) <*> f(c))
     }
   }

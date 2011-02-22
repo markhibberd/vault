@@ -49,7 +49,6 @@ object VaultJoinDemo {
   }
 
   def executeUpdates[F[_]](sqls: F[String])(implicit t: Traverse[F], fld: Foldable[F]): Connector[Int] = {
-    import Connector._
     sqls.traverse(_.executeUpdate) ∘ (_.sum)
   }
 
@@ -61,6 +60,16 @@ object VaultJoinDemo {
     , "create table muso (id IDENTITY, name VARCHAR(255), instrument VARCHAR(255))"
     , "create table band_muso (id IDENTITY, band_id INTEGER, muso_id INTEGER)"
     )
+
+    //   def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => Connector[B]): Connector[B] =
+    //   def executeUpdateWithKeysSet[B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): Connector[B] =
+
+    val q = Data.bands traverse {
+      case b@Band(id, name) => "insert into muso(id, name, instrument) values (?,?,?)".executeUpdateWithKeysSet[(Int, RowAccess[Band])](
+        withStatement = _.set(intType(id), stringType(name))
+      , withRow       = r => (_, r.intIndex(1) map (i => b copy (id = i)))
+      )
+    }
 
     for {
       n <- executeUpdates(creates)

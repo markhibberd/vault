@@ -99,7 +99,7 @@ private case class CalendarTimestampJDBCType(value: Timestamp, cal: Calendar) ex
 private case class UserNullJDBCType(typ: SQLType, name: String) extends JDBCType
 private case class URLJDBCType(value: URL) extends JDBCType
 
-object JDBCType {
+trait JDBCTypes {
   def nullType(typ: SQLType): JDBCType = NullJDBCType(typ)
   def booleanType(value: Boolean): JDBCType = BooleanJDBCType(value)
   def byteType(value: Byte): JDBCType = ByteJDBCType(value)

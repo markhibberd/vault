@@ -8,7 +8,7 @@ sealed trait PreparedStatementW {
   val s: PreparedStatement
 
   def tryExecuteUpdate: SQLValue[Int] =
-    tryValue(s.executeUpdate)
+    trySQLValue(s.executeUpdate)
 
   def executeStatements[T[_], A](as: T[A], k: A => Connector[Unit])(implicit f: Foldable[T]): Connector[Int] =
     connector(c => as.foldLeftM(0) {
@@ -64,7 +64,7 @@ sealed trait PreparedStatementW {
 
 }
 
-object PreparedStatementW {
+trait PreparedStatementWs {
   implicit def PreparedStatementPreparedStatementW(t: PreparedStatement): PreparedStatementW = new PreparedStatementW {
     val s = t
   }

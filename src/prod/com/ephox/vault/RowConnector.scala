@@ -25,7 +25,7 @@ sealed trait RowConnector[A] {
     })
 
   def finalyClose: RowConnector[A] =
-    finaly(closeRowConnector)
+    finaly(RowConnector.closeRowConnector)
 }
 
 object RowConnector {
@@ -33,24 +33,35 @@ object RowConnector {
     val connect = f
   }
 
+  def constantRowConnector[A](v: => RowAccess[A]): RowConnector[A] =
+    rowConnector(_ => v)
+
+  def valueRowConnector[A](f: Connection => A): RowConnector[A] =
+    rowConnector(f(_).η[RowAccess])
+
+  def tryRowConnector[A](f: Connection => A): RowConnector[A] =
+    rowConnector(c => tryRowAccessValue(f(c)))
+
+  val closeRowConnector: RowConnector[Unit] =
+    tryRowConnector(_.close)
+
   implicit def RowConnectorFunctor: Functor[RowConnector] = new Functor[RowConnector] {
     def fmap[A, B](k: RowConnector[A], f: A => B) =
       rowConnector((c: Connection) => k(c) map f)
   }
 
-  implicit def RowConnectorPure[M[_]]: Pure[RowConnector] = new Pure[RowConnector] {
+  implicit def RowConnectorPure: Pure[RowConnector] = new Pure[RowConnector] {
     def pure[A](a: => A) =
       rowConnector(_ => a.η[RowAccess])
   }
 
-  implicit def RowConnectorApply[M[_]]: Apply[RowConnector] = new Apply[RowConnector] {
+  implicit def RowConnectorApply: Apply[RowConnector] = new Apply[RowConnector] {
     def apply[A, B](f: RowConnector[A => B], a: RowConnector[A]) = {
-      import RowAccess._
       rowConnector(c => a(c) <*> f(c))
     }
   }
 
-  implicit def RowConnectorBind[M[_]]: Bind[RowConnector] = new Bind[RowConnector] {
+  implicit def RowConnectorBind: Bind[RowConnector] = new Bind[RowConnector] {
     def bind[A, B](a: RowConnector[A], f: A => RowConnector[B]) =
       rowConnector(c => a(c) >>= (a => f(a)(c)))
   }
