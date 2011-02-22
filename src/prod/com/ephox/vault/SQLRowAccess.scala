@@ -25,7 +25,6 @@ trait SQLRowAccesss {
 
   implicit def SQLRowAccessApply[M[_]]: Apply[SQLRowAccess] = new Apply[SQLRowAccess] {
     def apply[A, B](f: SQLRowAccess[A => B], a: SQLRowAccess[A]) = {
-      import RowConnector._
       sqlRowAccess(s => (a <|- s) <*> (f <|- s))
     }
   }

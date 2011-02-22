@@ -18,23 +18,23 @@ sealed trait RowConnector[A] {
     })
 
   def finaly[B](b: => RowConnector[B]): RowConnector[A] =
-    RowConnector.rowConnector(c => try {
+    rowConnector(c => try {
       apply(c)
     } finally {
       b(c)
     })
 
   def finalyClose: RowConnector[A] =
-    finaly(RowConnector.closeRowConnector)
+    finaly(closeRowConnector)
 
   def map[B](f: A => B): RowConnector[B] =
-    RowConnector.rowConnector(connect(_) map f)
+    rowConnector(connect(_) map f)
 
   def flatMap[B](f: A => RowConnector[B]) =
-    RowConnector.rowConnector(c => connect(c) flatMap (f(_) connect c))
+    rowConnector(c => connect(c) flatMap (f(_) connect c))
 }
 
-object RowConnector {
+trait RowConnectors {
   def rowConnector[A](f: Connection => RowAccess[A]): RowConnector[A] = new RowConnector[A] {
     val connect = f
   }
