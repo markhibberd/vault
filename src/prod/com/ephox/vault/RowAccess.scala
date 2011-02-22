@@ -26,8 +26,20 @@ sealed trait RowAccess[A] {
   def getValueOr(v: => A) =
     getValue getOrElse v
 
+  def getSQLValue =
+    fold(Some(_), None)
+
+  def getSQLValueOr(v: => SQLValue[A]) =
+    getSQLValue getOrElse v
+
   def printStackTraceOr(value: A => Unit, nul: => Unit) =
     fold(_.printStackTraceOr(value), nul)
+
+  def map[B](f: A => B): RowAccess[B] =
+    fold (x => (x ∘ f).toRowAccess, rowAccessNull)
+
+  def flatMap[B](f: A => RowAccess[B]): RowAccess[B] =
+    foldV (rowAccessError(_), f, rowAccessNull)
 }
 
 trait RowAccesss {
