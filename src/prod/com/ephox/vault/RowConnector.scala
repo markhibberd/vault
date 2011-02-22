@@ -26,6 +26,12 @@ sealed trait RowConnector[A] {
 
   def finalyClose: RowConnector[A] =
     finaly(RowConnector.closeRowConnector)
+
+  def map[B](f: A => B): RowConnector[B] =
+    RowConnector.rowConnector(connect(_) map f)
+
+  def flatMap[B](f: A => RowConnector[B]) =
+    RowConnector.rowConnector(c => connect(c) flatMap (f(_) connect c))
 }
 
 object RowConnector {
