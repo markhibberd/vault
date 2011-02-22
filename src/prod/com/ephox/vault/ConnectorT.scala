@@ -16,6 +16,10 @@ sealed trait ConnectorT[M[_], A] {
   def map[B](f: A => B)(implicit ftr: Functor[M]): ConnectorT[M, B] = new ConnectorT[M, B] {
     val connect = (c: Connection) => ConnectorT.this.connect(c) map (_ map f)
   }
+
+  def flatMap[B](f: A => ConnectorT[M, B])(implicit mnd: Monad[M]): ConnectorT[M, B] = new ConnectorT[M, B] {
+    val connect = (c: Connection) => ConnectorT.this.connect(c) flatMap ((z: SQLValue[A]) => z fold(e => sqlError[B](e).pure[M], a => f(a).connect(c)))
+  }
 }
 
 object ConnectorT {
