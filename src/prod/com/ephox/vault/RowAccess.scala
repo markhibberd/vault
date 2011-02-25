@@ -40,6 +40,15 @@ sealed trait RowAccess[A] {
 
   def flatMap[B](f: A => RowAccess[B]): RowAccess[B] =
     foldV (rowAccessError(_), f, rowAccessNull)
+
+  def possiblyNull: RowAccess[Option[A]] =
+    fold(v => v.toRowAccess ∘ (_.η[Option]), none[A].η[RowAccess])
+
+  def possiblyNullOr(d: => A): RowAccess[A] =
+    possiblyNull ∘ (_ getOrElse d)
+
+  // alias for possiblyNullOr
+  def |?(d: => A) = possiblyNullOr(d)
 }
 
 trait RowAccesss {
