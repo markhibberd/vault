@@ -34,6 +34,15 @@ sealed trait RowAccessor[A] {
   def flatMap[B](f: A => RowAccessor[B]): RowAccessor[B] = new RowAccessor[B] {
     val access = (r: Row) => RowAccessor.this.access(r) flatMap (a => f(a).access(r))
   }
+
+  def possiblyNull: RowAccessor[Option[A]] =
+    rowAccessor(access(_).possiblyNull)
+
+  def possiblyNullOr(d: => A): RowAccessor[A] =
+    possiblyNull ∘ (_ getOrElse d)
+
+  // alias for possiblyNullOr
+  def |?(d: => A) = possiblyNullOr(d)
 }
 
 trait RowAccessors {
