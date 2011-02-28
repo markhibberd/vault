@@ -8,6 +8,7 @@ package object vault
   extends StringQuerys
   with PreparedStatementWs
   with SQLValues
+  with LoggedSQLValues
   with RowAccesss
   with RowAccessors
   with RowConnectors
