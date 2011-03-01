@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import scalaz._
 import Scalaz._
+import Vault._
 
 sealed trait RowPartition {
   val partition: Row => Row => RowAccess[Boolean]

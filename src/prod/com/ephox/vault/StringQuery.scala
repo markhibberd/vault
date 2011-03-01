@@ -3,6 +3,7 @@ package com.ephox.vault
 import scalaz._
 import Scalaz._
 import java.sql.{PreparedStatement, Statement}
+import Vault._
 
 sealed trait StringQuery {
   val sql: String
@@ -13,6 +14,12 @@ sealed trait StringQuery {
                    , evaluate = (s: Statement) =>
                        trySQLValue(s executeUpdate sql)
                    ))
+
+  def executePreparedUpdate(withStatement: PreparedStatement => Unit) =
+    prepareStatement(s => connector(_ => {
+      withStatement(s)
+      s.tryExecuteUpdate
+    }))
 
   def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => Connector[B]): Connector[B] =
     connector(c => withSQLResource(
@@ -36,6 +43,11 @@ sealed trait StringQuery {
     , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[Connector]
     )
 
+  def executeUpdateWithId[A](withStatement: PreparedStatement => Unit, withId: Long => A) =
+    executeUpdateWithKeysSet(
+      withStatement,
+      r => i => (i, r.longLabel("ID") map (id => withId(id)))
+    ).map(_._2)
 
   def prepareStatement[A](k: PreparedStatement => Connector[A]) : Connector[A] =
     connector(c => withSQLResource(c prepareStatement sql, (s: PreparedStatement) => k(s)(c)))

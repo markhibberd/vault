@@ -3,6 +3,7 @@ package com.ephox.vault
 import java.sql.PreparedStatement
 import scalaz._
 import Scalaz._
+import Vault._
 
 sealed trait PreparedStatementW {
   val s: PreparedStatement

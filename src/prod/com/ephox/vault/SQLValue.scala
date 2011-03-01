@@ -3,6 +3,7 @@ package com.ephox.vault
 import java.sql.SQLException
 import scalaz._
 import Scalaz._
+import Vault._
 
 sealed trait SQLValue[A] {
   def fold[X](err: SQLException => X, value: A => X): X
