@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import scalaz._
 import Scalaz._
+import Vault._
 
 sealed trait RowAccessor[A] {
   val access: Row => RowAccess[A]
@@ -43,6 +44,9 @@ sealed trait RowAccessor[A] {
 
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
+
+  def list(sql: String) =
+    (this -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql) map (_.flatten)
 }
 
 trait RowAccessors {
