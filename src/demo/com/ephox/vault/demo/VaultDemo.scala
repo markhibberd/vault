@@ -3,7 +3,6 @@ package com.ephox.vault.demo
 import scalaz._
 import Scalaz._
 import com.ephox.vault._
-import Vault._
 
 object VaultDemo {
   case class Person(name: String, age: Int)
@@ -67,7 +66,7 @@ object VaultDemo {
       setupData commitRollback connection printStackTraceOr (n => println(n + " rows affected"))
 
       // get result and close connection
-      val combinedPerson = PersonRowAccess -||> combine <|- "SELECT * FROM PERSON" finalyClose connection
+      val combinedPerson = PersonRowAccess -||> combine <|- "SELECT * FROM PERSON".toSql finalyClose connection
 
       // print the result
       combinedPerson.println

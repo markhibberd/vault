@@ -2,7 +2,6 @@ package com.ephox.vault
 
 import scalaz._
 import Scalaz._
-import Vault._
 
 import LoggedSQLValue._
 

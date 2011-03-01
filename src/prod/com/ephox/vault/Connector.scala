@@ -3,7 +3,6 @@ package com.ephox.vault
 import scalaz._
 import Scalaz._
 import java.sql._
-import Vault._
 
 sealed trait Connector[A] {
   val connect: Connection => SQLValue[A]

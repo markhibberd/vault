@@ -6,7 +6,6 @@ import java.io.{Reader, InputStream}
 import java.util.Calendar
 import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, SQLException, ResultSet}
 import java.net.URL
-import Vault._
 
 sealed trait Row {
   def iterate[A, T](a: RowAccessor[A]): IterV[A, T] => RowAccess[IterV[A, T]]

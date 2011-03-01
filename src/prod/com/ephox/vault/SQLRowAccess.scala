@@ -2,10 +2,9 @@ package com.ephox.vault
 
 import scalaz._
 import Scalaz._
-import Vault._
 
 sealed trait SQLRowAccess[A] {
-  def <|-(sql: String): RowConnector[A]
+  def <|-(sql: SQLQuery): RowConnector[A]
 
   def map[B](f: A => B): SQLRowAccess[B] =
     sqlRowAccess(s => this <|- s map f)
@@ -15,8 +14,8 @@ sealed trait SQLRowAccess[A] {
 }
 
 trait SQLRowAccesss {
-  def sqlRowAccess[A](f: String => RowConnector[A]): SQLRowAccess[A] = new SQLRowAccess[A] {
-    def <|-(sql: String) =
+  def sqlRowAccess[A](f: SQLQuery => RowConnector[A]): SQLRowAccess[A] = new SQLRowAccess[A] {
+    def <|-(sql: SQLQuery) =
       f(sql)
   }
 
