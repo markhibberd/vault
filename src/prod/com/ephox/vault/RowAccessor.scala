@@ -7,18 +7,22 @@ sealed trait RowAccessor[A] {
   val access: Row => RowAccess[A]
 
   def -|>[T](iter: IterV[A, T]): SQLRowAccess[IterV[A, T]] =
-    sqlRowAccess(sql => rowConnector(c => try {
-      val st = c prepareStatement sql
-      try {
-        val r = st.executeQuery
-        try {
-          Row.resultSetRow(r).iterate[A, T](this)(iter)
-        } finally {
-          r.close
-        }
-      } finally {
-        st.close
-      }
+    sqlRowAccess(query => rowConnector(c => try {
+      query.fold(
+        (sql, bindings) => {
+          val st = c prepareStatement sql
+          st.set(bindings:_*)
+          try {
+            val r = st.executeQuery
+            try {
+              Row.resultSetRow(r).iterate[A, T](this)(iter)
+            } finally {
+              r.close
+            }
+          } finally {
+            st.close
+          }
+        })
     } catch {
       case e: java.sql.SQLException => rowAccessError(e)
       case x                        => throw x

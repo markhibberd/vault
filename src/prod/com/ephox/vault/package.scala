@@ -13,9 +13,10 @@ package object vault
   with RowAccessors
   with RowConnectors
   with SQLRowAccesss
+  with SQLQueries
   with Connectors
   with JDBCTypes
-  with SQLTypes {
+  with SQLTypes{
 
   def withSQLResource[T, R](
                           value: => T
