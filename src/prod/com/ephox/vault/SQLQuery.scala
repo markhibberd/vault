@@ -1,7 +1,5 @@
 package com.ephox.vault
 
-import java.sql.PreparedStatement
-
 trait SQLQuery {
   def fold[X](
     sql: (String, List[JDBCType]) => X
