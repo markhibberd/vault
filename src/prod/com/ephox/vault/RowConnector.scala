@@ -4,7 +4,6 @@ import scalaz._
 import Scalaz._
 import java.sql.Connection
 
-
 sealed trait RowConnector[A] {
   val connect: Connection => RowAccess[A]
 
