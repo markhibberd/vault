@@ -47,9 +47,6 @@ sealed trait RowAccessor[A] {
 
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
-
-  def list(sql: SQLQuery) =
-    (this -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql) map (_.flatten)
 }
 
 trait RowAccessors {
