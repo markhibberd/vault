@@ -17,6 +17,17 @@ object LoggedSQLValue {
       val value = a.η[({type λ[α]= WriterT[SQLValue, LOG, α]})#λ]
     }
   }
+
+  implicit def LoggedSQLValuerFunctor: Functor[LoggedSQLValue] = new Functor[LoggedSQLValue] {
+    def fmap[A, B](k: LoggedSQLValue[A], f: A => B) = new LoggedSQLValue[B] {
+      val value = {
+        val ftr = WriterT.WriterTFunctor[SQLValue, LOG]
+        // todo why won't the implicit pick up?
+        ftr.fmap(k.value, f)
+      }
+    }
+  }
+
 }
 
 trait LoggedSQLValues {
