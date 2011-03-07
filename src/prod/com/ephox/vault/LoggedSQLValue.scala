@@ -73,7 +73,32 @@ sealed trait LoggedSQLValue[A] {
 object LoggedSQLValue {
   type LOG = List[String] // todo use better data structure
 
-  // Pure, Functor, Apply, Bind, Each, Index, Length, Foldable, Traverse, Plus, Empty, Show, Equal, Order, Zero
+  implicit val LoggedSQLValueInjective = Injective[LoggedSQLValue]
+
+  implicit val LoggedSQLValueFunctor: Functor[LoggedSQLValue] = new Functor[LoggedSQLValue] {
+    def fmap[A, B](r: LoggedSQLValue[A], f: A => B) =
+      r map f
+  }
+
+  implicit val LoggedSQLValueePure: Pure[LoggedSQLValue] = new Pure[LoggedSQLValue] {
+    def pure[A](a: => A) =
+      loggedSqlValue(a)
+  }
+
+  implicit val LoggedSQLValueApply: Apply[LoggedSQLValue] = new Apply[LoggedSQLValue] {
+    def apply[A, B](f: LoggedSQLValue[A => B], a: LoggedSQLValue[A]) =
+      for {
+        ff <- f
+        aa <- a
+      } yield ff(aa)
+  }
+
+  implicit val LoggedSQLValueBind: Bind[LoggedSQLValue] = new Bind[LoggedSQLValue] {
+    def bind[A, B](a: LoggedSQLValue[A], f: A => LoggedSQLValue[B]) =
+      a flatMap f
+  }
+
+  // Each, Index, Length, Foldable, Traverse, Plus, Empty, Show, Equal, Order, Zero
 }
 
 trait LoggedSQLValues {
