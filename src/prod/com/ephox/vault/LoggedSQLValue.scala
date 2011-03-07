@@ -4,34 +4,27 @@ import scalaz._
 import Scalaz._
 
 import LoggedSQLValue._
+import java.sql.SQLException
 
-sealed trait LoggedSQLValue[A] extends NewType[WriterT[SQLValue, LOG, A]] {
-  val value: WriterT[SQLValue, LOG, A]
+sealed trait LoggedSQLValue[A] {
+  val log: LOG
+  def fold[X](ex: SQLException => X, value: A => X): X
 }
 
 object LoggedSQLValue {
   type LOG = List[String] // todo use better data structure
 
-  implicit def LoggedSQLValuePure: Pure[LoggedSQLValue] = new Pure[LoggedSQLValue] {
-    def pure[A](a: => A) = new LoggedSQLValue[A] {
-      val value = a.η[({type λ[α]= WriterT[SQLValue, LOG, α]})#λ]
-    }
-  }
-
-  implicit def LoggedSQLValuerFunctor: Functor[LoggedSQLValue] = new Functor[LoggedSQLValue] {
-    def fmap[A, B](k: LoggedSQLValue[A], f: A => B) = new LoggedSQLValue[B] {
-      val value = {
-        val ftr = WriterT.WriterTFunctor[SQLValue, LOG]
-        // todo why won't the implicit pick up?
-        ftr.fmap(k.value, f)
-      }
-    }
-  }
-
+  // Pure, Functor, Apply, Bind, Each, Index, Length, Foldable, Traverse, Plus, Empty, Show, Equal, Order, Zero
 }
 
 trait LoggedSQLValues {
-  def loggedSqlValue[A](w: WriterT[SQLValue, LOG, A]): LoggedSQLValue[A] = new LoggedSQLValue[A] {
-    val value = w
+  def loggedSqlValue[A](l: LOG, v: A): LoggedSQLValue[A] = new LoggedSQLValue[A] {
+    val log = l
+    def fold[X](ex: SQLException => X, value: A => X) = value(v)
+  }
+
+  def loggedSqlException[A](l: LOG, e: SQLException): LoggedSQLValue[A] = new LoggedSQLValue[A] {
+    val log = l
+    def fold[X](ex: SQLException => X, value: A => X) = ex(e)
   }
 }
