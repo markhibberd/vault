@@ -31,6 +31,9 @@ sealed trait LoggedSQLValue[L, A] {
   def getValueOr(v: => A) =
     getValue getOrElse v
 
+  def toEither =
+    fold(Left(_), Right(_))
+
   def toValidation =
     fold(success(_), failure(_))
 
@@ -119,7 +122,33 @@ object LoggedSQLValue {
       t.fold(e => loggedSqlException(e).η[F], a => f(a) ∘ (loggedSqlValue[L](_)))
   }
 
-  // Plus, Empty, Show, Equal, Order, Zero
+  implicit def LoggedSQLValuePlus[L]: Plus[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Plus[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
+    def plus[A](a1: LoggedSQLValue[L, A], a2: => LoggedSQLValue[L, A]) =
+      a1.fold(_ => a2, _ => a1)
+  }
+
+  implicit def LoggedSQLValueShow[L, A : Show]: Show[LoggedSQLValue[L, A]] = new Show[LoggedSQLValue[L, A]] {
+    def show(a: LoggedSQLValue[L, A]) =
+      a fold(
+              e => ("sql-error(" + e + ")").toList
+            , a => ("sql-value(" + a.shows + ")").toList
+            )
+
+  }
+
+  implicit def LoggedSQLValueEqual[L, A: Equal]: Equal[LoggedSQLValue[L, A]] = {
+    implicit val EqualSQLException: Equal[SQLException] = equalA
+    Equal.EitherEqual[SQLException, A] ∙ (_.toEither)
+  }
+
+  implicit def LoggedSQLValueOrder[L, A: Order]: Order[LoggedSQLValue[L, A]] = {
+    implicit val OrderSQLException: Order[SQLException] = new Order[SQLException] {
+      def order(a1: SQLException, a2: SQLException) = EQ
+    }
+    Order.EitherOrder[SQLException, A] ∙ (_.toEither)
+  }
+
+  implicit def LoggedSQLValueZero[L, A: Zero]: Zero[LoggedSQLValue[L, A]] = zero(loggedSqlValue[L](∅[A]))
 }
 
 trait LoggedSQLValues {
