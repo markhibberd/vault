@@ -99,7 +99,27 @@ object LoggedSQLValue {
       a flatMap f
   }
 
-  // Each, Index, Length, Foldable, Traverse, Plus, Empty, Show, Equal, Order, Zero
+  implicit def LoggedSQLValueEach[L]: Each[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Each[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
+    def each[A](a: LoggedSQLValue[L, A], f: A => Unit) =
+      a.fold(_ => (), f)
+  }
+
+  implicit def LoggedSQLValueIndex[L]: Index[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Index[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
+    def index[A](a: LoggedSQLValue[L, A], n: Int) =
+      if(n== 0) a.fold(_ => None, (Some(_))) else None
+  }
+
+  implicit def LoggedSQLValueFoldable[L]: Foldable[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Foldable[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
+    override def foldRight[A, B](t: LoggedSQLValue[L, A], b: => B, f: (A, => B) => B) =
+      t.fold(_ => b, a => f(a, b))
+  }
+
+  implicit def LoggedSQLValueTraverse[L]: Traverse[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Traverse[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
+    def traverse[F[_] : Applicative, A, B](f: A => F[B], t: LoggedSQLValue[L, A]) =
+      t.fold(e => loggedSqlException(e).η[F], a => f(a) ∘ (loggedSqlValue[L](_)))
+  }
+
+  // Plus, Empty, Show, Equal, Order, Zero
 }
 
 trait LoggedSQLValues {
