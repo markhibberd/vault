@@ -6,7 +6,10 @@ import Scalaz._
 import LoggedSQLValue._
 import java.sql.SQLException
 
-sealed trait LoggedSQLValue[A] {
+sealed trait LoggedSQLValue[L, A] {
+  type LOG =
+    LOGC[L]
+
   val log: LOG
   def fold[X](ex: SQLException => X, value: A => X): X
 
@@ -37,19 +40,19 @@ sealed trait LoggedSQLValue[A] {
   def printStackTraceOr(f: A => Unit) =
     fold(_.printStackTrace, f)
 
-  def map[B](f: A => B): LoggedSQLValue[B] = new LoggedSQLValue[B] {
+  def map[B](f: A => B): LoggedSQLValue[L, B] = new LoggedSQLValue[L, B] {
     val log = LoggedSQLValue.this.log
     def fold[X](err: SQLException => X, value: B => X) =
       LoggedSQLValue.this.fold(err, value compose f)
   }
 
-  def flatMap[B](f: A => LoggedSQLValue[B]): LoggedSQLValue[B] =
+  def flatMap[B](f: A => LoggedSQLValue[L, B]): LoggedSQLValue[L, B] =
     fold(loggedSqlException(_) setLog log, a => {
       val v = f(a)
-      v.fold[LoggedSQLValue[B]](loggedSqlException(_), loggedSqlValue(_)) :+-> (log |+| v.log)
+      v.fold[LoggedSQLValue[L, B]](loggedSqlException(_), loggedSqlValue(_)) :+-> (log |+| v.log)
     })
 
-  def withLog(f: LOG => LOG): LoggedSQLValue[A] = new LoggedSQLValue[A] {
+  def withLog(f: LOG => LOG): LoggedSQLValue[L, A] = new LoggedSQLValue[L, A] {
     val log = f(LoggedSQLValue.this.log)
     def fold[X](ex: SQLException => X, value: A => X) =
       LoggedSQLValue.this.fold(ex, value)
@@ -57,7 +60,7 @@ sealed trait LoggedSQLValue[A] {
 
   def setLog(l: LOG) = withLog(_ => l)
 
-  def :+->(l: LOG): LoggedSQLValue[A] = withLog(l |+| _)
+  def :+->(l: LOG) = withLog(l |+| _)
 
   def <-+:(l: LOG) = withLog(_ |+| l)
 
@@ -71,30 +74,28 @@ sealed trait LoggedSQLValue[A] {
 }
 
 object LoggedSQLValue {
-  type LOG = List[String] // todo use better data structure
+  type LOGC[C] = List[C] // todo use better data structure
 
-  implicit val LoggedSQLValueInjective = Injective[LoggedSQLValue]
-
-  implicit val LoggedSQLValueFunctor: Functor[LoggedSQLValue] = new Functor[LoggedSQLValue] {
-    def fmap[A, B](r: LoggedSQLValue[A], f: A => B) =
+  implicit def LoggedSQLValueFunctor[L]: Functor[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Functor[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
+    def fmap[A, B](r: LoggedSQLValue[L, A], f: A => B) =
       r map f
   }
 
-  implicit val LoggedSQLValueePure: Pure[LoggedSQLValue] = new Pure[LoggedSQLValue] {
+  implicit def LoggedSQLValuePure[L]: Pure[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Pure[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
     def pure[A](a: => A) =
       loggedSqlValue(a)
   }
 
-  implicit val LoggedSQLValueApply: Apply[LoggedSQLValue] = new Apply[LoggedSQLValue] {
-    def apply[A, B](f: LoggedSQLValue[A => B], a: LoggedSQLValue[A]) =
+  implicit def LoggedSQLValueApply[L]: Apply[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Apply[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
+    def apply[A, B](f: LoggedSQLValue[L, A => B], a: LoggedSQLValue[L, A]) =
       for {
         ff <- f
         aa <- a
       } yield ff(aa)
   }
 
-  implicit val LoggedSQLValueBind: Bind[LoggedSQLValue] = new Bind[LoggedSQLValue] {
-    def bind[A, B](a: LoggedSQLValue[A], f: A => LoggedSQLValue[B]) =
+  implicit def LoggedSQLValueBind[L]: Bind[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Bind[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
+    def bind[A, B](a: LoggedSQLValue[L, A], f: A => LoggedSQLValue[L, B]) =
       a flatMap f
   }
 
@@ -102,12 +103,14 @@ object LoggedSQLValue {
 }
 
 trait LoggedSQLValues {
-  def loggedSqlValue[A](v: A): LoggedSQLValue[A] = new LoggedSQLValue[A] {
-    val log = ∅[LOG]
-    def fold[X](ex: SQLException => X, value: A => X) = value(v)
+  def loggedSqlValue[L] = new (Id ~> (({type λ[α]=LoggedSQLValue[L, α]})#λ)) {
+    def apply[A](v: A) = new LoggedSQLValue[L, A] {
+      val log = ∅[LOG]
+      def fold[X](ex: SQLException => X, value: A => X) = value(v)
+    }
   }
 
-  def loggedSqlException[A](e: SQLException): LoggedSQLValue[A] = new LoggedSQLValue[A] {
+  def loggedSqlException[L, A](e: SQLException): LoggedSQLValue[L, A] = new LoggedSQLValue[L, A] {
     val log = ∅[LOG]
     def fold[X](ex: SQLException => X, value: A => X) = ex(e)
   }
