@@ -44,11 +44,30 @@ sealed trait LoggedSQLValue[A] {
   }
 
   def flatMap[B](f: A => LoggedSQLValue[B]): LoggedSQLValue[B] =
-    fold(loggedSqlException(log, _), a => {
+    fold(loggedSqlException(_) setLog log, a => {
       val v = f(a)
-      val l = log |+| v.log
-      v.fold(loggedSqlException(l, _), loggedSqlValue(l, _))
+      v.fold[LoggedSQLValue[B]](loggedSqlException(_), loggedSqlValue(_)) :+-> (log |+| v.log)
     })
+
+  def withLog(f: LOG => LOG): LoggedSQLValue[A] = new LoggedSQLValue[A] {
+    val log = f(LoggedSQLValue.this.log)
+    def fold[X](ex: SQLException => X, value: A => X) =
+      LoggedSQLValue.this.fold(ex, value)
+  }
+
+  def setLog(l: LOG) = withLog(_ => l)
+
+  def :+->(l: LOG): LoggedSQLValue[A] = withLog(l |+| _)
+
+  def <-+:(l: LOG) = withLog(_ |+| l)
+
+  def resetLog = withLog(_ => ∅[LOG])
+
+  // CAUTION side-effect
+  def flush(f: LOG => Unit) = {
+    f(log)
+    resetLog
+  }
 }
 
 object LoggedSQLValue {
@@ -58,13 +77,13 @@ object LoggedSQLValue {
 }
 
 trait LoggedSQLValues {
-  def loggedSqlValue[A](l: LOG, v: A): LoggedSQLValue[A] = new LoggedSQLValue[A] {
-    val log = l
+  def loggedSqlValue[A](v: A): LoggedSQLValue[A] = new LoggedSQLValue[A] {
+    val log = ∅[LOG]
     def fold[X](ex: SQLException => X, value: A => X) = value(v)
   }
 
-  def loggedSqlException[A](l: LOG, e: SQLException): LoggedSQLValue[A] = new LoggedSQLValue[A] {
-    val log = l
+  def loggedSqlException[A](e: SQLException): LoggedSQLValue[A] = new LoggedSQLValue[A] {
+    val log = ∅[LOG]
     def fold[X](ex: SQLException => X, value: A => X) = ex(e)
   }
 }
