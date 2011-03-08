@@ -98,6 +98,12 @@ sealed trait Row {
 
   def urlIndex(columnIndex: Int): RowAccess[URL]
   def urlLabel(columnLabel: String): RowAccess[URL]
+
+  def idLabel(label: String): RowAccess[Id]
+  def idIndex(index: Int): RowAccess[Id]
+
+  def possibleIdLabel(label: String): RowAccess[Id]
+  def possibleIdIndex(index: Int): RowAccess[Id]
 }
 
 object Row {
@@ -329,5 +335,20 @@ object Row {
       tryRowAccess(r.getURL(columnIndex))
     def urlLabel(columnLabel: String) =
       tryRowAccess(r.getURL(columnLabel))
+
+    def idLabel(label: String) =
+      longLabel(label) map (Id.id(_))
+    def idIndex(index: Int) =
+      longIndex(index) map (Id.id(_))
+
+    def possibleIdLabel(label: String) = longLabel(label).possiblyNull map ({
+      case None => Id.noid
+      case Some(x) => Id.id(x)
+    })
+
+    def possibleIdIndex(index: Int) = longIndex(index).possiblyNull map ({
+      case None => Id.noid
+      case Some(x) => Id.id(x)
+    })
   }
 }
