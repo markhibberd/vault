@@ -52,7 +52,7 @@ sealed trait LoggedSQLValue[L, A] {
   def flatMap[B](f: A => LoggedSQLValue[L, B]): LoggedSQLValue[L, B] =
     fold(loggedSqlException(_) setLog log, a => {
       val v = f(a)
-      v.fold[LoggedSQLValue[L, B]](loggedSqlException(_), loggedSqlValue(_)) :+-> (log |+| v.log)
+      v.fold[LoggedSQLValue[L, B]](loggedSqlException(_), loggedSqlValue(_)) :++-> (log |+| v.log)
     })
 
   def withLog(f: LOG => LOG): LoggedSQLValue[L, A] = new LoggedSQLValue[L, A] {
@@ -65,7 +65,11 @@ sealed trait LoggedSQLValue[L, A] {
 
   def :++->(l: LOG) = withLog(l |+| _)
 
+  def :+->(l: L) = withLog(l.pure[LOGC] |+| _)
+
   def <-++:(l: LOG) = withLog(_ |+| l)
+
+  def <-+:(l: L) = withLog(_ |+| l.pure[LOGC])
 
   def resetLog = withLog(_ => ∅[LOG])
 
