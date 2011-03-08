@@ -29,7 +29,7 @@ sealed trait SQLValue[A] {
     fold(Left(_), Right(_))
 
   def toValidation =
-    fold(success(_), failure(_))
+    fold(failure(_), success(_))
 
   def toRowAccess: RowAccess[A] =
     fold(rowAccessError, rowAccessValue(_))
