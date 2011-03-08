@@ -29,6 +29,7 @@ sealed trait StringQuery {
                            b <- {
                              val n = s.executeUpdate
                              val r = s.getGeneratedKeys
+                             if (!r.next) error("Tony? How can we restructure this?")
                              withRow(Row.resultSetRow(r))(a)(n)
                            }
                          } yield b
@@ -42,10 +43,10 @@ sealed trait StringQuery {
     , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[Connector]
     )
 
-  def executeUpdateWithId[A](withStatement: PreparedStatement => Unit, withId: Long => A) =
+  def executeUpdateWithId[A](withStatement: PreparedStatement => Unit, withId: Option[Long] => A): Connector[A] =
     executeUpdateWithKeysSet(
       withStatement,
-      r => i => (i, r.longLabel("ID") map (id => withId(id)))
+      r => i => (i, withId(r.longLabel("ID").getValue))
     ).map(_._2)
 
   def prepareStatement[A](k: PreparedStatement => Connector[A]) : Connector[A] =
