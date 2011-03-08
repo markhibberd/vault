@@ -63,9 +63,9 @@ sealed trait LoggedSQLValue[L, A] {
 
   def setLog(l: LOG) = withLog(_ => l)
 
-  def :+->(l: LOG) = withLog(l |+| _)
+  def :++->(l: LOG) = withLog(l |+| _)
 
-  def <-+:(l: LOG) = withLog(_ |+| l)
+  def <-++:(l: LOG) = withLog(_ |+| l)
 
   def resetLog = withLog(_ => ∅[LOG])
 
@@ -77,7 +77,7 @@ sealed trait LoggedSQLValue[L, A] {
 }
 
 object LoggedSQLValue {
-  type LOGC[C] = List[C]// todo use better data structure
+  type LOGC[C] = IndSeq[C]
 
   implicit def LoggedSQLValueFunctor[L]: Functor[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Functor[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
     def fmap[A, B](r: LoggedSQLValue[L, A], f: A => B) =
