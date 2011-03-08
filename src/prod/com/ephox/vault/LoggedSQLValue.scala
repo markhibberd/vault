@@ -35,7 +35,7 @@ sealed trait LoggedSQLValue[L, A] {
     fold(Left(_), Right(_))
 
   def toValidation =
-    fold(success(_), failure(_))
+    fold(failure(_), success(_))
 
   def toRowAccess: RowAccess[A] =
     fold(rowAccessError, rowAccessValue(_))
@@ -77,7 +77,7 @@ sealed trait LoggedSQLValue[L, A] {
 }
 
 object LoggedSQLValue {
-  type LOGC[C] = List[C] // todo use better data structure
+  type LOGC[C] = List[C]// todo use better data structure
 
   implicit def LoggedSQLValueFunctor[L]: Functor[({type λ[α]=LoggedSQLValue[L, α]})#λ] = new Functor[({type λ[α]=LoggedSQLValue[L, α]})#λ] {
     def fmap[A, B](r: LoggedSQLValue[L, A], f: A => B) =
