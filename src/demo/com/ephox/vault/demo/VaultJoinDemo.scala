@@ -48,9 +48,6 @@ object VaultJoinDemo {
       albums flatMap (_.songs)
   }
 
-  def executeUpdates[F[_]](sqls: F[String])(implicit t: Traverse[F], fld: Foldable[F]): Connector[Int] = {
-    sqls.traverse(_.executeUpdate) ∘ (_.sum)
-  }
 
   def setupData = {
     val creates = List(

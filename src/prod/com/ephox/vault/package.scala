@@ -16,7 +16,8 @@ package object vault
   with SQLQueries
   with Connectors
   with JDBCTypes
-  with SQLTypes{
+  with SQLTypes
+  with DDL {
 
   def withSQLResource[T, R](
                           value: => T
