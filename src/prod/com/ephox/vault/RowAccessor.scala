@@ -147,17 +147,17 @@ trait RowAccessors {
   def urlIndex(columnIndex: Int): RowAccessor[URL] = rowAccessor(_.urlIndex(columnIndex))
   def urlLabel(columnLabel: String): RowAccessor[URL] = rowAccessor(_.urlLabel(columnLabel))
 
-  def idLabel(label: String) = longLabel(label) map (Key.key(_))
-  def idIndex(index: Int) = longIndex(index) map (Key.key(_))
+  def idLabel(label: String) = longLabel(label) map (key(_))
+  def idIndex(index: Int) = longIndex(index) map (key(_))
 
   def possibleIdLabel(label: String) = longLabel(label).possiblyNull map ({
-    case None => Key.nokey
-    case Some(x) => Key.key(x)
+    case None => nokey
+    case Some(x) => key(x)
   })
 
   def possibleIdIndex(index: Int) = longIndex(index).possiblyNull map ({
-    case None => Key.nokey
-    case Some(x) => Key.key(x)
+    case None => nokey
+    case Some(x) => key(x)
   })
 
   implicit def RowAccessorFunctor: Functor[RowAccessor] = new Functor[RowAccessor] {
