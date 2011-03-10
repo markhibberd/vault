@@ -43,10 +43,10 @@ sealed trait StringQuery {
     , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[Connector]
     )
 
-  def executeUpdateWithId[A](withStatement: PreparedStatement => Unit, withId: Id => A): Connector[A] =
+  def executeUpdateWithKey[A](withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): Connector[A] =
     executeUpdateWithKeysSet(
       withStatement,
-      r => i => (i, withId(r.idLabel("ID").getValueOr(Id.noid)))
+      r => i => (i, keyed.set(r.keyLabel("ID").getValueOr(Key.nokey)))
     ).map(_._2)
 
   def prepareStatement[A](k: PreparedStatement => Connector[A]) : Connector[A] =
