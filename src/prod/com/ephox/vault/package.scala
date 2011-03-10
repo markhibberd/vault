@@ -20,7 +20,8 @@ package object vault
   with DDL
   with Keys
   with Keyeds
-  with KeyedWs {
+  with KeyedWs
+  with Mergers {
 
   def withSQLResource[T, R](
                           value: => T
