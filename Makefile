@@ -100,4 +100,4 @@ ${DIRECTORIES}:
 	mkdir -p $@
 
 clean:
-	rm -rf ${GEN}; find . -name "*~" -o -name "*.core" -print0 | xargs --no-run-if-empty -0 rm
+	rm -rf ${GEN}; find . -name "*~" -o -name "*.core" -print0 | xargs -0 rm -f

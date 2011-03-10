@@ -28,7 +28,7 @@ sealed trait SQLValue[A] {
   def toEither =
     fold(Left(_), Right(_))
 
-  def toValidation =
+  def toValidation: Validation[SQLException, A] =
     fold(failure(_), success(_))
 
   def toRowAccess: RowAccess[A] =
