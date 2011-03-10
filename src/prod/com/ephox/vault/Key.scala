@@ -28,22 +28,36 @@ object Key {
   }
 
   implicit def EqualKey: Equal[Key] =
-    equal((a, b) => a.fold(b.isSet, value => b.fold(false, _ == value)))
+    equal((a, b) => a.fold(!b.isSet, value => b.fold(false, _ == value)))
 }
 
 sealed trait Keyed[A] {
-  import Key._
-
-  val value: A
-  def get: Key
-  def set(key: Key): A
-  def =@=(keyed: Keyed[A])(implicit eq: Equal[Key]) = eq.equal(get, keyed.get)
+  def get(a: A): Key
+  def set(a: A, key: Key): A
 }
 
 object Keyed {
-  def idd[A](a: A, getf: A => Key, setf: (A, Key) => A): Keyed[A] = new Keyed[A] {
-    val value = a
-    def get = getf(value)
-    def set(key: Key) = setf(value, key)
+  def keyed[A](getf: A => Key, setf: (A, Key) => A): Keyed[A] = new Keyed[A] {
+    def get(a: A) = getf(a)
+    def set(a: A, key: Key) = setf(a, key)
   }
+}
+
+trait KeyedW[A] {
+  val value: A
+  val keyed: Keyed[A]
+
+  def id = keyed.get(value)
+
+  def =@=(other: KeyedW[A])(implicit eq: Equal[Key]) =
+    eq.equal(id, other.id)
+}
+
+object KeyedW {
+  implicit def KeyedWTo[A](a: A)(implicit keyedf: Keyed[A]): KeyedW[A] = new KeyedW[A] {
+    val value = a
+    val keyed = keyedf
+  }
+
+  implicit def KeyedWFrom[A](a: KeyedW[A]): A = a.value
 }
