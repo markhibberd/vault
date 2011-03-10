@@ -99,11 +99,11 @@ sealed trait Row {
   def urlIndex(columnIndex: Int): RowAccess[URL]
   def urlLabel(columnLabel: String): RowAccess[URL]
 
-  def idLabel(label: String): RowAccess[Id]
-  def idIndex(index: Int): RowAccess[Id]
+  def keyLabel(label: String): RowAccess[Key]
+  def keyIndex(index: Int): RowAccess[Key]
 
-  def possibleIdLabel(label: String): RowAccess[Id]
-  def possibleIdIndex(index: Int): RowAccess[Id]
+  def possibleKeyLabel(label: String): RowAccess[Key]
+  def possibleKeyIndex(index: Int): RowAccess[Key]
 }
 
 object Row {
@@ -336,19 +336,19 @@ object Row {
     def urlLabel(columnLabel: String) =
       tryRowAccess(r.getURL(columnLabel))
 
-    def idLabel(label: String) =
-      longLabel(label) map (Id.id(_))
-    def idIndex(index: Int) =
-      longIndex(index) map (Id.id(_))
+    def keyLabel(label: String) =
+      longLabel(label) map (Key.key(_))
+    def keyIndex(index: Int) =
+      longIndex(index) map (Key.key(_))
 
-    def possibleIdLabel(label: String) = longLabel(label).possiblyNull map ({
-      case None => Id.noid
-      case Some(x) => Id.id(x)
+    def possibleKeyLabel(label: String) = longLabel(label).possiblyNull map ({
+      case None => Key.nokey
+      case Some(x) => Key.key(x)
     })
 
-    def possibleIdIndex(index: Int) = longIndex(index).possiblyNull map ({
-      case None => Id.noid
-      case Some(x) => Id.id(x)
+    def possibleKeyIndex(index: Int) = longIndex(index).possiblyNull map ({
+      case None => Key.nokey
+      case Some(x) => Key.key(x)
     })
   }
 }
