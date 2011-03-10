@@ -15,10 +15,14 @@ sealed trait Key {
   def valueOrx(none: Long) = valueOr(none)
 
   def isSet = fold(false, _ => true)
+
+  override def toString = fold(
+    "Key[]",
+    "Key[" + _ + "]"
+  )
 }
 
-
-object Key {
+trait Keys {
   def key(value: Long): Key = new Key {
     def fold[X](none: => X, some: Long => X) = some(value)
   }
@@ -29,6 +33,9 @@ object Key {
 
   implicit def EqualKey: Equal[Key] =
     equal((a, b) => a.fold(!b.isSet, value => b.fold(false, _ == value)))
+
+  implicit def ShowKey: Show[Key] =
+    shows(_.toString)
 }
 
 sealed trait Keyed[A] {
@@ -36,7 +43,7 @@ sealed trait Keyed[A] {
   def set(a: A, key: Key): A
 }
 
-object Keyed {
+trait Keyeds {
   def keyed[A](getf: A => Key, setf: (A, Key) => A): Keyed[A] = new Keyed[A] {
     def get(a: A) = getf(a)
     def set(a: A, key: Key) = setf(a, key)
@@ -53,7 +60,7 @@ trait KeyedW[A] {
     eq.equal(id, other.id)
 }
 
-object KeyedW {
+trait KeyedWs {
   implicit def KeyedWTo[A](a: A)(implicit keyedf: Keyed[A]): KeyedW[A] = new KeyedW[A] {
     val value = a
     val keyed = keyedf
