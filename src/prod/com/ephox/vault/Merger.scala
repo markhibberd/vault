@@ -29,17 +29,24 @@ trait Mergers {
 
   def merge0[A](implicit k: Keyed[A]) = idMerger[A]((a1, a2) => a1)
 
-  def merge1[A, B](get: A => List[B], set: (A, List[B]) => A)(implicit ka: Keyed[A], kb: Keyed[B], mb: Merger[B]): Merger[A] =
+  def merge1[A, B](get: A => B, set: (A, B) => A)(implicit ka: Keyed[A], kb: Keyed[B], mb: Merger[B]): Merger[A] =
+    idMerger[A]((a1, a2) => set(a1, mb(get(a1), get(a2)).getOrElse(get(a1))))
+
+  def merge2[A, B, C](getB: A => B, getC: A => C, set: (A, B, C) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], mb: Merger[B], mc: Merger[C]): Merger[A] =
+    idMerger[A]((a1, a2) => set(a1, mb(getB(a1), getB(a2)).getOrElse(getB(a1)), mc(getC(a1), getC(a2)).getOrElse(getC(a1))))
+
+  def merge1n[A, B](get: A => List[B], set: (A, List[B]) => A)(implicit ka: Keyed[A], kb: Keyed[B], mb: Merger[B]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(get(a1), get(a2))))
 
-  def merge2[A, B, C](getB: A => List[B], getC: A => List[C], set: (A, List[B], List[C]) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], mb: Merger[B], mc: Merger[C]): Merger[A] =
+  def merge2n[A, B, C](getB: A => List[B], getC: A => List[C], set: (A, List[B], List[C]) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], mb: Merger[B], mc: Merger[C]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(getB(a1), getB(a2)), listMerge(getC(a1), getC(a2))))
 
-  def merge3[A, B, C, D](getB: A => List[B], getC: A => List[C], getD: A => List[D], set: (A, List[B], List[C], List[D]) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], kd: Keyed[D], mb: Merger[B], mc: Merger[C], md: Merger[D]): Merger[A] =
+  def merge3n[A, B, C, D](getB: A => List[B], getC: A => List[C], getD: A => List[D], set: (A, List[B], List[C], List[D]) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], kd: Keyed[D], mb: Merger[B], mc: Merger[C], md: Merger[D]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(getB(a1), getB(a2)), listMerge(getC(a1), getC(a2)), listMerge(getD(a1), getD(a2))))
 
+
   def listMerge[A](x: List[A], y: List[A])(implicit k: Keyed[A], merge: Merger[A]): List[A] = {
-    y.foldRight[List[A]](x) {
+    x.foldRight[List[A]](y) {
       case (a, acc) => valueMerge(acc, a)
     }
   }
