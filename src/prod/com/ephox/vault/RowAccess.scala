@@ -47,6 +47,9 @@ sealed trait RowAccess[A] {
   def possiblyNullOr(d: => A): RowAccess[A] =
     possiblyNull ∘ (_ getOrElse d)
 
+  def toList: RowAccess[List[A]] =
+    possiblyNull ∘ (_.toList)
+
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
 }
