@@ -9,7 +9,7 @@ sealed trait Connect {
 }
 
 object Connect {
-  def hsqltest: Connect = hsqlmem("testdb", "sa", "")
+  def hsqltest(): Connect = hsqlmem("testdb", "sa", "")
 
   def hsqlmem(dbname: String, username: String, password: String):Connect = new Connect {
     def nu = mkConnection(
