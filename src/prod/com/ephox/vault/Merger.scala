@@ -23,7 +23,7 @@ trait Mergers {
 
   def someMerger[A](f: (A, A) => A) = merger[A]((a1, a2) => Some(f(a1, a2)))
 
-  def ifelseMerger[A](p: (A, A) => Boolean, t: (A, A) => A) = merger[A]((a1, a2) => if(p(a1, a2)) Some(t(a1, a2)) else None)
+  def ifelseMerger[A](p: (A, A) => Boolean, t: (A, A) => A) = merger[A]((a1, a2) => if(p(a1, a2))  Some(t(a1, a2)) else None)
 
   def idMerger[A](t: (A, A) => A)(implicit k: Keyed[A]) = ifelseMerger[A](_ =@= _, t)
 
@@ -51,7 +51,7 @@ trait Mergers {
     (x.foldRight((some(y), nil[A])) {
       case (v, (None, acc)) => (None, v :: acc)
       case (v, (Some(a), acc)) =>
-        merge(a, v) match {
+        merge(v, a) match {
           case None => (Some(a), v :: acc)
           case Some(x) => (None, x :: acc)
         }
