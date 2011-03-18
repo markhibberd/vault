@@ -21,7 +21,8 @@ package object vault
   with Keys
   with Keyeds
   with KeyedWs
-  with Mergers {
+  with Mergers
+  with VaultIteratees {
 
   def withSQLResource[T, R](
                           value: => T
