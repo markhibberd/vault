@@ -6,16 +6,20 @@ import scalaz._
 import Scalaz._
 
 class MergerTest extends FunSuite {
-  case class Billy(key: Key, b: String)
-  case class Jimmy(key: Key, j: String)
+  case class Billy(key: Key, b: String) {
+    override def toString = "Billy[" + key.fold("", _ + "") + "]"
+  }
+
+  case class Jimmy(key: Key, j: String) {
+    override def toString = "Jimmy[" + key.fold("", _ + "") + "]"
+  }
   case class Bob(key: Key, x: String, bs: List[Billy], js: List[Jimmy]) {
     override def toString =
-      "Bob[\n" +
-      "  key = " + key + "\n" +
-      "  x = " + x + "\n" +
-      "  bs = {\n       " + bs.mkString(",\n       ") + "\n       }\n" +
-      "  js = {\n       " + js.mkString(",\n       ") + "\n       }\n" +
-      "]"
+      "Bob[" + key.fold("", _ + "") + ", [" + bs.mkString(",") + "], [" + js.mkString(",") + "]]"
+  }
+  case class Master(key: Key, bobs: List[Bob]) {
+    override def toString =
+      "Master[" + key.fold("", _ + "") + ", [" + bobs.mkString(",") + "]]"
   }
 
   implicit def KeyedBilly: Keyed[Billy] =
@@ -27,6 +31,9 @@ class MergerTest extends FunSuite {
   implicit def KeyedJimmy: Keyed[Jimmy] =
     keyed(_.key, (b, k) => b.copy(key = k))
 
+  implicit def KeyedMaster: Keyed[Master] =
+    keyed(_.key, (m, k) => m.copy(key = k))
+
   implicit def MergerBilly: Merger[Billy] =
     merge0
 
@@ -35,6 +42,9 @@ class MergerTest extends FunSuite {
 
   implicit def MergerBob: Merger[Bob] =
     merge2n[Bob, Billy, Jimmy](_.bs, _.js, (bob, bs, js) => bob.copy(bs = bs, js = js))
+
+  implicit def MergerMaster: Merger[Master] =
+    merge1n[Master, Bob](_.bobs, (m, bobs) => m.copy(bobs = bobs))
 
   val billy1 = Billy(key(1), "billy1")
   val billy2 = Billy(key(2), "billy2")
@@ -62,8 +72,26 @@ class MergerTest extends FunSuite {
     Bob(key(101), "bob2", List(billy4), List(jimmy4))
   )
 
-  test("merge") {
+  val masters = List(
+    Master(key(900), Bob(key(100), "bob1", List(billy1), List(jimmy0)) :: Nil),
+    Master(key(900), Bob(key(100), "bob1", List(billy2), List(jimmy0)) :: Nil),
+    Master(key(900), Bob(key(100), "bob1", List(billy1), List(jimmy1)) :: Nil),
+    Master(key(900), Bob(key(100), "bob1", List(billy2), List(jimmy1)) :: Nil),
+    Master(key(900), Bob(key(100), "bob1", List(billy1), List(jimmy2)) :: Nil),
+    Master(key(900), Bob(key(100), "bob1", List(billy2), List(jimmy2)) :: Nil),
+    Master(key(900), Bob(key(101), "bob2", List(billy3), List(jimmy3)) :: Nil),
+    Master(key(900), Bob(key(101), "bob2", List(billy4), List(jimmy3)) :: Nil),
+    Master(key(900), Bob(key(101), "bob2", List(billy3), List(jimmy4)) :: Nil),
+    Master(key(900), Bob(key(101), "bob2", List(billy4), List(jimmy4)) :: Nil)
+  )
+
+  test("merge 2n") {
     val result = ListEnumerator(bobs, combineAll[Bob]).run
+    println(result)
+  }
+
+  test("merge nested 1n/2n") {
+    val result = ListEnumerator(masters, combineAll[Master]).run
     println(result)
   }
 
