@@ -44,24 +44,17 @@ trait Mergers {
   def merge3n[A, B, C, D](getB: A => List[B], getC: A => List[C], getD: A => List[D], set: (A, List[B], List[C], List[D]) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], kd: Keyed[D], mb: Merger[B], mc: Merger[C], md: Merger[D]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(getB(a1), getB(a2)), listMerge(getC(a1), getC(a2)), listMerge(getD(a1), getD(a2))))
 
-
-  def listMerge[A](x: List[A], y: List[A])(implicit k: Keyed[A], merge: Merger[A]): List[A] = {
-    x.foldRight[List[A]](y) {
-      case (a, acc) => valueMerge(acc, a)
-    }
-  }
+  def listMerge[A](x: List[A], y: List[A])(implicit k: Keyed[A], merge: Merger[A]): List[A] =
+    y.foldRight[List[A]](x)((a, acc) => valueMerge(acc, a))
 
   def valueMerge[A](x: List[A], y: A)(implicit k: Keyed[A], merge: Merger[A]): List[A] = {
     (x.foldRight((some(y), nil[A])) {
       case (v, (None, acc)) => (None, v :: acc)
       case (v, (Some(a), acc)) =>
-        if (acc.exists(_ =@= v))
-          (None, acc)
-        else
-          merge(a, v) match {
-            case None => (Some(a), v :: acc)
-            case Some(x) => (None, x :: acc)
-          }
+        merge(a, v) match {
+          case None => (Some(a), v :: acc)
+          case Some(x) => (None, x :: acc)
+        }
     }) match {
       case (value, acc) => value.fold(_ :: acc, acc)
     }
