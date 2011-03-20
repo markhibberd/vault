@@ -20,6 +20,13 @@ sealed trait Key {
     "Key[]",
     "Key[" + _ + "]"
   )
+
+  override def hashCode = fold(0, _.hashCode)
+
+  override def equals(o: Any) =
+    o.isInstanceOf[Key] && o.asInstanceOf[Key].fold(
+      !isSet, value => fold(false, _ == value)
+    )
 }
 
 trait Keys {
