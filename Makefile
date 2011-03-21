@@ -65,6 +65,7 @@ ${TAR}: doc ${JAR} ${JAR_SRC} ${TAR_IMAGE} ${TAR_IMAGE}/lib ${TAR_IMAGE}/doc/xra
 	cp -r ${XRAY_PROD} ${TAR_IMAGE}/doc/xray/prod && \
 	cp -r ${XRAY_DEMO} ${TAR_IMAGE}/doc/xray/demo && \
 	cp lib/run/*.jar lib/run/scalaz/*.jar ${TAR_IMAGE}/lib && \
+	cp lib/run/scalaz/*.jar ${DIST}/ && \
 	cp ${JAR} ${JAR_SRC} ${TAR_IMAGE} && \
 	cp README ${TAR_IMAGE} && \
 	cp -r ${LICENSES} ${TAR_IMAGE} && \
