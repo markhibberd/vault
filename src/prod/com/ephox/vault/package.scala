@@ -18,9 +18,9 @@ package object vault
   with JDBCTypes
   with SQLTypes
   with DDL
-  with Keys
+  with KeyX
   with Keyeds
-  with KeyedWs
+  with KeyedWX
   with Mergers
   with VaultIteratees {
 
