@@ -32,6 +32,11 @@ sealed trait RowAccess[A] {
   def getSQLValueOr(v: => SQLValue[A]) =
     getSQLValue getOrElse v
 
+  def getOrDie =
+    fold(
+      _.getOrDie,
+      throw new VaultException("Unexpected null value from database."))
+
   def printStackTraceOr(value: A => Unit, nul: => Unit) =
     fold(_.printStackTraceOr(value), nul)
 

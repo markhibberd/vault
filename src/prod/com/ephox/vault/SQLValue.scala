@@ -25,6 +25,12 @@ sealed trait SQLValue[A] {
   def getValueOr(v: => A) =
     getValue getOrElse v
 
+  def getOrDie =
+    fold[A](
+      e => throw new VaultException(e),
+      x => x
+    )
+
   def toEither =
     fold(Left(_), Right(_))
 
