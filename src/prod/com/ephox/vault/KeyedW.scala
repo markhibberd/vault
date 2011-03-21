@@ -13,7 +13,7 @@ trait KeyedW[A] {
     eq.equal(id, other.id)
 
   def eqid(other: KeyedW[A])(implicit eq: Equal[Key]) =
-    this =@= other
+    eq.equal(id, other.id)
 }
 
 trait KeyedWX {
