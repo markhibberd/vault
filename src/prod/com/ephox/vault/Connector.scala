@@ -84,11 +84,8 @@ trait Connectors {
       valueConnector(_ => a)
   }
 
-  implicit def ConnectorApply[M[_]]: Apply[Connector] = new Apply[Connector] {
-    def apply[A, B](f: Connector[A => B], a: Connector[A]) = {
-      connector(c => a(c) <*> f(c))
-    }
-  }
+  implicit def ConnectorApply[M[_]]: Apply[Connector] =
+    FunctorBindApply[Connector]
 
   implicit def ConnectorBind[M[_]]: Bind[Connector] = new Bind[Connector] {
     def bind[A, B](a: Connector[A], f: A => Connector[B]) =
