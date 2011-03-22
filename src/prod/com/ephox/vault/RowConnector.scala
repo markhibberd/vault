@@ -9,6 +9,8 @@ sealed trait RowConnector[A] {
 
   def apply(c: Connection) = connect(c)
 
+  def executeOrDie(c: Connection) = connect(c).getOrDie
+
   def bracket[B, C](after: (=> A) => RowConnector[B], k: (=> A) => RowConnector[C]): RowConnector[C] =
     this >>= (a => try {
       k(a)
