@@ -9,6 +9,8 @@ sealed trait Connector[A] {
 
   def apply(c: Connection) = connect(c)
 
+  def executeOrDie(c: Connection) = connect(c).getOrDie
+
   def bracket[B, C](after: (=> A) => Connector[B], k: (=> A) => Connector[C]): Connector[C] =
     flatMap (a => try {
       k(a)
