@@ -31,7 +31,7 @@ class SelectTest extends FunSuite {
 
     populate executeOrDie connection
 
-    val result = Query.list(FredRowAccess, "SELECT * FROM FRED") executeOrDie connection
+    val result = Queries.list(FredRowAccess, "SELECT * FROM FRED") executeOrDie connection
 
     expect(freds)(result)
   }
