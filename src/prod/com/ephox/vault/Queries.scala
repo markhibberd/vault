@@ -3,7 +3,7 @@ package com.ephox.vault
 import scalaz._
 import Scalaz._
 
-object Query {
+object Queries {
   def list[A](access: RowAccessor[A], sql: String) =
     (access -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql.toSql) map (_.flatten)
 
