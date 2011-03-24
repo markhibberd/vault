@@ -12,7 +12,7 @@ package object vault
   with RowAccessors
   with RowConnectors
   with SqlRowAccesss
-  with SQLQueries
+  with SqlQuerys
   with SqlConnects
   with JDBCTypes
   with SqlTypes
