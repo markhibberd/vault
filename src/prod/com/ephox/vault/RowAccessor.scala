@@ -6,7 +6,7 @@ import Scalaz._
 sealed trait RowAccessor[A] {
   val access: Row => RowValue[A]
 
-  def -|>[T](iter: IterV[A, T]): SQLRowAccess[IterV[A, T]] =
+  def -|>[T](iter: IterV[A, T]): SqlRowAccess[IterV[A, T]] =
     sqlRowAccess(query => rowConnector(c => try {
       query.fold(
         (sql, bindings) => {
@@ -28,7 +28,7 @@ sealed trait RowAccessor[A] {
       case x                        => throw x
     }))
 
-  def -||>[T](iter: IterV[A, T]): SQLRowAccess[T] =
+  def -||>[T](iter: IterV[A, T]): SqlRowAccess[T] =
     -|>(iter) map (_.run)
 
   def map[B](f: A => B): RowAccessor[B] = new RowAccessor[B] {

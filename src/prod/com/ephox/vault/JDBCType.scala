@@ -7,7 +7,7 @@ import java.sql.{Clob, Blob, Ref, Timestamp, Time, Date}
 
 sealed trait JDBCType {
   def fold[X](
-               nullType: SQLType => X
+               nullType: SqlType => X
              , booleanType: Boolean => X
              , byteType: Byte => X
              , shortType: Short => X
@@ -24,7 +24,7 @@ sealed trait JDBCType {
              , asciiStreamType: InputStream => Int => X
              , unicodeStreamType: InputStream => Int => X
              , binaryStreamType: InputStream => Int => X
-             , objectTypeType: AnyRef => SQLType => X
+             , objectTypeType: AnyRef => SqlType => X
              , objectType: AnyRef => X
              , characterStreamType: Reader => Int => X
              , refType: Ref => X
@@ -34,7 +34,7 @@ sealed trait JDBCType {
              , calendarDateType: Date => Calendar => X
              , calendarTimeType: Time => Calendar => X
              , calendarTimestampType: Timestamp => Calendar => X
-             , userNullType: SQLType => String => X
+             , userNullType: SqlType => String => X
              , urlType: URL => X
              ) =
   this match {
@@ -69,7 +69,7 @@ sealed trait JDBCType {
     case URLJDBCType(value) => urlType(value)
   }
 }
-private case class NullJDBCType(typ: SQLType) extends JDBCType
+private case class NullJDBCType(typ: SqlType) extends JDBCType
 private case class BooleanJDBCType(value: Boolean) extends JDBCType
 private case class ByteJDBCType(value: Byte) extends JDBCType
 private case class ShortJDBCType(value: Short) extends JDBCType
@@ -86,7 +86,7 @@ private case class TimestampJDBCType(value: Timestamp) extends JDBCType
 private case class AsciiStreamJDBCType(value: InputStream, length: Int) extends JDBCType
 private case class UnicodeStreamJDBCType(value: InputStream, length: Int) extends JDBCType
 private case class BinaryStreamJDBCType(value: InputStream, length: Int) extends JDBCType
-private case class ObjectTypeJDBCType(value: AnyRef, typ: SQLType) extends JDBCType
+private case class ObjectTypeJDBCType(value: AnyRef, typ: SqlType) extends JDBCType
 private case class ObjectJDBCType(value: AnyRef) extends JDBCType
 private case class CharacterStreamJDBCType(value: Reader, length: Int) extends JDBCType
 private case class RefJDBCType(value: Ref) extends JDBCType
@@ -96,11 +96,11 @@ private case class ArrayJDBCType(value: java.sql.Array) extends JDBCType
 private case class CalendarDateJDBCType(value: Date, cal: Calendar) extends JDBCType
 private case class CalendarTimeJDBCType(value: Time, cal: Calendar) extends JDBCType
 private case class CalendarTimestampJDBCType(value: Timestamp, cal: Calendar) extends JDBCType
-private case class UserNullJDBCType(typ: SQLType, name: String) extends JDBCType
+private case class UserNullJDBCType(typ: SqlType, name: String) extends JDBCType
 private case class URLJDBCType(value: URL) extends JDBCType
 
 trait JDBCTypes {
-  def nullType(typ: SQLType): JDBCType = NullJDBCType(typ)
+  def nullType(typ: SqlType): JDBCType = NullJDBCType(typ)
   def booleanType(value: Boolean): JDBCType = BooleanJDBCType(value)
   def byteType(value: Byte): JDBCType = ByteJDBCType(value)
   def shortType(value: Short): JDBCType = ShortJDBCType(value)
@@ -117,7 +117,7 @@ trait JDBCTypes {
   def asciiStreamType(value: InputStream, length: Int): JDBCType = AsciiStreamJDBCType(value, length)
   def unicodeStreamType(value: InputStream, length: Int): JDBCType = UnicodeStreamJDBCType(value, length)
   def binaryStreamType(value: InputStream, length: Int): JDBCType = BinaryStreamJDBCType(value, length)
-  def objectTypeType(value: AnyRef, typ: SQLType): JDBCType = ObjectTypeJDBCType(value, typ)
+  def objectTypeType(value: AnyRef, typ: SqlType): JDBCType = ObjectTypeJDBCType(value, typ)
   def objectType(value: AnyRef): JDBCType = ObjectJDBCType(value)
   def characterStreamType(value: Reader, length: Int): JDBCType = CharacterStreamJDBCType(value, length)
   def refType(value: Ref): JDBCType = RefJDBCType(value)
@@ -127,6 +127,6 @@ trait JDBCTypes {
   def calendarDateType(value: Date, cal: Calendar): JDBCType = CalendarDateJDBCType(value, cal)
   def calendarTimeType(value: Time, cal: Calendar): JDBCType = CalendarTimeJDBCType(value, cal)
   def calendarTimestampType(value: Timestamp, cal: Calendar): JDBCType = CalendarTimestampJDBCType(value, cal)
-  def userNullType(typ: SQLType, name: String): JDBCType = UserNullJDBCType(typ, name)
+  def userNullType(typ: SqlType, name: String): JDBCType = UserNullJDBCType(typ, name)
   def urlType(value: URL): JDBCType = URLJDBCType(value)
 }

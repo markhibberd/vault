@@ -11,7 +11,7 @@ sealed trait StringQuery {
     sqlConnect(c => withSQLResource(
                      value = c.createStatement
                    , evaluate = (s: Statement) =>
-                       trySQLValue(s executeUpdate query)
+                       trySqlValue(s executeUpdate query)
                    ))
 
   def executePreparedUpdate(withStatement: PreparedStatement => Unit) =

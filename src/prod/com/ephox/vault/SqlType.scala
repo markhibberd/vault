@@ -2,7 +2,7 @@ package com.ephox.vault
 
 import java.sql.Types._
 
-sealed trait SQLType {
+sealed trait SqlType {
   type Type = Int
 
   def toType: Type = this match {
@@ -44,44 +44,44 @@ sealed trait SQLType {
     case VarCharType => VARCHAR
   }
 }
-case object ArrayType extends SQLType
-case object BigIntType extends SQLType
-case object BinaryType extends SQLType
-case object BitType extends SQLType
-case object BlobType extends SQLType
-case object BooleanType extends SQLType
-case object CharType extends SQLType
-case object ClobType extends SQLType
-case object DataLinkType extends SQLType
-case object DateType extends SQLType
-case object DecimalType extends SQLType
-case object DistinctType extends SQLType
-case object DoubleType extends SQLType
-case object FloatType extends SQLType
-case object IntegerType extends SQLType
-case object JavaObjectType extends SQLType
-case object LongNVarCharType extends SQLType
-case object LongVarBinaryType extends SQLType
-case object LongVarCharType extends SQLType
-case object NCharType extends SQLType
-case object NClobType extends SQLType
-case object NullType extends SQLType
-case object NumericType extends SQLType
-case object NVarCharType extends SQLType
-case object OtherType extends SQLType
-case object RealType extends SQLType
-case object RefType extends SQLType
-case object RowIdType extends SQLType
-case object SmallIntType extends SQLType
-case object SqlXmlType extends SQLType
-case object StructType extends SQLType
-case object TimeType extends SQLType
-case object TimestampType extends SQLType
-case object TinyIntType extends SQLType
-case object VarBinaryType extends SQLType
-case object VarCharType extends SQLType
+case object ArrayType extends SqlType
+case object BigIntType extends SqlType
+case object BinaryType extends SqlType
+case object BitType extends SqlType
+case object BlobType extends SqlType
+case object BooleanType extends SqlType
+case object CharType extends SqlType
+case object ClobType extends SqlType
+case object DataLinkType extends SqlType
+case object DateType extends SqlType
+case object DecimalType extends SqlType
+case object DistinctType extends SqlType
+case object DoubleType extends SqlType
+case object FloatType extends SqlType
+case object IntegerType extends SqlType
+case object JavaObjectType extends SqlType
+case object LongNVarCharType extends SqlType
+case object LongVarBinaryType extends SqlType
+case object LongVarCharType extends SqlType
+case object NCharType extends SqlType
+case object NClobType extends SqlType
+case object NullType extends SqlType
+case object NumericType extends SqlType
+case object NVarCharType extends SqlType
+case object OtherType extends SqlType
+case object RealType extends SqlType
+case object RefType extends SqlType
+case object RowIdType extends SqlType
+case object SmallIntType extends SqlType
+case object SqlXmlType extends SqlType
+case object StructType extends SqlType
+case object TimeType extends SqlType
+case object TimestampType extends SqlType
+case object TinyIntType extends SqlType
+case object VarBinaryType extends SqlType
+case object VarCharType extends SqlType
 
-trait SQLTypes {
+trait SqlTypes {
   val sqlTypes = Set(
                       ArrayType
                     , BigIntType

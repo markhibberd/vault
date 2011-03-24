@@ -5,7 +5,7 @@ import scalaz._
 import Scalaz._
 
 sealed trait RowValue[A] {
-  def fold[X](value: SQLValue[A] => X, nul: => X): X
+  def fold[X](value: SqlValue[A] => X, nul: => X): X
 
   def foldV[X](sqlErr: SQLException => X, sqlValue: A => X, nul: => X): X =
     fold(x => x.fold(sqlErr, sqlValue), nul)
@@ -29,7 +29,7 @@ sealed trait RowValue[A] {
   def getSQLValue =
     fold(Some(_), None)
 
-  def getSQLValueOr(v: => SQLValue[A]) =
+  def getSQLValueOr(v: => SqlValue[A]) =
     getSQLValue getOrElse v
 
   def printStackTraceOr(value: A => Unit, nul: => Unit) =
@@ -53,21 +53,21 @@ sealed trait RowValue[A] {
 
 trait RowValues {
   def rowError[A](e: SQLException): RowValue[A] = new RowValue[A] {
-    def fold[X](v: SQLValue[A] => X, nul: => X) =
+    def fold[X](v: SqlValue[A] => X, nul: => X) =
       v(sqlError(e))
   }
 
   def rowValue[A](a: A): RowValue[A] = new RowValue[A] {
-    def fold[X](v: SQLValue[A] => X, nul: => X) =
-      v(a.η[SQLValue])
+    def fold[X](v: SqlValue[A] => X, nul: => X) =
+      v(a.η[SqlValue])
   }
 
   def rowNull[A]: RowValue[A] = new RowValue[A] {
-    def fold[X](v: SQLValue[A] => X, nul: => X) = nul
+    def fold[X](v: SqlValue[A] => X, nul: => X) = nul
   }
 
   def tryRowValue[A](a: => A): RowValue[A] =
-    trySQLValue(a).toRowAccess
+    trySqlValue(a).toRowAccess
 
   implicit val RowValueInjective = Injective[RowValue]
 
@@ -78,7 +78,7 @@ trait RowValues {
 
   implicit val RowValuePure: Pure[RowValue] = new Pure[RowValue] {
     def pure[A](a: => A) =
-      a.η[SQLValue].toRowAccess
+      a.η[SqlValue].toRowAccess
   }
 
   implicit val RowValueApply: Apply[RowValue] = new Apply[RowValue] {
