@@ -5,6 +5,8 @@ import Scalaz._
 import com.ephox.vault._
 
 object VaultDemo {
+  type L = String
+
   case class Person(name: String, age: Int)
 
   object Person {
@@ -24,8 +26,8 @@ object VaultDemo {
 
   val PersonRowAccess =
     for {
-      name <- stringIndex(2)
-      age  <- intIndex(3)
+      name <- stringIndex[L](2)
+      age  <- intIndex[L](3)
     } yield Person(name, age)
 
   def setupData =
@@ -33,7 +35,7 @@ object VaultDemo {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
       p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement
-             (s => s.foreachStatement(data, (p: Person) => p match {
+             (s => s.foreachStatement[List, Person, L](data, (p: Person) => p match {
                case Person(name, age) => {
                  s.set(stringType(name), intType(age))
                }
@@ -66,10 +68,11 @@ object VaultDemo {
       setupData commitRollback connection printStackTraceOr (n => println(n + " rows affected"))
 
       // get result and close connection
-      val combinedPerson = PersonRowAccess -||> combine <|- "SELECT * FROM PERSON".toSql finalyClose connection
+//      val combinedPerson = PersonRowAccess -||> combine <|- "SELECT * FROM PERSON".toSql finalyClose connection
 
       // print the result
-      combinedPerson.println
+//      combinedPerson.println
+      error("todo")
     }
   }
 }

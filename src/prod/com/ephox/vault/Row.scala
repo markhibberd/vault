@@ -8,109 +8,109 @@ import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSe
 import java.net.URL
 
 sealed trait Row {
-  def iterate[A, T](a: RowAccessor[A]): IterV[A, T] => RowValue[IterV[A, T]]
+  def iterate[L, A, T](a: RowAccessor[L, A]): IterV[A, T] => RowValue[L, IterV[A, T]]
 
-  def arrayIndex(columnIndex: Int): RowValue[java.sql.Array]
-  def arrayLabel(columnLabel: String): RowValue[java.sql.Array]
+  def arrayIndex[L](columnIndex: Int): RowValue[L, java.sql.Array]
+  def arrayLabel[L](columnLabel: String): RowValue[L, java.sql.Array]
 
-  def asciiStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowValue[A]
-  def asciiStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowValue[A]
+  def asciiStreamIndex[L, A](columnIndex: Int, withInputStream: InputStream => A): RowValue[L, A]
+  def asciiStreamLabel[L, A](columnLabel: String, withInputStream: InputStream => A): RowValue[L, A]
 
-  def bigDecimalIndex(columnIndex: Int): RowValue[java.math.BigDecimal]
-  def bigDecimalLabel(columnLabel: String): RowValue[java.math.BigDecimal]
+  def bigDecimalIndex[L](columnIndex: Int): RowValue[L, java.math.BigDecimal]
+  def bigDecimalLabel[L](columnLabel: String): RowValue[L, java.math.BigDecimal]
 
-  def binaryStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowValue[A]
-  def binaryStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowValue[A]
+  def binaryStreamIndex[L, A](columnIndex: Int, withInputStream: InputStream => A): RowValue[L, A]
+  def binaryStreamLabel[L, A](columnLabel: String, withInputStream: InputStream => A): RowValue[L, A]
 
-  def blobIndex(columnIndex: Int): RowValue[Blob]
-  def blobLabel(columnLabel: String): RowValue[Blob]
+  def blobIndex[L](columnIndex: Int): RowValue[L, Blob]
+  def blobLabel[L](columnLabel: String): RowValue[L, Blob]
 
-  def booleanIndex(columnIndex: Int): RowValue[Boolean]
-  def booleanLabel(columnLabel: String): RowValue[Boolean]
+  def booleanIndex[L](columnIndex: Int): RowValue[L, Boolean]
+  def booleanLabel[L](columnLabel: String): RowValue[L, Boolean]
 
-  def byteIndex(columnIndex: Int): RowValue[Byte]
-  def byteLabel(columnLabel: String): RowValue[Byte]
+  def byteIndex[L](columnIndex: Int): RowValue[L, Byte]
+  def byteLabel[L](columnLabel: String): RowValue[L, Byte]
 
-  def bytesIndex(columnIndex: Int): RowValue[Array[Byte]]
-  def bytesLabel(columnLabel: String): RowValue[Array[Byte]]
+  def bytesIndex[L](columnIndex: Int): RowValue[L, Array[Byte]]
+  def bytesLabel[L](columnLabel: String): RowValue[L, Array[Byte]]
 
-  def characterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowValue[A]
-  def characterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowValue[A]
+  def characterStreamIndex[L, A](columnIndex: Int, withReader: Reader => A): RowValue[L, A]
+  def characterStreamLabel[L, A](columnLabel: String, withReader: Reader => A): RowValue[L, A]
 
-  def clobIndex(columnIndex: Int): RowValue[Clob]
-  def clobLabel(columnLabel: String): RowValue[Clob]
+  def clobIndex[L](columnIndex: Int): RowValue[L, Clob]
+  def clobLabel[L](columnLabel: String): RowValue[L, Clob]
 
-  def dateIndex(columnIndex: Int): RowValue[Date]
-  def dateLabel(columnLabel: String): RowValue[Date]
-  def dateIndexCal(columnIndex: Int, cal: Row.Cal): RowValue[Date]
-  def dateLabelCal(columnLabel: String, cal: Row.Cal): RowValue[Date]
+  def dateIndex[L](columnIndex: Int): RowValue[L, Date]
+  def dateLabel[L](columnLabel: String): RowValue[L, Date]
+  def dateIndexCal[L](columnIndex: Int, cal: Row.Cal): RowValue[L, Date]
+  def dateLabelCal[L](columnLabel: String, cal: Row.Cal): RowValue[L, Date]
 
-  def doubleIndex(columnIndex: Int): RowValue[Double]
-  def doubleLabel(columnLabel: String): RowValue[Double]
+  def doubleIndex[L](columnIndex: Int): RowValue[L, Double]
+  def doubleLabel[L](columnLabel: String): RowValue[L, Double]
 
-  def floatIndex(columnIndex: Int): RowValue[Float]
-  def floatLabel(columnLabel: String): RowValue[Float]
+  def floatIndex[L](columnIndex: Int): RowValue[L, Float]
+  def floatLabel[L](columnLabel: String): RowValue[L, Float]
 
-  def intIndex(columnIndex: Int): RowValue[Int]
-  def intLabel(columnLabel: String): RowValue[Int]
+  def intIndex[L](columnIndex: Int): RowValue[L, Int]
+  def intLabel[L](columnLabel: String): RowValue[L, Int]
 
-  def longIndex(columnIndex: Int): RowValue[Long]
-  def longLabel(columnLabel: String): RowValue[Long]
+  def longIndex[L](columnIndex: Int): RowValue[L, Long]
+  def longLabel[L](columnLabel: String): RowValue[L, Long]
 
-  def ncharacterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowValue[A]
-  def ncharacterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowValue[A]
+  def ncharacterStreamIndex[L, A](columnIndex: Int, withReader: Reader => A): RowValue[L, A]
+  def ncharacterStreamLabel[L, A](columnLabel: String, withReader: Reader => A): RowValue[L, A]
 
-  def nclobIndex(columnIndex: Int): RowValue[Clob]
-  def nclobLabel(columnLabel: String): RowValue[Clob]
+  def nclobIndex[L](columnIndex: Int): RowValue[L, Clob]
+  def nclobLabel[L](columnLabel: String): RowValue[L, Clob]
 
-  def nstringIndex(columnIndex: Int): RowValue[String]
-  def nstringLabel(columnLabel: String): RowValue[String]
+  def nstringIndex[L](columnIndex: Int): RowValue[L, String]
+  def nstringLabel[L](columnLabel: String): RowValue[L, String]
 
-  def objectIndex(columnIndex: Int): RowValue[AnyRef]
-  def objectLabel(columnLabel: String): RowValue[AnyRef]
-  def objectMapIndex(columnIndex: Int, m: Row.ObjectTypeMap): RowValue[AnyRef]
-  def objectMapLabel(columnLabel: String, m: Row.ObjectTypeMap): RowValue[AnyRef]
+  def objectIndex[L](columnIndex: Int): RowValue[L, AnyRef]
+  def objectLabel[L](columnLabel: String): RowValue[L, AnyRef]
+  def objectMapIndex[L](columnIndex: Int, m: Row.ObjectTypeMap): RowValue[L, AnyRef]
+  def objectMapLabel[L](columnLabel: String, m: Row.ObjectTypeMap): RowValue[L, AnyRef]
 
-  def refIndex(columnIndex: Int): RowValue[Ref]
-  def refLabel(columnLabel: String): RowValue[Ref]
+  def refIndex[L](columnIndex: Int): RowValue[L, Ref]
+  def refLabel[L](columnLabel: String): RowValue[L, Ref]
 
-  def rowIdIndex(columnIndex: Int): RowValue[RowId]
-  def rowIdLabel(columnLabel: String): RowValue[RowId]
+  def rowIdIndex[L](columnIndex: Int): RowValue[L, RowId]
+  def rowIdLabel[L](columnLabel: String): RowValue[L, RowId]
 
-  def shortIndex(columnIndex: Int): RowValue[Short]
-  def shortLabel(columnLabel: String): RowValue[Short]
+  def shortIndex[L](columnIndex: Int): RowValue[L, Short]
+  def shortLabel[L](columnLabel: String): RowValue[L, Short]
 
-  def sqlxmlIndex(columnIndex: Int): RowValue[SQLXML]
-  def sqlxmlLabel(columnLabel: String): RowValue[SQLXML]
+  def sqlxmlIndex[L](columnIndex: Int): RowValue[L, SQLXML]
+  def sqlxmlLabel[L](columnLabel: String): RowValue[L, SQLXML]
 
-  def stringIndex(columnIndex: Int): RowValue[String]
-  def stringLabel(columnLabel: String): RowValue[String]
+  def stringIndex[L](columnIndex: Int): RowValue[L, String]
+  def stringLabel[L](columnLabel: String): RowValue[L, String]
 
-  def timeIndex(columnIndex: Int): RowValue[Time]
-  def timeLabel(columnLabel: String): RowValue[Time]
-  def timeIndexCal(columnIndex: Int, cal: Row.Cal): RowValue[Time]
-  def timeLabelCal(columnLabel: String, cal: Row.Cal): RowValue[Time]
+  def timeIndex[L](columnIndex: Int): RowValue[L, Time]
+  def timeLabel[L](columnLabel: String): RowValue[L, Time]
+  def timeIndexCal[L](columnIndex: Int, cal: Row.Cal): RowValue[L, Time]
+  def timeLabelCal[L](columnLabel: String, cal: Row.Cal): RowValue[L, Time]
 
-  def timestampIndex(columnIndex: Int): RowValue[Timestamp]
-  def timestampLabel(columnLabel: String): RowValue[Timestamp]
-  def timestampIndexCal(columnIndex: Int, cal: Row.Cal): RowValue[Timestamp]
-  def timestampLabelCal(columnLabel: String, cal: Row.Cal): RowValue[Timestamp]
+  def timestampIndex[L](columnIndex: Int): RowValue[L, Timestamp]
+  def timestampLabel[L](columnLabel: String): RowValue[L, Timestamp]
+  def timestampIndexCal[L](columnIndex: Int, cal: Row.Cal): RowValue[L, Timestamp]
+  def timestampLabelCal[L](columnLabel: String, cal: Row.Cal): RowValue[L, Timestamp]
 
-  def urlIndex(columnIndex: Int): RowValue[URL]
-  def urlLabel(columnLabel: String): RowValue[URL]
+  def urlIndex[L](columnIndex: Int): RowValue[L, URL]
+  def urlLabel[L](columnLabel: String): RowValue[L, URL]
 
-  def keyLabel(label: String): RowValue[Key]
-  def keyIndex(index: Int): RowValue[Key]
+  def keyLabel[L](label: String): RowValue[L, Key]
+  def keyIndex[L](index: Int): RowValue[L, Key]
 
-  def possibleKeyLabel(label: String): RowValue[Key]
-  def possibleKeyIndex(index: Int): RowValue[Key]
+  def possibleKeyLabel[L](label: String): RowValue[L, Key]
+  def possibleKeyIndex[L](index: Int): RowValue[L, Key]
 }
 
 object Row {
   type ObjectTypeMap = java.util.Map[String, Class[_]]
   type Cal = Calendar
 
-  private[vault] def resultSetRow(r: ResultSet): Row = new Row {
+  private[vault] def resultSetRow(r: ResultSet): Row = /* new Row {
     private def tryRowAccess[A](a: => A): RowValue[A] =
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)
@@ -350,5 +350,6 @@ object Row {
       case None => Key.nokey
       case Some(x) => Key.key(x)
     })
-  }
+  } */
+    error("todo")
 }

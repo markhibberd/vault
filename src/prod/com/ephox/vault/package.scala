@@ -17,11 +17,11 @@ package object vault
   with SqlTypes
   with DDL {
 
-  def withSqlResource[T, R](
+  def withSqlResource[T, R, L](
                           value: => T
-                        , evaluate: T => SqlValue[R]
+                        , evaluate: T => SqlValue[L, R]
                         , whenClosing: Throwable => Unit = _ => ()
-                        )(implicit r: Resource[T]): SqlValue[R] =
+                        )(implicit r: Resource[T]): SqlValue[L, R] =
     withResource(value, evaluate, {
       case e: SqlException => sqlError(e)
       case e               => throw e
