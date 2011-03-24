@@ -24,7 +24,7 @@ sealed trait RowAccessor[A] {
           }
         })
     } catch {
-      case e: java.sql.SQLException => rowError(e)
+      case e: SqlException => rowError(e)
       case x                        => throw x
     }))
 
