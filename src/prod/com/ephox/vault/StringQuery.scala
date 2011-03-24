@@ -8,7 +8,7 @@ sealed trait StringQuery {
   val query: String
 
   def executeUpdate: SqlConnect[Int] =
-    sqlConnect(c => withSQLResource(
+    sqlConnect(c => withSqlResource(
                      value = c.createStatement
                    , evaluate = (s: Statement) =>
                        trySqlValue(s executeUpdate query)
@@ -21,7 +21,7 @@ sealed trait StringQuery {
     }))
 
   def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => SqlConnect[B]): SqlConnect[B] =
-    sqlConnect(c => withSQLResource(
+    sqlConnect(c => withSqlResource(
                      value = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
                    , evaluate = (s: PreparedStatement) => {
                          val a = withStatement(s)
@@ -50,7 +50,7 @@ sealed trait StringQuery {
     ).map(_._2)
 
   def prepareStatement[A](k: PreparedStatement => SqlConnect[A]) : SqlConnect[A] =
-    sqlConnect(c => withSQLResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
+    sqlConnect(c => withSqlResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
 
   def toSql = sql(query)
 

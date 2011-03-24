@@ -25,11 +25,11 @@ sealed trait RowValue[A] {
   def getValueOr(v: => A) =
     getValue getOrElse v
 
-  def getSQLValue =
+  def getSqlValue =
     fold(Some(_), None)
 
-  def getSQLValueOr(v: => SqlValue[A]) =
-    getSQLValue getOrElse v
+  def getSqlValueOr(v: => SqlValue[A]) =
+    getSqlValue getOrElse v
 
   def printStackTraceOr(value: A => Unit, nul: => Unit) =
     fold(_.printStackTraceOr(value), nul)
