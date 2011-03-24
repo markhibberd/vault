@@ -13,7 +13,7 @@ package object vault
   with RowConnectors
   with SQLRowAccesss
   with SQLQueries
-  with Connectors
+  with SqlConnects
   with JDBCTypes
   with SQLTypes
   with DDL {

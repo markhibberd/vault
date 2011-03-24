@@ -7,21 +7,21 @@ import java.sql.{PreparedStatement, Statement}
 sealed trait StringQuery {
   val query: String
 
-  def executeUpdate: Connector[Int] =
-    connector(c => withSQLResource(
+  def executeUpdate: SQLConnect[Int] =
+    sqlConnect(c => withSQLResource(
                      value = c.createStatement
                    , evaluate = (s: Statement) =>
                        trySQLValue(s executeUpdate query)
                    ))
 
   def executePreparedUpdate(withStatement: PreparedStatement => Unit) =
-    prepareStatement(s => connector(_ => {
+    prepareStatement(s => sqlConnect(_ => {
       withStatement(s)
       s.tryExecuteUpdate
     }))
 
-  def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => Connector[B]): Connector[B] =
-    connector(c => withSQLResource(
+  def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => SQLConnect[B]): SQLConnect[B] =
+    sqlConnect(c => withSQLResource(
                      value = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
                    , evaluate = (s: PreparedStatement) => {
                          val a = withStatement(s)
@@ -37,20 +37,20 @@ sealed trait StringQuery {
                      }
                    ))
 
-  def executeUpdateWithKeysSet[B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): Connector[B] =
+  def executeUpdateWithKeysSet[B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): SQLConnect[B] =
     executeUpdateWithKeys(
       withStatement = withStatement(_)
-    , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[Connector]
+    , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[SQLConnect]
     )
 
-  def executeUpdateWithKey[A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): Connector[A] =
+  def executeUpdateWithKey[A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SQLConnect[A] =
     executeUpdateWithKeysSet(
       withStatement,
       r => i => (i, keyed.set(a, r.keyLabel("ID").getValueOr(Key.nokey)))
     ).map(_._2)
 
-  def prepareStatement[A](k: PreparedStatement => Connector[A]) : Connector[A] =
-    connector(c => withSQLResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
+  def prepareStatement[A](k: PreparedStatement => SQLConnect[A]) : SQLConnect[A] =
+    sqlConnect(c => withSQLResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
 
   def toSql = sql(query)
 

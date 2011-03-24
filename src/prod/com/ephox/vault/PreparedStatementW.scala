@@ -10,16 +10,16 @@ sealed trait PreparedStatementW {
   def tryExecuteUpdate: SQLValue[Int] =
     trySQLValue(s.executeUpdate)
 
-  def executeStatements[T[_], A](as: T[A], k: A => Connector[Unit])(implicit f: Foldable[T]): Connector[Int] =
-    connector(c => as.foldLeftM(0) {
+  def executeStatements[T[_], A](as: T[A], k: A => SQLConnect[Unit])(implicit f: Foldable[T]): SQLConnect[Int] =
+    sqlConnect(c => as.foldLeftM(0) {
        case (n, a) => {
          k(a)(c)
          s.tryExecuteUpdate ∘ (n+)
        }
      })
 
-  def foreachStatement[T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): Connector[Int] =
-    executeStatements(as, (a: A) => k(a).η[Connector])
+  def foreachStatement[T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SQLConnect[Int] =
+    executeStatements(as, (a: A) => k(a).η[SQLConnect])
 
   def set(values: JDBCType*): Unit =
     setValues(values.toList)
