@@ -9,9 +9,9 @@ sealed trait Connector {
 }
 
 object Connector {
-  def hsqltest: SQLConnect = hsqlmem("testdb", "sa", "")
+  def hsqltest: SqlConnect = hsqlmem("testdb", "sa", "")
 
-  def hsqlmem(dbname: String, username: String, password: String):SQLConnect = new SQLConnect {
+  def hsqlmem(dbname: String, username: String, password: String):SqlConnect = new SqlConnect {
     def nu = mkConnection(
       "org.hsqldb.jdbcDriver",
       "jdbc:hsqldb:mem:" + dbname,
@@ -21,7 +21,7 @@ object Connector {
     override def toString = "hsqlmem[" + username + "@" + dbname + "]"
   }
 
-  def hsqlfile(dbfile: String, username: String, password: String):SQLConnect = new SQLConnect {
+  def hsqlfile(dbfile: String, username: String, password: String):SqlConnect = new SqlConnect {
     def nu = mkConnection(
       "org.hsqldb.jdbcDriver",
       "jdbc:hsqldb:file:" + dbfile,
@@ -43,13 +43,13 @@ object Connector {
     datasource(ds, name)
   }
 
-  def datasource(ds: DataSource, name: String = "provided"): SQLConnect = new SQLConnect {
+  def datasource(ds: DataSource, name: String = "provided"): SqlConnect = new SqlConnect {
     def nu = ds.getConnection
 
     override def toString = "datasource[" + name + "]"
   }
 
-  def oracle(hostname: String, port: Int, sid: String, username: String, password: String): SQLConnect = new SQLConnect {
+  def oracle(hostname: String, port: Int, sid: String, username: String, password: String): SqlConnect = new SqlConnect {
     def nu = mkConnection(
       "oracle.jdbc.OracleDriver",
       "jdbc:oracle:thin:@" + hostname + ":" + port + ":" + sid,
@@ -59,7 +59,7 @@ object Connector {
     override def toString = "oracle[" + username + "@" + hostname + ":" + port + ":" + sid + "]"
   }
 
-  def db2(hostname: String, port: Int, dbname: String, username: String, password: String): SQLConnect = new SQLConnect {
+  def db2(hostname: String, port: Int, dbname: String, username: String, password: String): SqlConnect = new SqlConnect {
     def nu = mkConnection(
       "com.ibm.db2.jcc.DB2Driver",
       "jdbc:db2://" + hostname + ":" + port + "/" + dbname,
@@ -69,7 +69,7 @@ object Connector {
     override def toString = "db2[" + username + "@" + hostname + ":" + port + "/" + dbname + "]"
   }
 
-  def mysql(hostname: String, port: Int, dbname: Int, username: String, password: String): SQLConnect = new SQLConnect {
+  def mysql(hostname: String, port: Int, dbname: Int, username: String, password: String): SqlConnect = new SqlConnect {
     def nu = mkConnection(
       "com.mysql.jdbc.Driver",
       "jdbc:mysql://" + hostname + ":" + port + "/" + dbname,
@@ -79,7 +79,7 @@ object Connector {
     override def toString = "mysql[" + username + "@" + hostname + ":" + port + "/" + dbname + "]"
   }
 
-  def sqlserver(hostname: String, port: Int, dbname: Int, username: String, password: String):  SQLConnect = new SQLConnect {
+  def sqlserver(hostname: String, port: Int, dbname: Int, username: String, password: String):  SqlConnect = new SqlConnect {
     def nu = mkConnection(
       "com.microsoft.jdbc.sqlserver.SQLServerDriver",
       "jdbc:microsoft:sqlserver://" + hostname + ":" + port + ";databaseName=" + dbname,
@@ -89,7 +89,7 @@ object Connector {
     override def toString = "sqlserver[" + username + "@" + hostname + ":" + port + "/" + dbname + "]"
   }
 
-  def postgres(hostname: String, port: Int, dbname: Int, username: String, password: String): SQLConnect = new SQLConnect {
+  def postgres(hostname: String, port: Int, dbname: Int, username: String, password: String): SqlConnect = new SqlConnect {
     def nu = mkConnection(
     "org.postgresql.Driver",
     "jdbc:postgresql://" + hostname + ":" + port + "/" + dbname,
@@ -99,7 +99,7 @@ object Connector {
     override def toString = "postgres[" + username + "@" + hostname + ":" + port + "/" + dbname + "]"
   }
 
-  def generic(driver: String, url: String, username: String, password: String): SQLConnect  = new SQLConnect {
+  def generic(driver: String, url: String, username: String, password: String): SqlConnect  = new SqlConnect {
     def nu = mkConnection(driver, url, username, password)
 
     override def toString = "generic[" + username + "@" + url + "]"
