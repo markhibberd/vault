@@ -5,7 +5,7 @@ import Scalaz._
 import java.sql.Connection
 
 sealed trait RowConnector[A] {
-  val connect: Connection => RowAccess[A]
+  val connect: Connection => RowValue[A]
 
   def apply(c: Connection) = connect(c)
 
@@ -34,18 +34,18 @@ sealed trait RowConnector[A] {
 }
 
 trait RowConnectors {
-  def rowConnector[A](f: Connection => RowAccess[A]): RowConnector[A] = new RowConnector[A] {
+  def rowConnector[A](f: Connection => RowValue[A]): RowConnector[A] = new RowConnector[A] {
     val connect = f
   }
 
-  def constantRowConnector[A](v: => RowAccess[A]): RowConnector[A] =
+  def constantRowConnector[A](v: => RowValue[A]): RowConnector[A] =
     rowConnector(_ => v)
 
   def valueRowConnector[A](f: Connection => A): RowConnector[A] =
-    rowConnector(f(_).η[RowAccess])
+    rowConnector(f(_).η[RowValue])
 
   def tryRowConnector[A](f: Connection => A): RowConnector[A] =
-    rowConnector(c => tryRowAccessValue(f(c)))
+    rowConnector(c => tryRowValue(f(c)))
 
   val closeRowConnector: RowConnector[Unit] =
     tryRowConnector(_.close)
@@ -57,7 +57,7 @@ trait RowConnectors {
 
   implicit def RowConnectorPure: Pure[RowConnector] = new Pure[RowConnector] {
     def pure[A](a: => A) =
-      rowConnector(_ => a.η[RowAccess])
+      rowConnector(_ => a.η[RowValue])
   }
 
   implicit def RowConnectorApply: Apply[RowConnector] = new Apply[RowConnector] {

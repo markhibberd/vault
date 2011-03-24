@@ -4,7 +4,7 @@ import scalaz._
 import Scalaz._
 
 sealed trait RowAccessor[A] {
-  val access: Row => RowAccess[A]
+  val access: Row => RowValue[A]
 
   def -|>[T](iter: IterV[A, T]): SQLRowAccess[IterV[A, T]] =
     sqlRowAccess(query => rowConnector(c => try {
@@ -24,7 +24,7 @@ sealed trait RowAccessor[A] {
           }
         })
     } catch {
-      case e: java.sql.SQLException => rowAccessError(e)
+      case e: java.sql.SQLException => rowError(e)
       case x                        => throw x
     }))
 
@@ -50,7 +50,7 @@ sealed trait RowAccessor[A] {
 }
 
 trait RowAccessors {
-  def rowAccessor[A](f: Row => RowAccess[A]): RowAccessor[A] = new RowAccessor[A] {
+  def rowAccessor[A](f: Row => RowValue[A]): RowAccessor[A] = new RowAccessor[A] {
     val access = f
   }
 
@@ -167,7 +167,7 @@ trait RowAccessors {
 
   implicit def RowAccessorPure[M[_]]: Pure[RowAccessor] = new Pure[RowAccessor] {
     def pure[A](a: => A) =
-      rowAccessor(_ => a.η[RowAccess])
+      rowAccessor(_ => a.η[RowValue])
   }
 
   implicit def RowAccessorApply[M[_]]: Apply[RowAccessor] = new Apply[RowAccessor] {
