@@ -4,7 +4,7 @@ import scalaz._
 import Scalaz._
 
 sealed trait SqlRowAccess[A] {
-  def <|-(sql: SQLQuery): RowConnector[A]
+  def <|-(sql: SqlQuery): RowConnector[A]
 
   def map[B](f: A => B): SqlRowAccess[B] =
     sqlRowAccess(s => this <|- s map f)
@@ -14,8 +14,8 @@ sealed trait SqlRowAccess[A] {
 }
 
 trait SqlRowAccesss {
-  def sqlRowAccess[A](f: SQLQuery => RowConnector[A]): SqlRowAccess[A] = new SqlRowAccess[A] {
-    def <|-(sql: SQLQuery) =
+  def sqlRowAccess[A](f: SqlQuery => RowConnector[A]): SqlRowAccess[A] = new SqlRowAccess[A] {
+    def <|-(sql: SqlQuery) =
       f(sql)
   }
 

@@ -1,13 +1,13 @@
 package com.ephox.vault
 
-trait SQLQuery {
+trait SqlQuery {
   def fold[X](
     sql: (String, List[JDBCType]) => X
   ): X
 }
 
-trait SQLQueries {
-  def sql(sql: String, bindings: List[JDBCType] = Nil): SQLQuery = new SQLQuery {
+trait SqlQuerys {
+  def sql(sql: String, bindings: List[JDBCType] = Nil): SqlQuery = new SqlQuery {
     def fold[X](
       bound: (String, List[JDBCType]) => X
     ): X = bound(sql, bindings)
