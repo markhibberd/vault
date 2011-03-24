@@ -29,7 +29,7 @@ sealed trait SqlConnect[A] {
   /**
    * Commits the connection and if this fails with an exception then rollback the connection.
    *
-   * If the failure is an `SQLException` then this is returned in the `SqlValue`, otherwise, the exception is rethrown.
+   * If the failure is an `SqlException` then this is returned in the `SqlValue`, otherwise, the exception is rethrown.
    */
   def commitRollback: SqlConnect[A] =
     sqlConnect(c => try {
@@ -37,7 +37,7 @@ sealed trait SqlConnect[A] {
       c.commit
       r
     } catch {
-      case e: SQLException => {
+      case e: SqlException => {
         c.rollback
         sqlError(e)
       }

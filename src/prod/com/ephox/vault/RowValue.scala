@@ -1,13 +1,12 @@
 package com.ephox.vault
 
-import java.sql.SQLException
 import scalaz._
 import Scalaz._
 
 sealed trait RowValue[A] {
   def fold[X](value: SqlValue[A] => X, nul: => X): X
 
-  def foldV[X](sqlErr: SQLException => X, sqlValue: A => X, nul: => X): X =
+  def foldV[X](sqlErr: SqlException => X, sqlValue: A => X, nul: => X): X =
     fold(x => x.fold(sqlErr, sqlValue), nul)
 
   def isNull: Boolean = foldV(_ => false, _ => false, true)
@@ -17,7 +16,7 @@ sealed trait RowValue[A] {
   def getError =
     fold(Some(_), None)
 
-  def getErrorOr(e: => SQLException) =
+  def getErrorOr(e: => SqlException) =
     getError getOrElse e
 
   def getValue =
@@ -52,7 +51,7 @@ sealed trait RowValue[A] {
 }
 
 trait RowValues {
-  def rowError[A](e: SQLException): RowValue[A] = new RowValue[A] {
+  def rowError[A](e: SqlException): RowValue[A] = new RowValue[A] {
     def fold[X](v: SqlValue[A] => X, nul: => X) =
       v(sqlError(e))
   }
@@ -115,7 +114,7 @@ trait RowValues {
 
   implicit val RowAccessTraverse: Traverse[RowValue] = new Traverse[RowValue] {
     def traverse[F[_] : Applicative, A, B](f: A => F[B], as: RowValue[A]): F[RowValue[B]] =
-      as foldV ((e: SQLException) => rowError(e).η[F], v => f(v) ∘ (rowValue(_)), rowNull.η[F])
+      as foldV ((e: SqlException) => rowError(e).η[F], v => f(v) ∘ (rowValue(_)), rowNull.η[F])
   }
 
   implicit def RowAccessShow[A: Show]: Show[RowValue[A]] = new Show[RowValue[A]] {

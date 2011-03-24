@@ -4,7 +4,7 @@ import scalaz._
 import Scalaz._
 import java.io.{Reader, InputStream}
 import java.util.Calendar
-import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, SQLException, ResultSet}
+import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSet}
 import java.net.URL
 
 sealed trait Row {
@@ -117,7 +117,7 @@ object Row {
         val z = a
         if(r.wasNull) rowNull else z.η[RowValue]
       } catch {
-        case e: SQLException => rowError(e)
+        case e: SqlException => rowError(e)
         case x => throw x
       }
 

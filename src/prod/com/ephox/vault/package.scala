@@ -2,7 +2,6 @@ package com.ephox
 
 import scalaz._
 import Scalaz._
-import java.sql.SQLException
 
 package object vault
   extends StringQuerys
@@ -24,7 +23,7 @@ package object vault
                         , whenClosing: Throwable => Unit = _ => ()
                         )(implicit r: Resource[T]): SqlValue[R] =
     withResource(value, evaluate, {
-      case e: SQLException => sqlError(e)
+      case e: SqlException => sqlError(e)
       case e               => throw e
     }, whenClosing)
 }

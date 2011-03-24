@@ -1,11 +1,10 @@
 package com.ephox.vault
 
-import java.sql.SQLException
 import scalaz._
 import Scalaz._
 
 sealed trait SqlValue[A] {
-  def fold[X](err: SQLException => X, value: A => X): X
+  def fold[X](err: SqlException => X, value: A => X): X
 
   def isError =
     fold(_ => true, _ => false)
@@ -16,7 +15,7 @@ sealed trait SqlValue[A] {
   def getError =
     fold(Some(_), _ => None)
 
-  def getErrorOr(e: => SQLException) =
+  def getErrorOr(e: => SqlException) =
     getError getOrElse e
 
   def getValue =
@@ -28,7 +27,7 @@ sealed trait SqlValue[A] {
   def toEither =
     fold(Left(_), Right(_))
 
-  def toValidation: Validation[SQLException, A] =
+  def toValidation: Validation[SqlException, A] =
     fold(failure(_), success(_))
 
   def toRowAccess: RowValue[A] =
@@ -38,30 +37,32 @@ sealed trait SqlValue[A] {
     fold(_.printStackTrace, f)
 
   def map[B](f: A => B): SqlValue[B] = new SqlValue[B] {
-    def fold[X](err: SQLException => X, value: B => X) =
+    def fold[X](err: SqlException => X, value: B => X) =
       SqlValue.this.fold(err, value compose f)
   }
 
   def flatMap[B](f: A => SqlValue[B]): SqlValue[B] = new SqlValue[B] {
-    def fold[X](err: SQLException => X, value: B => X) =
+    def fold[X](err: SqlException => X, value: B => X) =
       SqlValue.this.fold(err, a => f(a) fold (err, value))
   }
 }
 
 trait SqlValues {
-  def sqlError[A](e: SQLException): SqlValue[A] = new SqlValue[A] {
-    def fold[X](err: SQLException => X, value: A => X) = err(e)
+  type SqlException = java.sql.SQLException
+
+  def sqlError[A](e: SqlException): SqlValue[A] = new SqlValue[A] {
+    def fold[X](err: SqlException => X, value: A => X) = err(e)
   }
 
   def sqlValue[A](v: A): SqlValue[A] = new SqlValue[A] {
-    def fold[X](err: SQLException => X, va: A => X) = va(v)
+    def fold[X](err: SqlException => X, va: A => X) = va(v)
   }
 
   def trySqlValue[A](a: => A): SqlValue[A] =
     try {
       a.η[SqlValue]
     } catch {
-      case e: SQLException => sqlError(e)
+      case e: SqlException => sqlError(e)
       case e               => throw e
     }
 
@@ -111,7 +112,7 @@ trait SqlValues {
 
   implicit val SqlValueTraverse: Traverse[SqlValue] = new Traverse[SqlValue] {
     def traverse[F[_] : Applicative, A, B](f: A => F[B], as: SqlValue[A]): F[SqlValue[B]] =
-      as fold ((e: SQLException) => sqlError(e).η[F], v => f(v) ∘ (sqlValue(_)))
+      as fold ((e: SqlException) => sqlError(e).η[F], v => f(v) ∘ (sqlValue(_)))
   }
 
   implicit val SqlValuePlus: Plus[SqlValue] = new Plus[SqlValue] {
@@ -120,7 +121,7 @@ trait SqlValues {
   }
 
   implicit val SqlValueEmpty: Empty[SqlValue] = new Empty[SqlValue] {
-    def empty[A] = sqlError(new SQLException)
+    def empty[A] = sqlError(new SqlException)
   }
 
   implicit def SqlValueShow[A: Show]: Show[SqlValue[A]] = new Show[SqlValue[A]] {
@@ -132,15 +133,15 @@ trait SqlValues {
   }
 
   implicit def SqlValueEqual[A: Equal]: Equal[SqlValue[A]] = {
-    implicit val EqualSQLException: Equal[SQLException] = equalA
-    Equal.EitherEqual[SQLException, A] ∙ (_.toEither)
+    implicit val EqualSqlException: Equal[SqlException] = equalA
+    Equal.EitherEqual[SqlException, A] ∙ (_.toEither)
   }
 
   implicit def SqlValueOrder[A: Order]: Order[SqlValue[A]] = {
-    implicit val OrderSQLException: Order[SQLException] = new Order[SQLException] {
-      def order(a1: SQLException, a2: SQLException) = EQ
+    implicit val OrderSqlException: Order[SqlException] = new Order[SqlException] {
+      def order(a1: SqlException, a2: SqlException) = EQ
     }
-    Order.EitherOrder[SQLException, A] ∙ (_.toEither)
+    Order.EitherOrder[SqlException, A] ∙ (_.toEither)
   }
 
   implicit def SqlValueZero[A: Zero]: Zero[SqlValue[A]] = zero(sqlValue(∅[A]))
