@@ -17,7 +17,7 @@ package object vault
   with SqlTypes
   with DDL {
 
-  def withSQLResource[T, R](
+  def withSqlResource[T, R](
                           value: => T
                         , evaluate: T => SqlValue[R]
                         , whenClosing: Throwable => Unit = _ => ()
