@@ -7,8 +7,8 @@ import Scalaz._
 sealed trait PreparedStatementW {
   val s: PreparedStatement
 
-  def tryExecuteUpdate: SQLValue[Int] =
-    trySQLValue(s.executeUpdate)
+  def tryExecuteUpdate: SqlValue[Int] =
+    trySqlValue(s.executeUpdate)
 
   def executeStatements[T[_], A](as: T[A], k: A => SqlConnect[Unit])(implicit f: Foldable[T]): SqlConnect[Int] =
     sqlConnect(c => as.foldLeftM(0) {

@@ -5,7 +5,7 @@ import Scalaz._
 import java.sql._
 
 sealed trait SqlConnect[A] {
-  val connect: Connection => SQLValue[A]
+  val connect: Connection => SqlValue[A]
 
   def apply(c: Connection) = connect(c)
 
@@ -29,7 +29,7 @@ sealed trait SqlConnect[A] {
   /**
    * Commits the connection and if this fails with an exception then rollback the connection.
    *
-   * If the failure is an `SQLException` then this is returned in the `SQLValue`, otherwise, the exception is rethrown.
+   * If the failure is an `SQLException` then this is returned in the `SqlValue`, otherwise, the exception is rethrown.
    */
   def commitRollback: SqlConnect[A] =
     sqlConnect(c => try {
@@ -58,18 +58,18 @@ sealed trait SqlConnect[A] {
 }
 
 trait SqlConnects {
-  def sqlConnect[A](f: Connection => SQLValue[A]): SqlConnect[A] = new SqlConnect[A] {
+  def sqlConnect[A](f: Connection => SqlValue[A]): SqlConnect[A] = new SqlConnect[A] {
     val connect = f
   }
 
-  def constantSqlConnect[A](v: => SQLValue[A]): SqlConnect[A] =
+  def constantSqlConnect[A](v: => SqlValue[A]): SqlConnect[A] =
     sqlConnect(_ => v)
 
   def valueSqlConnect[A](f: Connection => A): SqlConnect[A] =
-    sqlConnect(f(_).η[SQLValue])
+    sqlConnect(f(_).η[SqlValue])
 
   def trySqlConnect[A](f: Connection => A): SqlConnect[A] =
-    sqlConnect(c => trySQLValue(f(c)))
+    sqlConnect(c => trySqlValue(f(c)))
 
   val closeSqlConnect: SqlConnect[Unit] =
     trySqlConnect(_.close)
