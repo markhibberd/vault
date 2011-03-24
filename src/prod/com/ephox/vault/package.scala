@@ -9,7 +9,7 @@ package object vault
   with SqlValues
   with RowValues
   with RowAccessors
-  with RowConnectors
+  with RowConnects
   with SqlRowAccesss
   with SqlQuerys
   with SqlConnects
