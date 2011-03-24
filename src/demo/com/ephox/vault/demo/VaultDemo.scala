@@ -45,7 +45,7 @@ object VaultDemo {
       System.err.println("<dbfile> <username> <password>")
     else {
       // use file-based database
-      def connection = com.ephox.vault.Connect.hsqlfile(args(0), args(1), args(2)).nu
+      def connection = com.ephox.vault.Connector.hsqlfile(args(0), args(1), args(2)).nu
 
       // get the first of the query results for a Person
       val firstPerson = IterV.peek[Person]
