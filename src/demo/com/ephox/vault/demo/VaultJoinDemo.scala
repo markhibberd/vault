@@ -58,7 +58,7 @@ object VaultJoinDemo {
     , "create table band_muso (id IDENTITY, band_id INTEGER, muso_id INTEGER)"
     )
 
-    val qqq: Connector[(Int, RowValue[List[Band]])] = (Data.bands traverse {
+    val qqq: SQLConnect[(Int, RowValue[List[Band]])] = (Data.bands traverse {
       case b@Band(id, name) => "insert into muso(id, name, instrument) values (?,?,?)".executeUpdateWithKeysSet[(Int, RowValue[Band])](
         withStatement = _.set(intType(id), stringType(name))
       , withRow       = r => (_, r.intIndex(1) map (i => b copy (id = i)))

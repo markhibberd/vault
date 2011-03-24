@@ -13,7 +13,7 @@ final case class Transaction[A](connect: Connection => Either[SQLException, A]) 
 object Transaction {
   import StatementBinder._
 
-  def evaluate[A](connector: Connector, tx: Transaction[A]): Either[SQLException, A] = {
+  def evaluate[A](connector: SQLConnect, tx: Transaction[A]): Either[SQLException, A] = {
     val connection = connector.nu
     try {
       tx.connect(connection)
