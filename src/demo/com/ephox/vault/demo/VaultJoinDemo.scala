@@ -5,6 +5,8 @@ import Scalaz._
 import com.ephox.vault._
 
 object VaultJoinDemo {
+  type L = String
+
   // one-to-many Album -> Song
   // many-to-many Band -> Muso (via BandMuso)
   // many-to-one Album -> Band
@@ -49,7 +51,7 @@ object VaultJoinDemo {
   }
 
 
-  def setupData = {
+  def setupData: SqlConnect[L, Int] = {
     val creates = List(
       "create table album (id IDENTITY, name VARCHAR(255), band_id INTEGER)"
     , "create table song (id IDENTITY, name VARCHAR(255), album_id INTEGER)"
@@ -58,16 +60,16 @@ object VaultJoinDemo {
     , "create table band_muso (id IDENTITY, band_id INTEGER, muso_id INTEGER)"
     )
 
-    val qqq: SqlConnect[(Int, RowValue[List[Band]])] = (Data.bands traverse {
-      case b@Band(id, name) => "insert into muso(id, name, instrument) values (?,?,?)".executeUpdateWithKeysSet[(Int, RowValue[Band])](
-        withStatement = _.set(intType(id), stringType(name))
-      , withRow       = r => (_, r.intIndex(1) map (i => b copy (id = i)))
-      )
-    }) ∘ (t => (t.foldMap(_._1), t.traverse(_._2)))
+//    val qqq: SqlConnect[(Int, RowValue[List[Band]])] = (Data.bands traverse {
+//      case b@Band(id, name) => "insert into muso(id, name, instrument) values (?,?,?)".executeUpdateWithKeysSet[(Int, RowValue[Band])](
+//        withStatement = _.set(intType(id), stringType(name))
+//      , withRow       = r => (_, r.intIndex(1) map (i => b copy (id = i)))
+//      )
+//    }) ∘ (t => (t.foldMap(_._1), t.traverse(_._2)))
 
     for {
       n <- executeUpdates(creates)
-      o <- "insert into muso(id, name, instrument) values (?,?,?)" prepareStatement (s => s.foreachStatement(Data.musos, (m: Muso) => m match {
+      o <- "insert into muso(id, name, instrument) values (?,?,?)" prepareStatement (s => s.foreachStatement[List, Muso, L](Data.musos, (m: Muso) => m match {
              case Muso(id, name, instrument) => {
                s.set(intType(id), stringType(name), stringType(instrument))
              }

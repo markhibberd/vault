@@ -7,19 +7,25 @@ import Scalaz._
 sealed trait PreparedStatementW {
   val s: PreparedStatement
 
-  def tryExecuteUpdate: SqlValue[Int] =
+  def tryExecuteUpdate[L]: SqlValue[L, Int] =
     trySqlValue(s.executeUpdate)
 
-  def executeStatements[T[_], A](as: T[A], k: A => SqlConnect[Unit])(implicit f: Foldable[T]): SqlConnect[Int] =
+  // todo partially apply type parameters
+  def executeStatements[T[_], A, L](as: T[A], k: A => SqlConnect[L, Unit])(implicit f: Foldable[T]): SqlConnect[L, Int] =
+  /*
     sqlConnect(c => as.foldLeftM(0) {
        case (n, a) => {
          k(a)(c)
-         s.tryExecuteUpdate ∘ (n+)
+         s.tryExecuteUpdate map (n+)
        }
      })
+     */
+    error("todo")
 
-  def foreachStatement[T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[Int] =
-    executeStatements(as, (a: A) => k(a).η[SqlConnect])
+  // todo partially apply type parameters
+  def foreachStatement[T[_], A, L](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[L, Int] =
+    // executeStatements(as, (a: A) => k(a).η[SqlConnect])
+    error("todo")
 
   def set(values: JDBCType*): Unit =
     setValues(values.toList)
