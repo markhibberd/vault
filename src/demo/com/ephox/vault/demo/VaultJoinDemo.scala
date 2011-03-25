@@ -60,13 +60,6 @@ object VaultJoinDemo {
     , "create table band_muso (id IDENTITY, band_id INTEGER, muso_id INTEGER)"
     )
 
-//    val qqq: SqlConnect[(Int, RowValue[List[Band]])] = (Data.bands traverse {
-//      case b@Band(id, name) => "insert into muso(id, name, instrument) values (?,?,?)".executeUpdateWithKeysSet[(Int, RowValue[Band])](
-//        withStatement = _.set(intType(id), stringType(name))
-//      , withRow       = r => (_, r.intIndex(1) map (i => b copy (id = i)))
-//      )
-//    }) ∘ (t => (t.foldMap(_._1), t.traverse(_._2)))
-
     for {
       n <- executeUpdates(creates)
       o <- "insert into muso(id, name, instrument) values (?,?,?)" prepareStatement (s => s.foreachStatement[L, List, Muso](Data.musos, (m: Muso) => m match {
