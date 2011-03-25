@@ -93,8 +93,13 @@ trait SqlConnects {
     }
   }
 
+  implicit def SqlConnectApplicative[L]: Applicative[({type λ[α]= SqlConnect[L, α]})#λ] = Applicative.applicative[({type λ[α]= SqlConnect[L, α]})#λ]
+
+
   implicit def SqlConnectBind[L, M[_]]: Bind[({type λ[α]= SqlConnect[L, α]})#λ] = new Bind[({type λ[α]= SqlConnect[L, α]})#λ] {
     def bind[A, B](a: SqlConnect[L, A], f: A => SqlConnect[L, B]) =
       sqlConnect(c => a(c) >>= (a => f(a)(c)))
   }
+
+  implicit def SqlConnectMonad[L]: Monad[({type λ[α]= SqlConnect[L, α]})#λ] = Monad.monad[({type λ[α]= SqlConnect[L, α]})#λ]
 }
