@@ -13,25 +13,25 @@ sealed trait RowValue[L, A] {
   def isError: Boolean = foldV(_ => true, _ => false, false)
   def isValue: Boolean = foldV(_ => false, _ => true, false)
 
-  def getError =
-    fold(Some(_), None)
+  def getError: Option[SqlException] =
+    fold(_.getError, None)
 
-  def getErrorOr(e: => SqlException) =
+  def getErrorOr(e: => SqlException): SqlException =
     getError getOrElse e
 
-  def getValue =
+  def getValue: Option[A] =
     fold(_.getValue, None)
 
-  def getValueOr(v: => A) =
+  def getValueOr(v: => A): A =
     getValue getOrElse v
 
-  def getSqlValue =
+  def getSqlValue: Option[SqlValue[L, A]] =
     fold(Some(_), None)
 
-  def getSqlValueOr(v: => SqlValue[L, A]) =
+  def getSqlValueOr(v: => SqlValue[L, A]): SqlValue[L, A] =
     getSqlValue getOrElse v
 
-  def printStackTraceOr(value: A => Unit, nul: => Unit) =
+  def printStackTraceOr(value: A => Unit, nul: => Unit): Unit =
     fold(_.printStackTraceOr(value), nul)
 
   def map[B](f: A => B): RowValue[L, B] =
