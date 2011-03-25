@@ -10,7 +10,6 @@ sealed trait PreparedStatementW {
   def tryExecuteUpdate[L]: SqlValue[L, Int] =
     trySqlValue(s.executeUpdate)
 
-  // todo partially apply type parameters
   def executeStatements[L, T[_], A](as: T[A], k: A => SqlConnect[L, Unit])(implicit f: Foldable[T]): SqlConnect[L, Int] =
     sqlConnect[L, Int](c => as.foldLeftM[({type λ[α]= SqlValue[L, α]})#λ, Int](0) {
        case (n, a) => {
@@ -19,7 +18,6 @@ sealed trait PreparedStatementW {
        }
      })
 
-  // todo partially apply type parameters
   def foreachStatement[L, T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[L, Int] =
     executeStatements(as, (a: A) => k(a).η[({type λ[α]= SqlConnect[L, α]})#λ])
 
