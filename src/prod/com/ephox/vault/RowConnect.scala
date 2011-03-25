@@ -69,8 +69,13 @@ trait RowConnects {
     }
   }
 
+  implicit def RowConnectApplicative[L]: Applicative[({type λ[α]= RowConnect[L, α]})#λ] = Applicative.applicative[({type λ[α]= RowConnect[L, α]})#λ]
+
   implicit def RowConnectBind[L]: Bind[({type λ[α]= RowConnect[L, α]})#λ] = new Bind[({type λ[α]= RowConnect[L, α]})#λ] {
     def bind[A, B](a: RowConnect[L, A], f: A => RowConnect[L, B]) =
       rowConnect(c => a(c) >>= (a => f(a)(c)))
   }
+
+  implicit def RowConnectMonad[L]: Monad[({type λ[α]= RowConnect[L, α]})#λ] = Monad.monad[({type λ[α]= RowConnect[L, α]})#λ]
+
 }
