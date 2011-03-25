@@ -160,24 +160,28 @@ trait RowAccessors {
     case Some(x) => Key.key(x)
   })
 
-//  implicit def RowAccessorFunctor: Functor[RowAccessor] = new Functor[RowAccessor] {
-//    def fmap[A, B](k: RowAccessor[A], f: A => B) =
-//      rowAccessor(r => k.access(r) map f)
-//  }
-//
-//  implicit def RowAccessorPure[M[_]]: Pure[RowAccessor] = new Pure[RowAccessor] {
-//    def pure[A](a: => A) =
-//      rowAccessor(_ => a.η[RowValue])
-//  }
-//
-//  implicit def RowAccessorApply[M[_]]: Apply[RowAccessor] = new Apply[RowAccessor] {
-//    def apply[A, B](f: RowAccessor[A => B], a: RowAccessor[A]) = {
-//      rowAccessor(r => a.access(r) <*> f.access(r))
-//    }
-//  }
-//
-//  implicit def RowAccessorBind[M[_]]: Bind[RowAccessor] = new Bind[RowAccessor] {
-//    def bind[A, B](a: RowAccessor[A], f: A => RowAccessor[B]) =
-//      rowAccessor(r => a.access(r) >>= (a => f(a) access (r)))
-//  }
+  implicit def RowAccessorFunctor[L]: Functor[({type λ[α]= RowAccessor[L, α]})#λ] = new Functor[({type λ[α]= RowAccessor[L, α]})#λ] {
+    def fmap[A, B](k: RowAccessor[L, A], f: A => B) =
+      k map f
+  }
+
+  implicit def RowAccessorPure[L, M[_]]: Pure[({type λ[α]= RowAccessor[L, α]})#λ] = new Pure[({type λ[α]= RowAccessor[L, α]})#λ] {
+    def pure[A](a: => A) =
+      rowAccessor(_ => a.η[({type λ[α]= RowValue[L, α]})#λ])
+  }
+
+  implicit def RowAccessorApply[L, M[_]]: Apply[({type λ[α]= RowAccessor[L, α]})#λ] = new Apply[({type λ[α]= RowAccessor[L, α]})#λ] {
+    def apply[A, B](f: RowAccessor[L, A => B], a: RowAccessor[L, A]) = {
+      rowAccessor(r => a.access(r) <*> f.access(r))
+    }
+  }
+
+  implicit def RowAccessorApplicative[L]: Applicative[({type λ[α]= RowAccessor[L, α]})#λ] = Applicative.applicative[({type λ[α]= RowAccessor[L, α]})#λ]
+
+  implicit def RowAccessorBind[L, M[_]]: Bind[({type λ[α]= RowAccessor[L, α]})#λ] = new Bind[({type λ[α]= RowAccessor[L, α]})#λ] {
+    def bind[A, B](a: RowAccessor[L, A], f: A => RowAccessor[L, B]) =
+      rowAccessor(r => a.access(r) >>= (a => f(a) access (r)))
+  }
+
+  implicit def RowAccessorMonad[L]: Monad[({type λ[α]= RowAccessor[L, α]})#λ] = Monad.monad[({type λ[α]= RowAccessor[L, α]})#λ]
 }

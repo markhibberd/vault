@@ -88,10 +88,14 @@ trait RowValues {
       f fold (rowError(_), ff => a fold (rowError(_), aa => rowValue(ff(aa)), rowNull), rowNull)
   }
 
+  implicit def RowValueApplicative[L]: Applicative[({type λ[α]= RowValue[L, α]})#λ] = Applicative.applicative[({type λ[α]= RowValue[L, α]})#λ]
+
   implicit def RowValueBind[L]: Bind[({type λ[α]= RowValue[L, α]})#λ] = new Bind[({type λ[α]= RowValue[L, α]})#λ] {
     def bind[A, B](a: RowValue[L, A], f: A => RowValue[L, B]) =
       a fold (rowError(_), f, rowNull)
   }
+
+  implicit def RowValueMonad[L]: Monad[({type λ[α]= RowValue[L, α]})#λ] = Monad.monad[({type λ[α]= RowValue[L, α]})#λ]
 
   implicit def RowValueEach[L]: Each[({type λ[α]= RowValue[L, α]})#λ] = new Each[({type λ[α]= RowValue[L, α]})#λ] {
     def each[A](e: RowValue[L, A], f: A => Unit) =
