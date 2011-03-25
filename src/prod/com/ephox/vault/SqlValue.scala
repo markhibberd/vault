@@ -31,7 +31,7 @@ sealed trait SqlValue[L, A] extends NewType[Logger[L, Either[SqlException, A]]] 
   def toValidation: Validation[SqlException, A] =
     fold(failure(_), success(_))
 
-  def toRowAccess: RowValue[L, A] =
+  def toRowValue: RowValue[L, A] =
     fold(rowError, rowValue(_))
 
   def printStackTraceOr(f: A => Unit): Unit =
