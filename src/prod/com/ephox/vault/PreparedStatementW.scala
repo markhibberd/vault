@@ -11,21 +11,17 @@ sealed trait PreparedStatementW {
     trySqlValue(s.executeUpdate)
 
   // todo partially apply type parameters
-  def executeStatements[T[_], A, L](as: T[A], k: A => SqlConnect[L, Unit])(implicit f: Foldable[T]): SqlConnect[L, Int] =
-  /*
-    sqlConnect(c => as.foldLeftM(0) {
+  def executeStatements[L, T[_], A](as: T[A], k: A => SqlConnect[L, Unit])(implicit f: Foldable[T]): SqlConnect[L, Int] =
+    sqlConnect[L, Int](c => as.foldLeftM[({type λ[α]= SqlValue[L, α]})#λ, Int](0) {
        case (n, a) => {
          k(a)(c)
-         s.tryExecuteUpdate map (n+)
+         s.tryExecuteUpdate[L] map (n+)
        }
      })
-     */
-    error("todo")
 
   // todo partially apply type parameters
-  def foreachStatement[T[_], A, L](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[L, Int] =
-    // executeStatements(as, (a: A) => k(a).η[SqlConnect])
-    error("todo")
+  def foreachStatement[L, T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[L, Int] =
+    executeStatements(as, (a: A) => k(a).η[({type λ[α]= SqlConnect[L, α]})#λ])
 
   def set(values: JDBCType*): Unit =
     setValues(values.toList)

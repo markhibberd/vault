@@ -69,7 +69,7 @@ object VaultJoinDemo {
 
     for {
       n <- executeUpdates(creates)
-      o <- "insert into muso(id, name, instrument) values (?,?,?)" prepareStatement (s => s.foreachStatement[List, Muso, L](Data.musos, (m: Muso) => m match {
+      o <- "insert into muso(id, name, instrument) values (?,?,?)" prepareStatement (s => s.foreachStatement[L, List, Muso](Data.musos, (m: Muso) => m match {
              case Muso(id, name, instrument) => {
                s.set(intType(id), stringType(name), stringType(instrument))
              }
