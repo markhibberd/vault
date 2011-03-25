@@ -28,6 +28,9 @@ sealed trait RowValue[L, A] {
   def getSqlValue: Option[SqlValue[L, A]] =
     fold(Some(_), None)
 
+  def getSqlValueSeq: SqlValue[L, Option[A]] =
+    getSqlValue.sequence[({type λ[α]= SqlValue[L, α]})#λ, A]
+
   def getSqlValueOr(v: => SqlValue[L, A]): SqlValue[L, A] =
     getSqlValue getOrElse v
 
