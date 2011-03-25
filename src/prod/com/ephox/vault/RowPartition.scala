@@ -13,6 +13,5 @@ object RowPartition {
   }
 
   def equalityPartition[L, A: Equal](k: Row => A): RowPartition[L] =
-    // rowPartition(r1 => r2 => (k(r1) === k(r2)).η[RowValue])
-    error("todo")
+    rowPartition(r1 => r2 => (k(r1) === k(r2)).η[({type λ[α]= RowValue[L, α]})#λ])
 }
