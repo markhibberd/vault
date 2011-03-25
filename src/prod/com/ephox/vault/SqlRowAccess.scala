@@ -19,24 +19,24 @@ trait SqlRowAccesss {
       f(sql)
   }
 
-//  implicit def SqlRowAccessFunctor: Functor[SqlRowAccess] = new Functor[SqlRowAccess] {
-//    def fmap[A, B](k: SqlRowAccess[A], f: A => B) =
-//      sqlRowAccess(s => k <|- s map f)
-//  }
-//
-//  implicit def SqlRowAccessPure[M[_]]: Pure[SqlRowAccess] = new Pure[SqlRowAccess] {
-//    def pure[A](a: => A) =
-//      sqlRowAccess(_ => a.η[RowConnect])
-//  }
-//
-//  implicit def SqlRowAccessApply[M[_]]: Apply[SqlRowAccess] = new Apply[SqlRowAccess] {
-//    def apply[A, B](f: SqlRowAccess[A => B], a: SqlRowAccess[A]) = {
-//      sqlRowAccess(s => (a <|- s) <*> (f <|- s))
-//    }
-//  }
-//
-//  implicit def SqlRowAccessBind[M[_]]: Bind[SqlRowAccess] = new Bind[SqlRowAccess] {
-//    def bind[A, B](a: SqlRowAccess[A], f: A => SqlRowAccess[B]) =
-//      sqlRowAccess(s => (a <|- s) >>= (a => f(a) <|- s))
-//  }
+  implicit def SqlRowAccessFunctor[L]: Functor[({type λ[α]= SqlRowAccess[L, α]})#λ] = new Functor[({type λ[α]= SqlRowAccess[L, α]})#λ] {
+    def fmap[A, B](k: SqlRowAccess[L, A], f: A => B) =
+      k map f
+  }
+
+  implicit def SqlRowAccessPure[L, M[_]]: Pure[({type λ[α]= SqlRowAccess[L, α]})#λ] = new Pure[({type λ[α]= SqlRowAccess[L, α]})#λ] {
+    def pure[A](a: => A) =
+      sqlRowAccess(_ => a.η[({type λ[α]= RowConnect[L, α]})#λ])
+  }
+
+  implicit def SqlRowAccessApply[L, M[_]]: Apply[({type λ[α]= SqlRowAccess[L, α]})#λ] = new Apply[({type λ[α]= SqlRowAccess[L, α]})#λ] {
+    def apply[A, B](f: SqlRowAccess[L, A => B], a: SqlRowAccess[L, A]) = {
+      sqlRowAccess(s => (a <|- s) <*> (f <|- s))
+    }
+  }
+
+  implicit def SqlRowAccessBind[L, M[_]]: Bind[({type λ[α]= SqlRowAccess[L, α]})#λ] = new Bind[({type λ[α]= SqlRowAccess[L, α]})#λ] {
+    def bind[A, B](a: SqlRowAccess[L, A], f: A => SqlRowAccess[L, B]) =
+      a flatMap f
+  }
 }
