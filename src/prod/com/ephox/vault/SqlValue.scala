@@ -84,11 +84,15 @@ trait SqlValues {
       f fold (sqlError(_), ff => a fold (sqlError(_), aa => sqlValue(ff(aa))))
   }
 
+  implicit def SqlValueApplicative[L]: Applicative[({type λ[α]= SqlValue[L, α]})#λ] = Applicative.applicative[({type λ[α]= SqlValue[L, α]})#λ]
+
 
   implicit def SqlValueBind[L]: Bind[({type λ[α]= SqlValue[L, α]})#λ] = new Bind[({type λ[α]= SqlValue[L, α]})#λ] {
     def bind[A, B](a: SqlValue[L, A], f: A => SqlValue[L, B]) =
       a fold (sqlError(_), f)
   }
+
+  implicit def SqlValueMonad[L]: Monad[({type λ[α]= SqlValue[L, α]})#λ] = Monad.monad[({type λ[α]= SqlValue[L, α]})#λ]
 
   implicit def SqlValueEach[L]: Each[({type λ[α]= SqlValue[L, α]})#λ] = new Each[({type λ[α]= SqlValue[L, α]})#λ] {
     def each[A](e: SqlValue[L, A], f: A => Unit) =
