@@ -45,6 +45,12 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
   def flatMap[B](f: A => RowValue[L, B]): RowValue[L, B] =
     fold(rowError(_), f, rowNull)
 
+  def isNotNullWithMessage(s: String): SqlValue[L, A] =
+    fold(sqlError(_), sqlValue(_), sqlError(new SqlException(s)))
+
+  def isNotNull: SqlValue[L, A] =
+    isNotNullWithMessage("is not null")
+
   def possiblyNull: RowValue[L, Option[A]] =
     fold(rowError(_), a => rowValue(Some(a)), rowValue(None))
 
