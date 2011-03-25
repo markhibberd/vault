@@ -42,33 +42,35 @@ trait RowConnects {
     rowConnect(_ => v)
 
   def valueRowConnect[L, A](f: Connection => A): RowConnect[L, A] =
-    // rowConnect(f(_).η[RowValue])
-    error("todo")
+    rowConnect(f(_).η[({type λ[α]= RowValue[L, α]})#λ])
 
   def tryRowConnect[L, A](f: Connection => A): RowConnect[L, A] =
     rowConnect(c => tryRowValue(f(c)))
 
   def closeRowConnect[L]: RowConnect[L, Unit] =
     tryRowConnect(_.close)
-//
-//  implicit def RowConnectFunctor: Functor[RowConnect] = new Functor[RowConnect] {
-//    def fmap[A, B](k: RowConnect[A], f: A => B) =
-//      rowConnect((c: Connection) => k(c) map f)
-//  }
-//
-//  implicit def RowConnectPure: Pure[RowConnect] = new Pure[RowConnect] {
-//    def pure[A](a: => A) =
-//      rowConnect(_ => a.η[RowValue])
-//  }
-//
-//  implicit def RowConnectApply: Apply[RowConnect] = new Apply[RowConnect] {
-//    def apply[A, B](f: RowConnect[A => B], a: RowConnect[A]) = {
-//      rowConnect(c => a(c) <*> f(c))
-//    }
-//  }
-//
-//  implicit def RowConnectBind: Bind[RowConnect] = new Bind[RowConnect] {
-//    def bind[A, B](a: RowConnect[A], f: A => RowConnect[B]) =
-//      rowConnect(c => a(c) >>= (a => f(a)(c)))
-//  }
+
+  implicit def RowConnectFunctor[L]: Functor[({type λ[α]= RowConnect[L, α]})#λ] = new Functor[({type λ[α]= RowConnect[L, α]})#λ] {
+    def fmap[A, B](k: RowConnect[L, A], f: A => B) =
+      k map f
+  }
+
+  implicit def RowConnectPure[L]: Pure[({type λ[α]= RowConnect[L, α]})#λ] = new Pure[({type λ[α]= RowConnect[L, α]})#λ] {
+    def pure[A](a: => A) =
+      rowConnect(_ => a.η[({type λ[α]= RowValue[L, α]})#λ])
+  }
+
+  implicit def RowConnectApply[L]: Apply[({type λ[α]= RowConnect[L, α]})#λ] = new Apply[({type λ[α]= RowConnect[L, α]})#λ] {
+    def apply[A, B](f: RowConnect[L, A => B], a: RowConnect[L, A]) = {
+      rowConnect(c => {
+        val fc = f(c)
+        a(c) <*> fc
+      })
+    }
+  }
+
+  implicit def RowConnectBind[L]: Bind[({type λ[α]= RowConnect[L, α]})#λ] = new Bind[({type λ[α]= RowConnect[L, α]})#λ] {
+    def bind[A, B](a: RowConnect[L, A], f: A => RowConnect[L, B]) =
+      rowConnect(c => a(c) >>= (a => f(a)(c)))
+  }
 }
