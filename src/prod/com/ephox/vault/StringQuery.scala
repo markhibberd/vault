@@ -14,12 +14,11 @@ sealed trait StringQuery {
                        trySqlValue(s executeUpdate query)
                    ))
 
-  def executePreparedUpdate(withStatement: PreparedStatement => Unit) =
-//    prepareStatement(s => sqlConnect(_ => {
-//      withStatement(s)
-//      s.tryExecuteUpdate
-//    }))
-    error("todo")
+  def executePreparedUpdate[L](withStatement: PreparedStatement => Unit): SqlConnect[L, Int] =
+    prepareStatement(s => sqlConnect(_ => {
+      withStatement(s)
+      s.tryExecuteUpdate
+    }))
 
   def executeUpdateWithKeys[A, B, L](withStatement: PreparedStatement => A, withRow: Row => A => Int => SqlConnect[L, B]): SqlConnect[L, B] =
     sqlConnect(c => withSqlResource(
@@ -39,11 +38,10 @@ sealed trait StringQuery {
                    ))
 
   def executeUpdateWithKeysSet[L, B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): SqlConnect[L, B] =
-//    executeUpdateWithKeys(
-//      withStatement = withStatement(_)
-//    , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[SqlConnect]
-//    )
-    error("todo")
+    executeUpdateWithKeys(
+      withStatement = withStatement(_)
+    , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[({type λ[α]= SqlConnect[L, α]})#λ]
+    )
 
   def executeUpdateWithKey[L, A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SqlConnect[L, A] =
     executeUpdateWithKeysSet(
