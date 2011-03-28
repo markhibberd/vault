@@ -25,7 +25,7 @@ sealed trait RowAccess[L, A] {
         })
     } catch {
       case e: SqlException => rowError(e)
-      case x                        => throw x
+      case x               => throw x
     }))
 
   def -||>[T](iter: IterV[A, T]): SqlRowAccess[L, T] =
@@ -37,6 +37,10 @@ sealed trait RowAccess[L, A] {
 
   def flatMap[B](f: A => RowAccess[L, B]): RowAccess[L, B] = new RowAccess[L, B] {
     val access = (r: Row) => RowAccess.this.access(r) flatMap (a => f(a).access(r))
+  }
+
+  def mapValue[B](f: RowValue[L, A] => RowValue[L, B]): RowAccess[L, B] = new RowAccess[L, B] {
+    val access = (r: Row) => f(RowAccess.this.access(r))
   }
 
   def unifyNullWithMessage(message: String): SqlAccess[L, A] =
