@@ -1,15 +1,13 @@
 package com.ephox.vault
 
 trait Query {
-  def fold[X](
-    sql: (String, List[JDBCType]) => X
-  ): X
+  val sql: String
+  val bindings: List[JDBCType]
 }
 
 trait Querys {
-  def query(sql: String, bindings: List[JDBCType] = Nil): Query = new Query {
-    def fold[X](
-      bound: (String, List[JDBCType]) => X
-    ): X = bound(sql, bindings)
+  def query(s: String, b: JDBCType*): Query = new Query {
+    val sql = s
+    val bindings = b.toList
   }
 }
