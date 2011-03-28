@@ -7,7 +7,7 @@ sealed trait RowAccess[L, A] {
   val access: Row => RowValue[L, A]
 
   def -|>[T](iter: IterV[A, T]): RowQuery[L, IterV[A, T]] =
-    rowQuerys(query => rowConnect(c => try {
+    rowQuery(query => rowConnect(c => try {
       query.fold(
         (sql, bindings) => {
           val st = c prepareStatement sql
