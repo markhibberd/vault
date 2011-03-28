@@ -9,11 +9,12 @@ package object vault
   with RowValues
   with RowAccesss
   with RowConnects
+  with RowQueryConnects
   with SqlValues
   with SqlAccesss
   with SqlConnects
+  with SqlQueryConnects
   with Querys
-  with RowQueryConnects
   with JDBCTypes
   with SqlTypes
   with DDL {
