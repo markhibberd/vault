@@ -8,21 +8,18 @@ sealed trait RowAccess[L, A] {
 
   def -|>[T](iter: IterV[A, T]): RowQueryConnect[L, IterV[A, T]] =
     rowQueryConnect(query => rowConnect(c => try {
-      query.fold(
-        (sql, bindings) => {
-          val st = c prepareStatement sql
-          st.set(bindings:_*)
-          try {
-            val r = st.executeQuery
-            try {
-              Row.resultSetRow(r).iterate[L, A, T](this)(iter)
-            } finally {
-              r.close
-            }
-          } finally {
-            st.close
-          }
-        })
+      val st = c prepareStatement query.sql
+      st.set(query.bindings:_*)
+      try {
+        val r = st.executeQuery
+        try {
+          Row.resultSetRow(r).iterate[L, A, T](this)(iter)
+        } finally {
+          r.close
+        }
+      } finally {
+        st.close
+      }
     } catch {
       case e: SqlException => rowError(e)
       case x               => throw x
