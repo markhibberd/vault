@@ -39,11 +39,29 @@ sealed trait RowAccess[L, A] {
     val access = (r: Row) => RowAccess.this.access(r) flatMap (a => f(a).access(r))
   }
 
-  def possiblyNull: RowAccess[L, Option[A]] =
-    // rowAccess(access(_).possiblyNull)
-    error("todo")
+  def unifyNullWithMessage(message: String): SqlAccess[L, A] =
+    sqlAccess((r: Row) => RowAccess.this.access(r) unifyNullWithMessage message)
 
-  def possiblyNullOr(d: => A): RowAccess[L, A] =
+  def unifyNull: SqlAccess[L, A] =
+    sqlAccess((r: Row) => RowAccess.this.access(r).unifyNull)
+
+  /*
+
+  def possiblyNull: SqlValue[L, Option[A]] =
+    getSqlValue.sequence[({type λ[α]= SqlValue[L, α]})#λ, A]
+
+  def possiblyNullOr(d: => A): SqlValue[L, A] =
+    possiblyNull map (_ getOrElse d)
+
+  // alias for possiblyNullOr
+  def |?(d: => A) = possiblyNullOr(d)
+
+   */
+
+  def possiblyNull: SqlAccess[L, Option[A]] =
+    sqlAccess(access(_).possiblyNull)
+
+  def possiblyNullOr(d: => A): SqlAccess[L, A] =
     possiblyNull map (_ getOrElse d)
 
   // alias for possiblyNullOr
@@ -151,15 +169,16 @@ trait RowAccesss {
   def idLabel[L](label: String): RowAccess[L, Key] = longLabel(label) map (Key.key(_))
   def idIndex[L](index: Int): RowAccess[L, Key] = longIndex(index) map (Key.key(_))
 
-  def possibleIdLabel[L](label: String): RowAccess[L, Key] = longLabel(label).possiblyNull map ({
-    case None => Key.nokey
-    case Some(x) => Key.key(x)
-  })
-
-  def possibleIdIndex[L](index: Int): RowAccess[L, Key] = longIndex(index).possiblyNull map ({
-    case None => Key.nokey
-    case Some(x) => Key.key(x)
-  })
+  // todo
+//  def possibleIdLabel[L](label: String): RowAccess[L, Key] = longLabel(label).possiblyNull map ({
+//    case None => Key.nokey
+//    case Some(x) => Key.key(x)
+//  })
+//
+//  def possibleIdIndex[L](index: Int): RowAccess[L, Key] = longIndex(index).possiblyNull map ({
+//    case None => Key.nokey
+//    case Some(x) => Key.key(x)
+//  })
 
   implicit def RowAccessFunctor[L]: Functor[({type λ[α]= RowAccess[L, α]})#λ] = new Functor[({type λ[α]= RowAccess[L, α]})#λ] {
     def fmap[A, B](k: RowAccess[L, A], f: A => B) =
