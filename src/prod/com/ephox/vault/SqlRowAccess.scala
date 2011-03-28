@@ -13,12 +13,7 @@ sealed trait SqlRowAccess[L, A] {
     sqlRowAccess(s => (this <|- s) flatMap (a => f(a) <|- s))
 }
 
-trait SqlRowAccesss {
-  def sqlRowAccess[L, A](f: SqlQuery => RowConnect[L, A]): SqlRowAccess[L, A] = new SqlRowAccess[L, A] {
-    def <|-(sql: SqlQuery) =
-      f(sql)
-  }
-
+object SqlRowAccess {
   implicit def SqlRowAccessFunctor[L]: Functor[({type λ[α]= SqlRowAccess[L, α]})#λ] = new Functor[({type λ[α]= SqlRowAccess[L, α]})#λ] {
     def fmap[A, B](k: SqlRowAccess[L, A], f: A => B) =
       k map f
@@ -35,8 +30,18 @@ trait SqlRowAccesss {
     }
   }
 
+  implicit def SqlRowAccessApplicative[L]: Applicative[({type λ[α]= SqlRowAccess[L, α]})#λ] = Applicative.applicative[({type λ[α]= SqlRowAccess[L, α]})#λ]
+
   implicit def SqlRowAccessBind[L, M[_]]: Bind[({type λ[α]= SqlRowAccess[L, α]})#λ] = new Bind[({type λ[α]= SqlRowAccess[L, α]})#λ] {
     def bind[A, B](a: SqlRowAccess[L, A], f: A => SqlRowAccess[L, B]) =
       a flatMap f
+  }
+
+  implicit def SqlRowAccessMonad[L]: Monad[({type λ[α]= SqlRowAccess[L, α]})#λ] = Monad.monad[({type λ[α]= SqlRowAccess[L, α]})#λ]
+}
+trait SqlRowAccesss {
+  def sqlRowAccess[L, A](f: SqlQuery => RowConnect[L, A]): SqlRowAccess[L, A] = new SqlRowAccess[L, A] {
+    def <|-(sql: SqlQuery) =
+      f(sql)
   }
 }

@@ -30,9 +30,6 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
   def getSqlValue: Option[SqlValue[L, A]] =
     fold(e => Some(sqlError(e)), a => Some(sqlValue(a)), None)
 
-  def getSqlValueSeq: SqlValue[L, Option[A]] =
-    getSqlValue.sequence[({type λ[α]= SqlValue[L, α]})#λ, A]
-
   def getSqlValueOr(v: => SqlValue[L, A]): SqlValue[L, A] =
     getSqlValue getOrElse v
 
@@ -45,16 +42,16 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
   def flatMap[B](f: A => RowValue[L, B]): RowValue[L, B] =
     fold(rowError(_), f, rowNull)
 
-  def isNotNullWithMessage(s: String): SqlValue[L, A] =
-    fold(sqlError(_), sqlValue(_), sqlError(new SqlException(s)))
+  def unifyNullWithMessage(message: String): SqlValue[L, A] =
+    fold(sqlError(_), sqlValue(_), sqlError(new SqlException(message)))
 
-  def isNotNull: SqlValue[L, A] =
-    isNotNullWithMessage("is not null")
+  def unifyNull: SqlValue[L, A] =
+    unifyNullWithMessage("unify null")
 
-  def possiblyNull: RowValue[L, Option[A]] =
-    fold(rowError(_), a => rowValue(Some(a)), rowValue(None))
+  def possiblyNull: SqlValue[L, Option[A]] =
+    getSqlValue.sequence[({type λ[α]= SqlValue[L, α]})#λ, A]
 
-  def possiblyNullOr(d: => A): RowValue[L, A] =
+  def possiblyNullOr(d: => A): SqlValue[L, A] =
     possiblyNull map (_ getOrElse d)
 
   // alias for possiblyNullOr
