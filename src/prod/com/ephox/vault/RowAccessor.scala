@@ -40,7 +40,8 @@ sealed trait RowAccessor[L, A] {
   }
 
   def possiblyNull: RowAccessor[L, Option[A]] =
-    rowAccessor(access(_).possiblyNull)
+    // rowAccessor(access(_).possiblyNull)
+    error("todo")
 
   def possiblyNullOr(d: => A): RowAccessor[L, A] =
     possiblyNull map (_ getOrElse d)
