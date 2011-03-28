@@ -5,36 +5,6 @@ import scalaz._, Scalaz._
 sealed trait SqlAccess[L, A] {
   val access: Row => SqlValue[L, A]
 
-  val isError: Row => Boolean =
-    access(_).isError
-
-  val isValue: Row => Boolean =
-    access(_).isValue
-
-  val getError: Row => Option[SqlException] =
-    access(_).getError
-
-  def getErrorOr(e: => SqlException): Row => SqlException =
-    access(_).getErrorOr(e)
-
-  val getValue: Row => Option[A] =
-    access(_).getValue
-
-  def getValueOr(v: => A): Row => A =
-    access(_).getValueOr(v)
-
-  val toEither: Row => Either[SqlException, A] =
-    access(_).toEither
-
-  val toValidation: Row => Validation[SqlException, A] =
-    access(_).toValidation
-
-  val toRowValue: Row => RowValue[L, A] =
-    access(_).toRowValue
-
-  def printStackTraceOr(f: A => Unit): Row => Unit =
-    access(_).printStackTraceOr(f)
-
   def map[B](f: A => B): SqlAccess[L, B] = new SqlAccess[L, B] {
     val access = (r: Row) => SqlAccess.this.access(r) map f
   }
