@@ -4,7 +4,7 @@ import scalaz._
 import Scalaz._
 
 sealed trait RowQuery[L, A] {
-  def <|-(sql: SqlQuery): RowConnect[L, A]
+  def <|-(sql: Query): RowConnect[L, A]
 
   def map[B](f: A => B): RowQuery[L, B] =
     rowQuerys(s => this <|- s map f)
@@ -14,8 +14,8 @@ sealed trait RowQuery[L, A] {
 }
 
 trait RowQuerys {
-  def rowQuerys[L, A](f: SqlQuery => RowConnect[L, A]): RowQuery[L, A] = new RowQuery[L, A] {
-    def <|-(sql: SqlQuery) =
+  def rowQuerys[L, A](f: Query => RowConnect[L, A]): RowQuery[L, A] = new RowQuery[L, A] {
+    def <|-(sql: Query) =
       f(sql)
   }
 

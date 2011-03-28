@@ -52,9 +52,9 @@ sealed trait StringQuery {
   def prepareStatement[L, A](k: PreparedStatement => SqlConnect[L, A]) : SqlConnect[L, A] =
     sqlConnect(c => withSqlResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
 
-  def toSql = sql(query)
+  def toSql = com.ephox.vault.query(query)
 
-  def bindSql(bindings: JDBCType*) = sql(query, bindings.toList)
+  def bindSql(bindings: JDBCType*) = com.ephox.vault.query(query, bindings.toList)
 }
 
 trait StringQuerys {
