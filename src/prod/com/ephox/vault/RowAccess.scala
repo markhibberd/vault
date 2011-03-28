@@ -45,19 +45,6 @@ sealed trait RowAccess[L, A] {
   def unifyNull: SqlAccess[L, A] =
     sqlAccess((r: Row) => RowAccess.this.access(r).unifyNull)
 
-  /*
-
-  def possiblyNull: SqlValue[L, Option[A]] =
-    getSqlValue.sequence[({type λ[α]= SqlValue[L, α]})#λ, A]
-
-  def possiblyNullOr(d: => A): SqlValue[L, A] =
-    possiblyNull map (_ getOrElse d)
-
-  // alias for possiblyNullOr
-  def |?(d: => A) = possiblyNullOr(d)
-
-   */
-
   def possiblyNull: SqlAccess[L, Option[A]] =
     sqlAccess(access(_).possiblyNull)
 
