@@ -8,7 +8,7 @@ import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSe
 import java.net.URL
 
 sealed trait Row {
-  def iterate[L, A, T](a: RowAccessor[L, A]): IterV[A, T] => RowValue[L, IterV[A, T]]
+  def iterate[L, A, T](a: RowAccess[L, A]): IterV[A, T] => RowValue[L, IterV[A, T]]
 
   def arrayIndex[L](columnIndex: Int): RowValue[L, java.sql.Array]
   def arrayLabel[L](columnLabel: String): RowValue[L, java.sql.Array]
@@ -121,7 +121,7 @@ object Row {
         case x => throw x
       }
 
-    def iterate[L, A, T](ra: RowAccessor[L, A]) =
+    def iterate[L, A, T](ra: RowAccess[L, A]) =
       iter => {
         def loop(i: IterV[A, T]): RowValue[L, IterV[A, T]] =
           i.fold((a, ip) => i.η[({type λ[α]= RowValue[L, α]})#λ],

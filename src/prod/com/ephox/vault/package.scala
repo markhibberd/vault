@@ -8,7 +8,7 @@ package object vault
   with PreparedStatementWs
   with SqlValues
   with RowValues
-  with RowAccessors
+  with RowAccesss
   with RowConnects
   with SqlRowAccesss
   with SqlQuerys
