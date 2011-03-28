@@ -6,13 +6,14 @@ import Scalaz._
 package object vault
   extends StringQuerys
   with PreparedStatementWs
-  with SqlValues
   with RowValues
   with RowAccesss
   with RowConnects
-  with SqlRowAccesss
-  with SqlQuerys
+  with SqlValues
+  with SqlAccesss
   with SqlConnects
+  with SqlQuerys
+  with SqlRowAccesss
   with JDBCTypes
   with SqlTypes
   with DDL {
