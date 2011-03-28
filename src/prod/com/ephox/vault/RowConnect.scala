@@ -31,6 +31,21 @@ sealed trait RowConnect[L, A] {
 
   def flatMap[B](f: A => RowConnect[L, B]) =
     rowConnect(c => connect(c) flatMap (f(_) connect c))
+
+  def unifyNullWithMessage(message: String): SqlConnect[L, A] =
+    sqlConnect(connect(_) unifyNullWithMessage message)
+
+  def unifyNull: SqlConnect[L, A] =
+    sqlConnect(connect(_) unifyNull)
+
+  def possiblyNull: SqlConnect[L, Option[A]] =
+    sqlConnect(connect(_) possiblyNull)
+
+  def possiblyNullOr(d: => A): SqlConnect[L, A] =
+    sqlConnect(connect(_) possiblyNullOr d)
+
+  def |?(d: => A): SqlConnect[L, A] =
+    sqlConnect(connect(_) |? d)
 }
 
 trait RowConnects {
