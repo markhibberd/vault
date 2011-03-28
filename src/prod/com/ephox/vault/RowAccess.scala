@@ -156,16 +156,15 @@ trait RowAccesss {
   def idLabel[L](label: String): RowAccess[L, Key] = longLabel(label) map (Key.key(_))
   def idIndex[L](index: Int): RowAccess[L, Key] = longIndex(index) map (Key.key(_))
 
-  // todo
-//  def possibleIdLabel[L](label: String): RowAccess[L, Key] = longLabel(label).possiblyNull map ({
-//    case None => Key.nokey
-//    case Some(x) => Key.key(x)
-//  })
-//
-//  def possibleIdIndex[L](index: Int): RowAccess[L, Key] = longIndex(index).possiblyNull map ({
-//    case None => Key.nokey
-//    case Some(x) => Key.key(x)
-//  })
+  def possibleIdLabel[L](label: String): SqlAccess[L, Key] = longLabel(label).possiblyNull map ({
+    case None => Key.nokey
+    case Some(x) => Key.key(x)
+  })
+
+  def possibleIdIndex[L](index: Int): SqlAccess[L, Key] = longIndex(index).possiblyNull map ({
+    case None => Key.nokey
+    case Some(x) => Key.key(x)
+  })
 
   implicit def RowAccessFunctor[L]: Functor[({type λ[α]= RowAccess[L, α]})#λ] = new Functor[({type λ[α]= RowAccess[L, α]})#λ] {
     def fmap[A, B](k: RowAccess[L, A], f: A => B) =

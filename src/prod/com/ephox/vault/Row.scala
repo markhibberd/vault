@@ -102,8 +102,8 @@ sealed trait Row {
   def keyLabel[L](label: String): RowValue[L, Key]
   def keyIndex[L](index: Int): RowValue[L, Key]
 
-  // def possibleKeyLabel[L](label: String): RowValue[L, Key]
-//  def possibleKeyIndex[L](index: Int): RowValue[L, Key] todo
+  def possibleKeyLabel[L](label: String): SqlValue[L, Key]
+  def possibleKeyIndex[L](index: Int): SqlValue[L, Key]
 }
 
 object Row {
@@ -340,7 +340,7 @@ object Row {
       longLabel(label) map (Key.key(_))
     def keyIndex[L](index: Int) =
       longIndex(index) map (Key.key(_))
-    /*
+
     def possibleKeyLabel[L](label: String) = longLabel(label).possiblyNull map ({
       case None => Key.nokey
       case Some(x) => Key.key(x)
@@ -350,6 +350,5 @@ object Row {
       case None => Key.nokey
       case Some(x) => Key.key(x)
     })
-    */
   }
 }
