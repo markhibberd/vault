@@ -337,18 +337,18 @@ object Row {
       tryRowAccess(r.getURL(columnLabel))
 
     def keyLabel[L](label: String) =
-      longLabel(label) map (Key.key(_))
+      longLabel(label) map (key(_))
     def keyIndex[L](index: Int) =
-      longIndex(index) map (Key.key(_))
+      longIndex(index) map (key(_))
 
     def possibleKeyLabel[L](label: String) = longLabel(label).possiblyNull map ({
-      case None => Key.nokey
-      case Some(x) => Key.key(x)
+      case None => nokey
+      case Some(x) => key(x)
     })
 
     def possibleKeyIndex[L](index: Int) = longIndex(index).possiblyNull map ({
-      case None => Key.nokey
-      case Some(x) => Key.key(x)
+      case None => nokey
+      case Some(x) => key(x)
     })
   }
 }

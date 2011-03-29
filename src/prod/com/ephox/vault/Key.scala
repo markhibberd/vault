@@ -15,10 +15,21 @@ sealed trait Key {
   def valueOrx(none: Long) = valueOr(none)
 
   def isSet = fold(false, _ => true)
+
+  override def toString = fold(
+    "Key[]",
+    "Key[" + _ + "]"
+  )
+
+  override def hashCode = fold(0, _.hashCode)
+
+  override def equals(o: Any) =
+    o.isInstanceOf[Key] && o.asInstanceOf[Key].fold(
+      !isSet, value => fold(false, _ == value)
+    )
 }
 
-
-object Key {
+trait KeyX {
   def key(value: Long): Key = new Key {
     def fold[X](none: => X, some: Long => X) = some(value)
   }
@@ -29,35 +40,11 @@ object Key {
 
   implicit def EqualKey: Equal[Key] =
     equal((a, b) => a.fold(!b.isSet, value => b.fold(false, _ == value)))
+
+  implicit def ShowKey: Show[Key] =
+    shows(_.toString)
 }
 
-sealed trait Keyed[A] {
-  def get(a: A): Key
-  def set(a: A, key: Key): A
-}
+object Keys extends KeyX
 
-object Keyed {
-  def keyed[A](getf: A => Key, setf: (A, Key) => A): Keyed[A] = new Keyed[A] {
-    def get(a: A) = getf(a)
-    def set(a: A, key: Key) = setf(a, key)
-  }
-}
 
-trait KeyedW[A] {
-  val value: A
-  val keyed: Keyed[A]
-
-  def id = keyed.get(value)
-
-  def =@=(other: KeyedW[A])(implicit eq: Equal[Key]) =
-    eq.equal(id, other.id)
-}
-
-object KeyedW {
-  implicit def KeyedWTo[A](a: A)(implicit keyedf: Keyed[A]): KeyedW[A] = new KeyedW[A] {
-    val value = a
-    val keyed = keyedf
-  }
-
-  implicit def KeyedWFrom[A](a: KeyedW[A]): A = a.value
-}

@@ -45,6 +45,9 @@ sealed trait RowAccessor[L, A] {
   def possiblyNullOr(d: => A): RowAccessor[L, A] =
     possiblyNull map (_ getOrElse d)
 
+  def toList: RowAccessor[L, List[A]] =
+    rowAccessor(access(_).toList)
+
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
 }
@@ -147,17 +150,17 @@ trait RowAccessors {
   def urlIndex[L](columnIndex: Int): RowAccessor[L, URL] = rowAccessor(_.urlIndex(columnIndex))
   def urlLabel[L](columnLabel: String): RowAccessor[L, URL] = rowAccessor(_.urlLabel(columnLabel))
 
-  def idLabel[L](label: String): RowAccessor[L, Key] = longLabel(label) map (Key.key(_))
-  def idIndex[L](index: Int): RowAccessor[L, Key] = longIndex(index) map (Key.key(_))
+  def idLabel[L](label: String): RowAccessor[L, Key] = longLabel(label) map (key(_))
+  def idIndex[L](index: Int): RowAccessor[L, Key] = longIndex(index) map (key(_))
 
   def possibleIdLabel[L](label: String): RowAccessor[L, Key] = longLabel(label).possiblyNull map ({
-    case None => Key.nokey
-    case Some(x) => Key.key(x)
+    case None => nokey
+    case Some(x) => key(x)
   })
 
   def possibleIdIndex[L](index: Int): RowAccessor[L, Key] = longIndex(index).possiblyNull map ({
-    case None => Key.nokey
-    case Some(x) => Key.key(x)
+    case None => nokey
+    case Some(x) => key(x)
   })
 
   implicit def RowAccessorFunctor[L]: Functor[({type λ[α]= RowAccessor[L, α]})#λ] = new Functor[({type λ[α]= RowAccessor[L, α]})#λ] {
