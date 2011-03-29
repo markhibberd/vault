@@ -1,0 +1,21 @@
+package com.ephox.vault
+
+import scalaz._
+import Scalaz._
+
+object Queries {
+  def list[L, A](access: RowAccessor[L, A], sql: String) =
+    (access -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql.toSql) map (_.flatten)
+
+  def first[L, A](access: RowAccessor[L, A], sql: SqlQuery) =
+    access -||> IterV.head[A] <|- sql
+
+  def byId[L, A](access: RowAccessor[L, A], sql: String, id: Long) =
+    first(access, sql.bindSql(longType(id)))
+
+  def listm[L, A](access: RowAccessor[L, A], sql: String)(implicit merge: Merger[A]) =
+    access -||> combineAll <|- sql.toSql
+
+  def byIdm[L, A](access: RowAccessor[L, A], sql: String, id: Long)(implicit merge: Merger[A]) =
+    access -||> combine <|- sql.bindSql(longType(id))
+}

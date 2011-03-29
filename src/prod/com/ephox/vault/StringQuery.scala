@@ -46,7 +46,7 @@ sealed trait StringQuery {
   def executeUpdateWithKey[L, A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SqlConnect[L, A] =
     executeUpdateWithKeysSet(
       withStatement,
-      r => i => (i, keyed.set(a, r.keyLabel("ID").getValueOr(Key.nokey)))
+      r => i => (i, keyed.set(a, r.keyLabel("ID").getValueOr(nokey)))
     ).map(_._2)
 
   def prepareStatement[L, A](k: PreparedStatement => SqlConnect[L, A]) : SqlConnect[L, A] =

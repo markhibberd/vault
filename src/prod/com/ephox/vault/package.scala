@@ -15,7 +15,12 @@ package object vault
   with SqlConnects
   with JDBCTypes
   with SqlTypes
-  with DDL {
+  with Updates
+  with KeyX
+  with Keyeds
+  with KeyedWX
+  with Mergers
+  with VaultIteratees {
 
   def withSqlResource[T, R, L](
                           value: => T

@@ -25,6 +25,9 @@ sealed trait SqlValue[L, A] extends NewType[Logger[L, Either[SqlException, A]]] 
   def getValueOr(v: => A): A =
     getValue getOrElse v
 
+  def getOrDie: A =
+    fold(e => throw new VaultException(e), x => x)
+
   def toEither:Either[SqlException, A] =
     fold(Left(_), Right(_))
 

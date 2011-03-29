@@ -129,4 +129,5 @@ trait JDBCTypes {
   def calendarTimestampType(value: Timestamp, cal: Calendar): JDBCType = CalendarTimestampJDBCType(value, cal)
   def userNullType(typ: SqlType, name: String): JDBCType = UserNullJDBCType(typ, name)
   def urlType(value: URL): JDBCType = URLJDBCType(value)
+  def idType(value: Key): JDBCType = value.fold(nullType(NumericType), longType(_))
 }
