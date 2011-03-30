@@ -9,6 +9,8 @@ sealed trait SqlConnect[L, A] {
 
   def apply(c: Connection) = connect(c)
 
+  def executeOrDie(c: Connection) = connect(c).getOrDie
+
   def bracket[B, C](after: (=> A) => SqlConnect[L, B], k: (=> A) => SqlConnect[L, C]): SqlConnect[L, C] =
     flatMap (a => try {
       k(a)
