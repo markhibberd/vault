@@ -154,8 +154,8 @@ trait RowAccesss {
   def urlIndex[L](columnIndex: Int): RowAccess[L, URL] = rowAccess(_.urlIndex(columnIndex))
   def urlLabel[L](columnLabel: String): RowAccess[L, URL] = rowAccess(_.urlLabel(columnLabel))
 
-  def idLabel[L](label: String): RowAccess[L, Key] = longLabel(label) map (Key.key(_))
-  def idIndex[L](index: Int): RowAccess[L, Key] = longIndex(index) map (Key.key(_))
+  def idLabel[L](label: String): RowAccess[L, Key] = longLabel(label) map (key(_))
+  def idIndex[L](index: Int): RowAccess[L, Key] = longIndex(index) map (key(_))
 
   def possibleIdLabel[L](label: String): SqlAccess[L, Key] = longLabel(label).possiblyNull map (_.toKey(identity))
 

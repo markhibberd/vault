@@ -27,6 +27,9 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
   def getValueOr(v: => A): A =
     getValue getOrElse v
 
+  def getOrDie: A =
+    fold(e => throw new VaultException(e), x => x, throw new VaultException("Unexpected database null."))
+
   def getSqlValue: Option[SqlValue[L, A]] =
     fold(e => Some(sqlError(e)), a => Some(sqlValue(a)), None)
 
@@ -53,6 +56,9 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
 
   def possiblyNullOr(d: => A): SqlValue[L, A] =
     possiblyNull map (_ | d)
+
+  def toList: SqlValue[L, List[A]] =
+    possiblyNull map (_.toList)
 
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)

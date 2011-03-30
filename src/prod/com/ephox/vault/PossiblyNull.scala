@@ -49,7 +49,7 @@ sealed trait PossiblyNull[A] {
     k(this | null.asInstanceOf[A])
 
   def toKey(toLong: A => Long) =
-    fold(a => Key.key(toLong(a)), Key.nokey)
+    fold(a => key(toLong(a)), nokey)
 
   def orElse(n: => PossiblyNull[A]): PossiblyNull[A] =
     ifelse(this, n)

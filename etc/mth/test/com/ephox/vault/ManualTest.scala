@@ -6,7 +6,7 @@ import java.sql.ResultSet
 class ManualTest extends FunSuite {
   import DdlStatement._
   import DmlStatement._
-  import Query._
+  import Queries._
   import Transaction._
 
   test("playing around") {
