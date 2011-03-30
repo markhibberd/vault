@@ -341,14 +341,8 @@ object Row {
     def keyIndex[L](index: Int) =
       longIndex(index) map (Key.key(_))
 
-    def possibleKeyLabel[L](label: String) = longLabel(label).possiblyNull map ({
-      case None => Key.nokey
-      case Some(x) => Key.key(x)
-    })
+    def possibleKeyLabel[L](label: String) = longLabel(label).possiblyNull map (_.toKey(identity))
 
-    def possibleKeyIndex[L](index: Int) = longIndex(index).possiblyNull map ({
-      case None => Key.nokey
-      case Some(x) => Key.key(x)
-    })
+    def possibleKeyIndex[L](index: Int) = longIndex(index).possiblyNull map (_.toKey(identity))
   }
 }

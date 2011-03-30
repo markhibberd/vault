@@ -12,6 +12,9 @@ sealed trait SqlAccess[L, A] {
   def flatMap[B](f: A => SqlAccess[L, B]): SqlAccess[L, B] = new SqlAccess[L, B] {
     val access = (r: Row) => SqlAccess.this.access(r) flatMap (a => f(a).access(r))
   }
+
+  def toRowAccess: RowAccess[L, A] =
+    rowAccess(r => access(r).toRowValue)
 }
 
 trait SqlAccesss {

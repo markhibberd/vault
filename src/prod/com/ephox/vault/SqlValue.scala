@@ -74,25 +74,18 @@ trait SqlValues {
       r map f
   }
 
-  implicit def SqlValuePure[L]: Pure[({type λ[α]= SqlValue[L, α]})#λ] = new Pure[({type λ[α]= SqlValue[L, α]})#λ] {
-    def pure[A](a: => A) =
-      sqlValue(a)
-  }
-
-  implicit def SqlValueApply[L]: Apply[({type λ[α]= SqlValue[L, α]})#λ] = new Apply[({type λ[α]= SqlValue[L, α]})#λ] {
+  implicit def SqlValueApplicative[L]: Applicative[({type λ[α]= SqlValue[L, α]})#λ] = new Applicative[({type λ[α]= SqlValue[L, α]})#λ] {
     def apply[A, B](f: SqlValue[L, A => B], a: SqlValue[L, A]) =
       f fold (sqlError(_), ff => a fold (sqlError(_), aa => sqlValue(ff(aa))))
+
+    def pure[A](a: => A) = sqlValue(a)
   }
 
-  implicit def SqlValueApplicative[L]: Applicative[({type λ[α]= SqlValue[L, α]})#λ] = Applicative.applicative[({type λ[α]= SqlValue[L, α]})#λ]
+  implicit def SqlValueMonad[L]: Monad[({type λ[α]= SqlValue[L, α]})#λ] = new Monad[({type λ[α]= SqlValue[L, α]})#λ] {
+    def pure[A](a: => A) = sqlValue(a)
 
-
-  implicit def SqlValueBind[L]: Bind[({type λ[α]= SqlValue[L, α]})#λ] = new Bind[({type λ[α]= SqlValue[L, α]})#λ] {
-    def bind[A, B](a: SqlValue[L, A], f: A => SqlValue[L, B]) =
-      a fold (sqlError(_), f)
+    def bind[A, B](a: SqlValue[L, A], f: A => SqlValue[L, B]) = a flatMap f
   }
-
-  implicit def SqlValueMonad[L]: Monad[({type λ[α]= SqlValue[L, α]})#λ] = Monad.monad[({type λ[α]= SqlValue[L, α]})#λ]
 
   implicit def SqlValueEach[L]: Each[({type λ[α]= SqlValue[L, α]})#λ] = new Each[({type λ[α]= SqlValue[L, α]})#λ] {
     def each[A](e: SqlValue[L, A], f: A => Unit) =
@@ -134,9 +127,9 @@ trait SqlValues {
   implicit def SqlValueShow[L, A: Show]: Show[SqlValue[L, A]] = new Show[SqlValue[L, A]] {
     def show(a: SqlValue[L, A]) =
       a fold(
-              e => ("error(" + e + ")").toList
-            , a => ("value(" + a.shows + ")").toList
-            )
+              e => ("error(" + e + ")")
+            , a => ("value(" + a.shows + ")")
+            ) toList
   }
 
   implicit def SqlValueEqual[L, A: Equal]: Equal[SqlValue[L, A]] = {

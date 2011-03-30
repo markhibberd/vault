@@ -46,11 +46,11 @@ sealed trait RowAccess[L, A] {
   def unifyNull: SqlAccess[L, A] =
     sqlAccess((r: Row) => RowAccess.this.access(r).unifyNull)
 
-  def possiblyNull: SqlAccess[L, Option[A]] =
+  def possiblyNull: SqlAccess[L, PossiblyNull[A]] =
     sqlAccess(access(_).possiblyNull)
 
   def possiblyNullOr(d: => A): SqlAccess[L, A] =
-    possiblyNull map (_ getOrElse d)
+    possiblyNull map (_ | d)
 
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
@@ -157,15 +157,9 @@ trait RowAccesss {
   def idLabel[L](label: String): RowAccess[L, Key] = longLabel(label) map (Key.key(_))
   def idIndex[L](index: Int): RowAccess[L, Key] = longIndex(index) map (Key.key(_))
 
-  def possibleIdLabel[L](label: String): SqlAccess[L, Key] = longLabel(label).possiblyNull map ({
-    case None => Key.nokey
-    case Some(x) => Key.key(x)
-  })
+  def possibleIdLabel[L](label: String): SqlAccess[L, Key] = longLabel(label).possiblyNull map (_.toKey(identity))
 
-  def possibleIdIndex[L](index: Int): SqlAccess[L, Key] = longIndex(index).possiblyNull map ({
-    case None => Key.nokey
-    case Some(x) => Key.key(x)
-  })
+  def possibleIdIndex[L](index: Int): SqlAccess[L, Key] = longIndex(index).possiblyNull map (_.toKey(identity))
 
   implicit def RowAccessFunctor[L]: Functor[({type λ[α]= RowAccess[L, α]})#λ] = new Functor[({type λ[α]= RowAccess[L, α]})#λ] {
     def fmap[A, B](k: RowAccess[L, A], f: A => B) =
