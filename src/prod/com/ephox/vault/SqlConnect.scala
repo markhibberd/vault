@@ -79,27 +79,23 @@ trait SqlConnects {
       k map f
   }
 
-  implicit def SqlConnectPure[L, M[_]]: Pure[({type λ[α]= SqlConnect[L, α]})#λ] = new Pure[({type λ[α]= SqlConnect[L, α]})#λ] {
-    def pure[A](a: => A) =
-      valueSqlConnect(_ => a)
-  }
-
-  implicit def SqlConnectApply[L, M[_]]: Apply[({type λ[α]= SqlConnect[L, α]})#λ] = new Apply[({type λ[α]= SqlConnect[L, α]})#λ] {
+  implicit def SqlConnectApplicative[L]: Applicative[({type λ[α]= SqlConnect[L, α]})#λ] = new Applicative[({type λ[α]= SqlConnect[L, α]})#λ] {
     def apply[A, B](f: SqlConnect[L, A => B], a: SqlConnect[L, A]) = {
       sqlConnect(c => {
         val fc = f(c)
         a(c) <*> fc
       })
     }
+
+    def pure[A](a: => A) =
+      valueSqlConnect(_ => a)
   }
 
-  implicit def SqlConnectApplicative[L]: Applicative[({type λ[α]= SqlConnect[L, α]})#λ] = Applicative.applicative[({type λ[α]= SqlConnect[L, α]})#λ]
-
-
-  implicit def SqlConnectBind[L, M[_]]: Bind[({type λ[α]= SqlConnect[L, α]})#λ] = new Bind[({type λ[α]= SqlConnect[L, α]})#λ] {
+  implicit def SqlConnectMonad[L]: Monad[({type λ[α]= SqlConnect[L, α]})#λ] = new Monad[({type λ[α]= SqlConnect[L, α]})#λ]{
     def bind[A, B](a: SqlConnect[L, A], f: A => SqlConnect[L, B]) =
       sqlConnect(c => a(c) >>= (a => f(a)(c)))
-  }
 
-  implicit def SqlConnectMonad[L]: Monad[({type λ[α]= SqlConnect[L, α]})#λ] = Monad.monad[({type λ[α]= SqlConnect[L, α]})#λ]
+    def pure[A](a: => A) =
+      valueSqlConnect(_ => a)
+  }
 }

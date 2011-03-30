@@ -18,7 +18,7 @@ sealed trait RowQueryConnect[L, A] {
   def unifyNull: SqlQueryConnect[L, A] =
     sqlQueryConnect(q => (this <|- q) unifyNull)
 
-  def possiblyNull: SqlQueryConnect[L, Option[A]] =
+  def possiblyNull: SqlQueryConnect[L, PossiblyNull[A]] =
     sqlQueryConnect(q => (this <|- q) possiblyNull)
 
   def possiblyNullOr(d: => A): SqlQueryConnect[L, A] =

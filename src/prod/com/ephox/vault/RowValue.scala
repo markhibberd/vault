@@ -48,11 +48,11 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
   def unifyNull: SqlValue[L, A] =
     unifyNullWithMessage("unify null")
 
-  def possiblyNull: SqlValue[L, Option[A]] =
-    getSqlValue.sequence[({type λ[α]= SqlValue[L, α]})#λ, A]
+  def possiblyNull: SqlValue[L, PossiblyNull[A]] =
+    optionPossiblyNull(getSqlValue).sequence[({type λ[α]= SqlValue[L, α]})#λ, A]
 
   def possiblyNullOr(d: => A): SqlValue[L, A] =
-    possiblyNull map (_ getOrElse d)
+    possiblyNull map (_ | d)
 
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
@@ -81,24 +81,21 @@ trait RowValues {
       r map f
   }
 
-  implicit def RowValuePure[L]: Pure[({type λ[α]= RowValue[L, α]})#λ] = new Pure[({type λ[α]= RowValue[L, α]})#λ] {
+  implicit def RowValueApplicative[L]: Applicative[({type λ[α]= RowValue[L, α]})#λ] = new Applicative[({type λ[α]= RowValue[L, α]})#λ] {
+    def apply[A, B](f: RowValue[L, A => B], a: RowValue[L, A]) =
+      f fold (rowError(_), ff => a fold (rowError(_), aa => rowValue(ff(aa)), rowNull), rowNull)
+
     def pure[A](a: => A) =
       rowValue(a)
   }
 
-  implicit def RowValueApply[L]: Apply[({type λ[α]= RowValue[L, α]})#λ] = new Apply[({type λ[α]= RowValue[L, α]})#λ] {
-    def apply[A, B](f: RowValue[L, A => B], a: RowValue[L, A]) =
-      f fold (rowError(_), ff => a fold (rowError(_), aa => rowValue(ff(aa)), rowNull), rowNull)
-  }
-
-  implicit def RowValueApplicative[L]: Applicative[({type λ[α]= RowValue[L, α]})#λ] = Applicative.applicative[({type λ[α]= RowValue[L, α]})#λ]
-
-  implicit def RowValueBind[L]: Bind[({type λ[α]= RowValue[L, α]})#λ] = new Bind[({type λ[α]= RowValue[L, α]})#λ] {
+  implicit def RowValueMonad[L]: Monad[({type λ[α]= RowValue[L, α]})#λ] = new Monad[({type λ[α]= RowValue[L, α]})#λ] {
     def bind[A, B](a: RowValue[L, A], f: A => RowValue[L, B]) =
       a fold (rowError(_), f, rowNull)
-  }
 
-  implicit def RowValueMonad[L]: Monad[({type λ[α]= RowValue[L, α]})#λ] = Monad.monad[({type λ[α]= RowValue[L, α]})#λ]
+    def pure[A](a: => A) =
+      rowValue(a)
+  }
 
   implicit def RowValueEach[L]: Each[({type λ[α]= RowValue[L, α]})#λ] = new Each[({type λ[α]= RowValue[L, α]})#λ] {
     def each[A](e: RowValue[L, A], f: A => Unit) =
@@ -130,10 +127,10 @@ trait RowValues {
   implicit def RowAccessShow[L, A: Show]: Show[RowValue[L, A]] = new Show[RowValue[L, A]] {
     def show(a: RowValue[L, A]) =
       a fold (
-              e => ("row-error(" + e + ")").toList
-            , a => ("row-value(" + a.shows + ")").toList
-            , "row-null".toList
-            )
+              e => ("row-error(" + e + ")")
+            , a => ("row-value(" + a.shows + ")")
+            , "row-null"
+            ) toList
   }
 
   implicit def RowAccessEqual[L, A: Equal]: Equal[RowValue[L, A]] = new Equal[RowValue[L, A]] {

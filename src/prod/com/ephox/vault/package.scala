@@ -5,6 +5,7 @@ import Scalaz._
 
 package object vault
   extends StringQuerys
+  with PossiblyNulls
   with PreparedStatementWs
   with RowValues
   with RowAccesss
