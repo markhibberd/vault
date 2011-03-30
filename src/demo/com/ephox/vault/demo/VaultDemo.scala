@@ -1,43 +1,45 @@
 package com.ephox.vault.demo
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 import com.ephox.vault._
 
 object VaultDemo {
   type L = String
 
-  case class Person(name: String, age: Int)
+  case class Person(name: String, age: Int, address: PossiblyNull[String])
 
   object Person {
     implicit val ShowPerson: Show[Person] = showA
   }
 
+  val PersonSql =
+    for {
+      name    <- stringIndex[L](2).unifyNull
+      age     <- intIndex[L](3).unifyNull
+      address <- stringIndex[L](4).possiblyNull
+    } yield Person(name, age, address)
+
   val data =
     List(
-          "Bob" -> 45
-        , "Bob" -> 54
-        , "Mary" -> 78
-        , "Fred" -> 99
-        , "Jack" -> 9999
-        , "Mark" -> 9999
-        , "Mark" -> 9999
-        ) map { case (name, age) => Person(name, age) }
-
-  val PersonRowAccess =
-    for {
-      name <- stringIndex[L](2)
-      age  <- intIndex[L](3)
-    } yield Person(name, age)
+          "Bob"  -> 45   -> notNull("61 Street")
+        , "Bob"  -> 54   -> isNull[String]
+        , "Mary" -> 78   -> notNull("87 Street")
+        , "Fred" -> 99   -> isNull[String]
+        , "Jack" -> 9999 -> isNull[String]
+        , "Mark" -> 9999 -> notNull("98 Other Street")
+        , "Mark" -> 9999 -> isNull[String]
+        ) map {
+      case ((name, age), address) => Person(name, age, address)
+    }
 
   def setupData =
     for {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
-      b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER)".executeUpdate
-      p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" prepareStatement
+      b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER, address VARCHAR(255))".executeUpdate
+      p <- "INSERT INTO PERSON(name, age, address) VALUES (?,?,?)" prepareStatement
              (s => s.foreachStatement[L, List, Person](data, (p: Person) => p match {
-               case Person(name, age) => {
-                 s.set(stringType(name), intType(age))
+               case Person(name, age, address) => {
+                 s.set(stringType(name), intType(age), address toJDBCType stringType)
                }
              }))
     } yield a + b + p
@@ -68,7 +70,7 @@ object VaultDemo {
       setupData commitRollback connection printStackTraceOr (n => println(n + " rows affected"))
 
       // get result and close connection
-      val combinedPerson = PersonRowAccess -||> combine <|- "SELECT * FROM PERSON".toSql finalyClose connection
+      val combinedPerson = PersonSql.toRowAccess -||> combine <|- "SELECT * FROM PERSON".toSql finalyClose connection
 
       // print the result
       combinedPerson.println
