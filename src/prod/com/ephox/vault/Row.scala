@@ -342,9 +342,9 @@ object Row {
       longIndex(index) map (key(_))
 
     def possibleKeyLabel[L](label: String) =
-      longLabel(label).possiblyNull map (_.toKey(identity))
+      longLabel(label).possiblyNull map (_.toKey)
 
     def possibleKeyIndex[L](index: Int) =
-      longIndex(index).possiblyNull map (_.toKey(identity))
+      longIndex(index).possiblyNull map (_.toKey)
   }
 }
