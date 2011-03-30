@@ -48,8 +48,8 @@ sealed trait PossiblyNull[A] {
   def toJDBCType(k: A => JDBCType): JDBCType =
     k(this | null.asInstanceOf[A])
 
-  def toKey(toLong: A => Long) =
-    fold(a => key(toLong(a)), nokey)
+  def toKey(implicit i: A <:< Long) =
+    fold(a => key(a: Long), nokey)
 
   def orElse(n: => PossiblyNull[A]): PossiblyNull[A] =
     ifelse(this, n)
