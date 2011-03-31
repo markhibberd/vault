@@ -3,6 +3,7 @@ package com.ephox.vault
 import scalaz._
 import Scalaz._
 import SqlValue._
+import RowValue._
 
 sealed trait SqlValue[L, A] extends NewType[Logger[L, Either[SqlException, A]]] {
   def fold[X](err: SqlException => X, v: A => X) =

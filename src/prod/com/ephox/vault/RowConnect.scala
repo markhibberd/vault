@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import scalaz._
 import Scalaz._
+import RowValue._
 import java.sql.Connection
 
 sealed trait RowConnect[L, A] {

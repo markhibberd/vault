@@ -107,6 +107,8 @@ sealed trait Row {
 }
 
 object Row {
+  import RowValue._
+
   type ObjectTypeMap = java.util.Map[String, Class[_]]
   type Cal = Calendar
 
