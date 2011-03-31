@@ -8,6 +8,7 @@ sealed trait PreparedStatementW {
   val s: PreparedStatement
 
   import SqlConnect._
+  import PreparedStatementW._
 
   def tryExecuteUpdate[L]: SqlValue[L, Int] =
     SqlValue.trySqlValue(s.executeUpdate)
@@ -65,6 +66,8 @@ sealed trait PreparedStatementW {
     }
 
 }
+
+object PreparedStatementW extends PreparedStatementWs
 
 trait PreparedStatementWs {
   implicit def PreparedStatementPreparedStatementW(t: PreparedStatement): PreparedStatementW = new PreparedStatementW {

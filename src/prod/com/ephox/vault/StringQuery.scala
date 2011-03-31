@@ -9,6 +9,7 @@ sealed trait StringQuery {
   val query: String
 
   import SqlConnect._
+  import PreparedStatementW._
 
   def executeUpdate[L]: SqlConnect[L, Int] =
     sqlConnect(c => withSqlResource(

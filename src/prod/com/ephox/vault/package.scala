@@ -5,7 +5,6 @@ import Scalaz._
 
 package object vault
   extends StringQuerys
-  with PreparedStatementWs
   with RowQueryConnects
   with SqlQueryConnects
   with Querys
