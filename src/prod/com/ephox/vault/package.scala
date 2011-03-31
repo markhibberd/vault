@@ -11,7 +11,6 @@ package object vault
   with RowConnects
   with RowQueryConnects
   with SqlAccesss
-  with SqlConnects
   with SqlQueryConnects
   with Querys
   with JDBCTypes

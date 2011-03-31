@@ -7,6 +7,8 @@ import java.sql.Connection
 sealed trait RowConnect[L, A] {
   val connect: Connection => RowValue[L, A]
 
+  import SqlConnect._
+
   def apply(c: Connection) = connect(c)
 
   def executeOrDie(c: Connection) = connect(c).getOrDie
@@ -49,6 +51,8 @@ sealed trait RowConnect[L, A] {
   def |?(d: => A): SqlConnect[L, A] =
     sqlConnect(connect(_) |? d)
 }
+
+object RowConnect extends RowConnects
 
 trait RowConnects {
   def rowConnect[L, A](f: Connection => RowValue[L, A]): RowConnect[L, A] = new RowConnect[L, A] {
