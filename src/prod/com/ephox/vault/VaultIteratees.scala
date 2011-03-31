@@ -1,7 +1,6 @@
 package com.ephox.vault;
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 
 trait VaultIteratees {
   def combineAll[A](implicit merge: Merger[A]): IterV[A, List[A]] = {

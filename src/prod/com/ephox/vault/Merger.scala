@@ -1,8 +1,7 @@
 package com.ephox.vault
 
 import com.ephox.vault._, KeyedW._
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 
 trait Merger[A] {
   val merge: (A, A) => Option[A]

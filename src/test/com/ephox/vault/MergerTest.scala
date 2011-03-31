@@ -2,8 +2,7 @@ package com.ephox.vault
 
 import org.scalatest.FunSuite
 import com.ephox.vault._, Vault._
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 
 class MergerTest extends FunSuite {
   case class Billy(key: Key, b: String) {

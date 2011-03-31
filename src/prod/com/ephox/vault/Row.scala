@@ -1,7 +1,6 @@
 package com.ephox.vault
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 import java.io.{Reader, InputStream}
 import java.util.Calendar
 import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSet}

@@ -1,7 +1,6 @@
 package com.ephox.vault
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 import SqlValue._
 
 sealed trait RowValue[A] extends NewType[Option[Either[SqlException, A]]] {

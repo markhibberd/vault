@@ -1,8 +1,7 @@
 package com.ephox.vault
 
 import org.scalatest.FunSuite
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 import com.ephox.vault._, Vault._
 
 class SelectTest extends FunSuite {
