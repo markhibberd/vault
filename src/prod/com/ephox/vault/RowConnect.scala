@@ -70,7 +70,7 @@ trait RowConnects {
   def tryRowConnect[A](f: Connection => A): RowConnect[A] =
     rowConnect(c => tryRowValue(f(c)))
 
-  def closeRowConnect[L]: RowConnect[Unit] =
+  def closeRowConnect: RowConnect[Unit] =
     tryRowConnect(_.close)
 
   implicit val RowConnectFunctor: Functor[RowConnect] = new Functor[RowConnect] {

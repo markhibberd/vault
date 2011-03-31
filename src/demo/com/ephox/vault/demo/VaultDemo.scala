@@ -4,8 +4,6 @@ import scalaz._, Scalaz._
 import com.ephox.vault._, Vault._
 
 object VaultDemo {
-  type L = String
-
   case class Person(name: String, age: Int, address: PossiblyNull[String])
 
   object Person {
@@ -14,9 +12,9 @@ object VaultDemo {
 
   val PersonSql =
     for {
-      name    <- stringIndex[L](2).unifyNull
-      age     <- intIndex[L](3).unifyNull
-      address <- stringIndex[L](4).possiblyNull
+      name    <- stringIndex(2).unifyNull
+      age     <- intIndex(3).unifyNull
+      address <- stringIndex(4).possiblyNull
     } yield Person(name, age, address)
 
   val data =
