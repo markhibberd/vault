@@ -8,7 +8,6 @@ package object vault
   with SqlQueryConnects
   with Querys
   with JDBCTypes
-  with SqlTypes
   with KeyX
   with Keyeds
   with KeyedWX
