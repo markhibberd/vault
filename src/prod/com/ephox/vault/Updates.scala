@@ -10,3 +10,5 @@ trait Updates {
     sqls.traverse[({type λ[α]= SqlConnect[L, α]})#λ, Int](_.executeUpdate) ∘ (_.sum)
   }
 }
+
+object Updates extends Updates
