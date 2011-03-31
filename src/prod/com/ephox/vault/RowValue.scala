@@ -4,13 +4,13 @@ import scalaz._
 import Scalaz._
 import SqlValue._
 
-sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException, A]]]] {
+sealed trait RowValue[A] extends NewType[Option[Either[SqlException, A]]] {
   import PossiblyNull._
 
   import RowValue._
 
   def fold[X](sqlErr: SqlException => X, sqlValue: A => X, nul: => X): X =
-    value.over match {
+    value match {
       case None           => nul
       case Some(Left(e))  => sqlErr(e)
       case Some(Right(a)) => sqlValue(a)
@@ -35,34 +35,34 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
   def getOrDie: A =
     fold(e => throw new VaultException(e), x => x, throw new VaultException("Unexpected database null."))
 
-  def getSqlValue: Option[SqlValue[L, A]] =
+  def getSqlValue: Option[SqlValue[A]] =
     fold(e => Some(sqlError(e)), a => Some(sqlValue(a)), None)
 
-  def getSqlValueOr(v: => SqlValue[L, A]): SqlValue[L, A] =
+  def getSqlValueOr(v: => SqlValue[A]): SqlValue[A] =
     getSqlValue getOrElse v
 
   def printStackTraceOr(v: A => Unit, nul: => Unit): Unit =
     fold(_ => (), v, nul)
 
-  def map[B](f: A => B): RowValue[L, B] =
+  def map[B](f: A => B): RowValue[B] =
     fold(rowError(_), a => rowValue(f(a)), rowNull)
 
-  def flatMap[B](f: A => RowValue[L, B]): RowValue[L, B] =
+  def flatMap[B](f: A => RowValue[B]): RowValue[B] =
     fold(rowError(_), f, rowNull)
 
-  def unifyNullWithMessage(message: String): SqlValue[L, A] =
+  def unifyNullWithMessage(message: String): SqlValue[A] =
     fold(sqlError(_), sqlValue(_), sqlError(new SqlException(message)))
 
-  def unifyNull: SqlValue[L, A] =
+  def unifyNull: SqlValue[A] =
     unifyNullWithMessage("unify null")
 
-  def possiblyNull: SqlValue[L, PossiblyNull[A]] =
-    optionPossiblyNull(getSqlValue).sequence[({type λ[α]= SqlValue[L, α]})#λ, A]
+  def possiblyNull: SqlValue[PossiblyNull[A]] =
+    optionPossiblyNull(getSqlValue).sequence[({type λ[α]= SqlValue[α]})#λ, A]
 
-  def possiblyNullOr(d: => A): SqlValue[L, A] =
+  def possiblyNullOr(d: => A): SqlValue[A] =
     possiblyNull map (_ | d)
 
-  def toList: SqlValue[L, List[A]] =
+  def toList: SqlValue[List[A]] =
     possiblyNull map (_.toList)
 
   // alias for possiblyNullOr
@@ -72,73 +72,67 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
 object RowValue extends RowValues
 
 trait RowValues {
-  def rowError[L, A](e: SqlException): RowValue[L, A] = new RowValue[L, A] {
-    val value = (Some(Left(e)): Option[Either[SqlException, A]]).logger[L]
+  def rowError[A](e: SqlException): RowValue[A] = new RowValue[A] {
+    val value = (Some(Left(e)): Option[Either[SqlException, A]])
   }
 
-  def rowValue[L, A](a: A): RowValue[L, A] = new RowValue[L, A] {
-    val value = (Some(Right(a)): Option[Either[SqlException, A]]).logger[L]
+  def rowValue[A](a: A): RowValue[A] = new RowValue[A] {
+    val value = (Some(Right(a)): Option[Either[SqlException, A]])
   }
 
-  def rowNull[L, A]: RowValue[L, A] = new RowValue[L, A] {
-    val value = (None: Option[Either[SqlException, A]]).logger[L]
+  def rowNull[A]: RowValue[A] = new RowValue[A] {
+    val value = (None: Option[Either[SqlException, A]])
   }
 
-  def tryRowValue[L, A](a: => A): RowValue[L, A] =
+  def tryRowValue[A](a: => A): RowValue[A] =
     trySqlValue(a).toRowValue
 
-  implicit def RowValueInjective[L] = Injective[({type λ[α]= RowValue[L, α]})#λ]
+  implicit val RowValueInjective = Injective[RowValue]
 
-  implicit def RowValueFunctor[L]: Functor[({type λ[α]= RowValue[L, α]})#λ] = new Functor[({type λ[α]= RowValue[L, α]})#λ] {
-    def fmap[A, B](r: RowValue[L, A], f: A => B) =
+  implicit val RowValueFunctor: Functor[RowValue] = new Functor[RowValue] {
+    def fmap[A, B](r: RowValue[A], f: A => B) =
       r map f
   }
 
-  implicit def RowValueApplicative[L]: Applicative[({type λ[α]= RowValue[L, α]})#λ] = new Applicative[({type λ[α]= RowValue[L, α]})#λ] {
-    def apply[A, B](f: RowValue[L, A => B], a: RowValue[L, A]) =
-      f fold (rowError(_), ff => a fold (rowError(_), aa => rowValue(ff(aa)), rowNull), rowNull)
-
+  implicit val RowValuePure: Pure[RowValue] = new Pure[RowValue] {
     def pure[A](a: => A) =
       rowValue(a)
   }
 
-  implicit def RowValueMonad[L]: Monad[({type λ[α]= RowValue[L, α]})#λ] = new Monad[({type λ[α]= RowValue[L, α]})#λ] {
-    def bind[A, B](a: RowValue[L, A], f: A => RowValue[L, B]) =
+  implicit val RowValueBind: Bind[RowValue] = new Bind[RowValue] {
+    def bind[A, B](a: RowValue[A], f: A => RowValue[B]) =
       a fold (rowError(_), f, rowNull)
-
-    def pure[A](a: => A) =
-      rowValue(a)
   }
 
-  implicit def RowValueEach[L]: Each[({type λ[α]= RowValue[L, α]})#λ] = new Each[({type λ[α]= RowValue[L, α]})#λ] {
-    def each[A](e: RowValue[L, A], f: A => Unit) =
+  implicit val RowValueEach: Each[RowValue] = new Each[RowValue] {
+    def each[A](e: RowValue[A], f: A => Unit) =
       e fold (_ => (), f, ())
   }
 
-  implicit def RowAccessIndex[L]: Index[({type λ[α]= RowValue[L, α]})#λ] = new Index[({type λ[α]= RowValue[L, α]})#λ] {
-    def index[A](a: RowValue[L, A], i: Int) = a.getValue filter (_ => i == 0)
+  implicit val RowAccessIndex: Index[RowValue] = new Index[RowValue] {
+    def index[A](a: RowValue[A], i: Int) = a.getValue filter (_ => i == 0)
   }
 
-  implicit def RowAccessLength[L]: Length[({type λ[α]= RowValue[L, α]})#λ] = new Length[({type λ[α]= RowValue[L, α]})#λ] {
-    def len[A](a: RowValue[L, A]) =
+  implicit val RowAccessLength: Length[RowValue] = new Length[RowValue] {
+    def len[A](a: RowValue[A]) =
       a fold (_ => 0, _ => 1, 0)
   }
 
-  implicit def RowAccessFoldable[L]: Foldable[({type λ[α]= RowValue[L, α]})#λ] = new Foldable[({type λ[α]= RowValue[L, α]})#λ] {
-    override def foldLeft[A, B](e: RowValue[L, A], b: B, f: (B, A) => B) =
+  implicit val RowAccessFoldable: Foldable[RowValue] = new Foldable[RowValue] {
+    override def foldLeft[A, B](e: RowValue[A], b: B, f: (B, A) => B) =
       e fold (_ => b, f(b, _), b)
 
-    override def foldRight[A, B](e: RowValue[L, A], b: => B, f: (A, => B) => B) =
+    override def foldRight[A, B](e: RowValue[A], b: => B, f: (A, => B) => B) =
       e fold (_ => b, f(_, b), b)
   }
 
-  implicit def RowAccessTraverse[L]: Traverse[({type λ[α]= RowValue[L, α]})#λ] = new Traverse[({type λ[α]= RowValue[L, α]})#λ] {
-    def traverse[F[_] : Applicative, A, B](f: A => F[B], as: RowValue[L, A]): F[RowValue[L, B]] =
+  implicit val RowAccessTraverse: Traverse[RowValue] = new Traverse[RowValue] {
+    def traverse[F[_] : Applicative, A, B](f: A => F[B], as: RowValue[A]): F[RowValue[B]] =
       as fold ((e: SqlException) => rowError(e).η[F], v => f(v) ∘ (rowValue(_)), rowNull.η[F])
   }
 
-  implicit def RowAccessShow[L, A: Show]: Show[RowValue[L, A]] = new Show[RowValue[L, A]] {
-    def show(a: RowValue[L, A]) =
+  implicit def RowAccessShow[A: Show]: Show[RowValue[A]] = new Show[RowValue[A]] {
+    def show(a: RowValue[A]) =
       a fold (
               e => ("row-error(" + e + ")")
             , a => ("row-value(" + a.shows + ")")
@@ -146,13 +140,13 @@ trait RowValues {
             ) toList
   }
 
-  implicit def RowAccessEqual[L, A: Equal]: Equal[RowValue[L, A]] = new Equal[RowValue[L, A]] {
-    def equal(a1: RowValue[L, A], a2: RowValue[L, A]) =
+  implicit def RowAccessEqual[A: Equal]: Equal[RowValue[A]] = new Equal[RowValue[A]] {
+    def equal(a1: RowValue[A], a2: RowValue[A]) =
       a1 fold (
         _ => a2.isError
       , t => a2 fold (_ => false, t === _, false)
       , a2.isNull)
   }
 
-  implicit def RowAccessZero[L, A: Zero]: Zero[RowValue[L, A]] = zero(rowValue(∅[A]))
+  implicit def RowAccessZero[A: Zero]: Zero[RowValue[A]] = zero(rowValue(∅[A]))
 }

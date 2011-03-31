@@ -10,19 +10,19 @@ sealed trait PreparedStatementW {
   import SqlConnect._
   import PreparedStatementW._
 
-  def tryExecuteUpdate[L]: SqlValue[L, Int] =
+  def tryExecuteUpdate: SqlValue[Int] =
     SqlValue.trySqlValue(s.executeUpdate)
 
-  def executeStatements[L, T[_], A](as: T[A], k: A => SqlConnect[L, Unit])(implicit f: Foldable[T]): SqlConnect[L, Int] =
-    sqlConnect[L, Int](c => as.foldLeftM[({type λ[α]= SqlValue[L, α]})#λ, Int](0) {
+  def executeStatements[T[_], A](as: T[A], k: A => SqlConnect[Unit])(implicit f: Foldable[T]): SqlConnect[Int] =
+    sqlConnect[Int](c => as.foldLeftM[({type λ[α]= SqlValue[α]})#λ, Int](0) {
        case (n, a) => {
          k(a)(c)
-         s.tryExecuteUpdate[L] map (n+)
+         s.tryExecuteUpdate map (n+)
        }
      })
 
-  def foreachStatement[L, T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[L, Int] =
-    executeStatements(as, (a: A) => k(a).η[({type λ[α]= SqlConnect[L, α]})#λ])
+  def foreachStatement[T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[Int] =
+    executeStatements(as, (a: A) => k(a).η[({type λ[α]= SqlConnect[α]})#λ])
 
   def set(values: JDBCType*): Unit =
     setValues(values.toList)

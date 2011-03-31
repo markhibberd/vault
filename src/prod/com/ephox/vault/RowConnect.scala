@@ -5,8 +5,8 @@ import Scalaz._
 import RowValue._
 import java.sql.Connection
 
-sealed trait RowConnect[L, A] {
-  val connect: Connection => RowValue[L, A]
+sealed trait RowConnect[A] {
+  val connect: Connection => RowValue[A]
 
   import SqlConnect._
   import RowConnect._
@@ -15,76 +15,76 @@ sealed trait RowConnect[L, A] {
 
   def executeOrDie(c: Connection) = connect(c).getOrDie
 
-  def bracket[B, C](after: (=> A) => RowConnect[L, B], k: (=> A) => RowConnect[L, C]): RowConnect[L, C] =
+  def bracket[B, C](after: (=> A) => RowConnect[B], k: (=> A) => RowConnect[C]): RowConnect[C] =
     this flatMap (a => try {
       k(a)
     } finally {
       after(a)
     })
 
-  def finaly[B](b: => RowConnect[L, B]): RowConnect[L, A] =
+  def finaly[B](b: => RowConnect[B]): RowConnect[A] =
     rowConnect(c => try {
       apply(c)
     } finally {
       b(c)
     })
 
-  def finalyClose: RowConnect[L, A] =
+  def finalyClose: RowConnect[A] =
     finaly(closeRowConnect)
 
-  def map[B](f: A => B): RowConnect[L, B] =
+  def map[B](f: A => B): RowConnect[B] =
     rowConnect(connect(_) map f)
 
-  def flatMap[B](f: A => RowConnect[L, B]) =
+  def flatMap[B](f: A => RowConnect[B]) =
     rowConnect(c => connect(c) flatMap (f(_) connect c))
 
-  def unifyNullWithMessage(message: String): SqlConnect[L, A] =
+  def unifyNullWithMessage(message: String): SqlConnect[A] =
     sqlConnect(connect(_) unifyNullWithMessage message)
 
-  def unifyNull: SqlConnect[L, A] =
+  def unifyNull: SqlConnect[A] =
     sqlConnect(connect(_) unifyNull)
 
-  def possiblyNull: SqlConnect[L, PossiblyNull[A]] =
+  def possiblyNull: SqlConnect[PossiblyNull[A]] =
     sqlConnect(connect(_) possiblyNull)
 
-  def possiblyNullOr(d: => A): SqlConnect[L, A] =
+  def possiblyNullOr(d: => A): SqlConnect[A] =
     sqlConnect(connect(_) possiblyNullOr d)
 
-  def |?(d: => A): SqlConnect[L, A] =
+  def |?(d: => A): SqlConnect[A] =
     sqlConnect(connect(_) |? d)
 }
 
 object RowConnect extends RowConnects
 
 trait RowConnects {
-  def rowConnect[L, A](f: Connection => RowValue[L, A]): RowConnect[L, A] = new RowConnect[L, A] {
+  def rowConnect[A](f: Connection => RowValue[A]): RowConnect[A] = new RowConnect[A] {
     val connect = f
   }
 
-  def constantRowConnect[L, A](v: => RowValue[L, A]): RowConnect[L, A] =
+  def constantRowConnect[A](v: => RowValue[A]): RowConnect[A] =
     rowConnect(_ => v)
 
-  def valueRowConnect[L, A](f: Connection => A): RowConnect[L, A] =
-    rowConnect(f(_).η[({type λ[α]= RowValue[L, α]})#λ])
+  def valueRowConnect[A](f: Connection => A): RowConnect[A] =
+    rowConnect(f(_).η[({type λ[α]= RowValue[α]})#λ])
 
-  def tryRowConnect[L, A](f: Connection => A): RowConnect[L, A] =
+  def tryRowConnect[A](f: Connection => A): RowConnect[A] =
     rowConnect(c => tryRowValue(f(c)))
 
-  def closeRowConnect[L]: RowConnect[L, Unit] =
+  def closeRowConnect[L]: RowConnect[Unit] =
     tryRowConnect(_.close)
 
-  implicit def RowConnectFunctor[L]: Functor[({type λ[α]= RowConnect[L, α]})#λ] = new Functor[({type λ[α]= RowConnect[L, α]})#λ] {
-    def fmap[A, B](k: RowConnect[L, A], f: A => B) =
+  implicit val RowConnectFunctor: Functor[RowConnect] = new Functor[RowConnect] {
+    def fmap[A, B](k: RowConnect[A], f: A => B) =
       k map f
   }
 
-  implicit def RowConnectPure[L]: Pure[({type λ[α]= RowConnect[L, α]})#λ] = new Pure[({type λ[α]= RowConnect[L, α]})#λ] {
+  implicit val RowConnectPure: Pure[RowConnect] = new Pure[RowConnect] {
     def pure[A](a: => A) =
-      rowConnect(_ => a.η[({type λ[α]= RowValue[L, α]})#λ])
+      rowConnect(_ => a.η[({type λ[α]= RowValue[α]})#λ])
   }
 
-  implicit def RowConnectApply[L]: Apply[({type λ[α]= RowConnect[L, α]})#λ] = new Apply[({type λ[α]= RowConnect[L, α]})#λ] {
-    def apply[A, B](f: RowConnect[L, A => B], a: RowConnect[L, A]) = {
+  implicit val RowConnectApply: Apply[RowConnect] = new Apply[RowConnect] {
+    def apply[A, B](f: RowConnect[A => B], a: RowConnect[A]) = {
       rowConnect(c => {
         val fc = f(c)
         a(c) <*> fc
@@ -92,13 +92,8 @@ trait RowConnects {
     }
   }
 
-  implicit def RowConnectApplicative[L]: Applicative[({type λ[α]= RowConnect[L, α]})#λ] = Applicative.applicative[({type λ[α]= RowConnect[L, α]})#λ]
-
-  implicit def RowConnectBind[L]: Bind[({type λ[α]= RowConnect[L, α]})#λ] = new Bind[({type λ[α]= RowConnect[L, α]})#λ] {
-    def bind[A, B](a: RowConnect[L, A], f: A => RowConnect[L, B]) =
+  implicit val RowConnectBind: Bind[RowConnect] = new Bind[RowConnect] {
+    def bind[A, B](a: RowConnect[A], f: A => RowConnect[B]) =
       rowConnect(c => a(c) >>= (a => f(a)(c)))
   }
-
-  implicit def RowConnectMonad[L]: Monad[({type λ[α]= RowConnect[L, α]})#λ] = Monad.monad[({type λ[α]= RowConnect[L, α]})#λ]
-
 }

@@ -2,48 +2,44 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._
 
-sealed trait SqlQueryConnect[L, A] {
-  def <|-(sql: Query): SqlConnect[L, A]
+sealed trait SqlQueryConnect[A] {
+  def <|-(sql: Query): SqlConnect[A]
 
   import SqlQueryConnect._
 
-  def map[B](f: A => B): SqlQueryConnect[L, B] =
+  def map[B](f: A => B): SqlQueryConnect[B] =
     sqlQueryConnect(s => this <|- s map f)
 
-  def flatMap[B](f: A => SqlQueryConnect[L, B]): SqlQueryConnect[L, B] =
+  def flatMap[B](f: A => SqlQueryConnect[B]): SqlQueryConnect[B] =
     sqlQueryConnect(s => (this <|- s) flatMap (a => f(a) <|- s))
 }
 
 object SqlQueryConnect extends SqlQueryConnects
 
 trait SqlQueryConnects {
-  def sqlQueryConnect[L, A](f: Query => SqlConnect[L, A]): SqlQueryConnect[L, A] = new SqlQueryConnect[L, A] {
+  def sqlQueryConnect[A](f: Query => SqlConnect[A]): SqlQueryConnect[A] = new SqlQueryConnect[A] {
     def <|-(sql: Query) =
       f(sql)
   }
 
-  implicit def SqlQueryConnectFunctor[L]: Functor[({type λ[α]= SqlQueryConnect[L, α]})#λ] = new Functor[({type λ[α]= SqlQueryConnect[L, α]})#λ] {
-    def fmap[A, B](k: SqlQueryConnect[L, A], f: A => B) =
+  implicit val SqlQueryConnectFunctor: Functor[SqlQueryConnect] = new Functor[SqlQueryConnect] {
+    def fmap[A, B](k: SqlQueryConnect[A], f: A => B) =
       k map f
   }
 
-  implicit def SqlQueryConnectPure[L, M[_]]: Pure[({type λ[α]= SqlQueryConnect[L, α]})#λ] = new Pure[({type λ[α]= SqlQueryConnect[L, α]})#λ] {
+  implicit val SqlQueryConnectPure: Pure[SqlQueryConnect] = new Pure[SqlQueryConnect] {
     def pure[A](a: => A) =
-      sqlQueryConnect(_ => a.η[({type λ[α]= SqlConnect[L, α]})#λ])
+      sqlQueryConnect(_ => a.η[SqlConnect])
   }
 
-  implicit def SqlQueryConnectApply[L, M[_]]: Apply[({type λ[α]= SqlQueryConnect[L, α]})#λ] = new Apply[({type λ[α]= SqlQueryConnect[L, α]})#λ] {
-    def apply[A, B](f: SqlQueryConnect[L, A => B], a: SqlQueryConnect[L, A]) = {
+  implicit val SqlQueryConnectApply: Apply[SqlQueryConnect] = new Apply[SqlQueryConnect] {
+    def apply[A, B](f: SqlQueryConnect[A => B], a: SqlQueryConnect[A]) = {
       sqlQueryConnect(s => (a <|- s) <*> (f <|- s))
     }
   }
 
-  implicit def SqlQueryConnectApplicative[L]: Applicative[({type λ[α]= SqlQueryConnect[L, α]})#λ] = Applicative.applicative[({type λ[α]= SqlQueryConnect[L, α]})#λ]
-
-  implicit def SqlQueryConnectBind[L, M[_]]: Bind[({type λ[α]= SqlQueryConnect[L, α]})#λ] = new Bind[({type λ[α]= SqlQueryConnect[L, α]})#λ] {
-    def bind[A, B](a: SqlQueryConnect[L, A], f: A => SqlQueryConnect[L, B]) =
+  implicit val SqlQueryConnectBind: Bind[SqlQueryConnect] = new Bind[SqlQueryConnect] {
+    def bind[A, B](a: SqlQueryConnect[A], f: A => SqlQueryConnect[B]) =
       a flatMap f
   }
-
-  implicit def SqlQueryConnectMonad[L]: Monad[({type λ[α]= SqlQueryConnect[L, α]})#λ] = Monad.monad[({type λ[α]= SqlQueryConnect[L, α]})#λ]
 }

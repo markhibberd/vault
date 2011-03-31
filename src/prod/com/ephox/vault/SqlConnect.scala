@@ -5,8 +5,8 @@ import Scalaz._
 import SqlValue._
 import java.sql._
 
-sealed trait SqlConnect[L, A] {
-  val connect: Connection => SqlValue[L, A]
+sealed trait SqlConnect[A] {
+  val connect: Connection => SqlValue[A]
 
   import SqlConnect._
 
@@ -14,21 +14,21 @@ sealed trait SqlConnect[L, A] {
 
   def executeOrDie(c: Connection) = connect(c).getOrDie
 
-  def bracket[B, C](after: (=> A) => SqlConnect[L, B], k: (=> A) => SqlConnect[L, C]): SqlConnect[L, C] =
+  def bracket[B, C](after: (=> A) => SqlConnect[B], k: (=> A) => SqlConnect[C]): SqlConnect[C] =
     flatMap (a => try {
       k(a)
     } finally {
       after(a)
     })
 
-  def finaly[B](b: => SqlConnect[L, B]): SqlConnect[L, A] =
+  def finaly[B](b: => SqlConnect[B]): SqlConnect[A] =
     sqlConnect(c => try {
       apply(c)
     } finally {
       b(c)
     })
 
-  def finalyClose: SqlConnect[L, A] =
+  def finalyClose: SqlConnect[A] =
     finaly(closeSqlConnect)
 
   /**
@@ -36,7 +36,7 @@ sealed trait SqlConnect[L, A] {
    *
    * If the failure is an `SqlException` then this is returned in the `SqlValue`, otherwise, the exception is rethrown.
    */
-  def commitRollback: SqlConnect[L, A] =
+  def commitRollback: SqlConnect[A] =
     sqlConnect(c => try {
       val r = connect(c)
       c.commit
@@ -52,57 +52,47 @@ sealed trait SqlConnect[L, A] {
       }
     })
 
-  def commitRollbackClose: SqlConnect[L, A] =
+  def commitRollbackClose: SqlConnect[A] =
     commitRollback.finalyClose
 
-  def map[B](f: A => B): SqlConnect[L, B] =
+  def map[B](f: A => B): SqlConnect[B] =
     sqlConnect(connect(_) map f)
 
-  def flatMap[B](f: A => SqlConnect[L, B]) =
+  def flatMap[B](f: A => SqlConnect[B]) =
     sqlConnect(c => connect(c) flatMap (f(_) connect c))
 }
 
 object SqlConnect extends SqlConnects
 
 trait SqlConnects {
-  def sqlConnect[L, A](f: Connection => SqlValue[L, A]): SqlConnect[L, A] = new SqlConnect[L, A] {
+  def sqlConnect[A](f: Connection => SqlValue[A]): SqlConnect[A] = new SqlConnect[A] {
     val connect = f
   }
 
-  def constantSqlConnect[L, A](v: => SqlValue[L, A]): SqlConnect[L, A] =
+  def constantSqlConnect[A](v: => SqlValue[A]): SqlConnect[A] =
     sqlConnect(_ => v)
 
-  def valueSqlConnect[L, A](f: Connection => A): SqlConnect[L, A] =
-    sqlConnect(f(_).η[({type λ[α]= SqlValue[L, α]})#λ])
+  def valueSqlConnect[A](f: Connection => A): SqlConnect[A] =
+    sqlConnect(f(_).η[({type λ[α]= SqlValue[α]})#λ])
 
-  def trySqlConnect[L, A](f: Connection => A): SqlConnect[L, A] =
+  def trySqlConnect[A](f: Connection => A): SqlConnect[A] =
     sqlConnect(c => trySqlValue(f(c)))
 
-  def closeSqlConnect[L]: SqlConnect[L, Unit] =
+  def closeSqlConnect[L]: SqlConnect[Unit] =
     trySqlConnect(_.close)
 
-  implicit def SqlConnectFunctor[L]: Functor[({type λ[α]= SqlConnect[L, α]})#λ] = new Functor[({type λ[α]= SqlConnect[L, α]})#λ] {
-    def fmap[A, B](k: SqlConnect[L, A], f: A => B) =
+  implicit val SqlConnectFunctor: Functor[SqlConnect] = new Functor[SqlConnect] {
+    def fmap[A, B](k: SqlConnect[A], f: A => B) =
       k map f
   }
 
-  implicit def SqlConnectApplicative[L]: Applicative[({type λ[α]= SqlConnect[L, α]})#λ] = new Applicative[({type λ[α]= SqlConnect[L, α]})#λ] {
-    def apply[A, B](f: SqlConnect[L, A => B], a: SqlConnect[L, A]) = {
-      sqlConnect(c => {
-        val fc = f(c)
-        a(c) <*> fc
-      })
-    }
-
+  implicit val SqlConnectPure: Pure[SqlConnect] = new Pure[SqlConnect] {
     def pure[A](a: => A) =
       valueSqlConnect(_ => a)
   }
 
-  implicit def SqlConnectMonad[L]: Monad[({type λ[α]= SqlConnect[L, α]})#λ] = new Monad[({type λ[α]= SqlConnect[L, α]})#λ]{
-    def bind[A, B](a: SqlConnect[L, A], f: A => SqlConnect[L, B]) =
+  implicit val SqlConnectBind: Bind[SqlConnect] = new Bind[SqlConnect]{
+    def bind[A, B](a: SqlConnect[A], f: A => SqlConnect[B]) =
       sqlConnect(c => a(c) >>= (a => f(a)(c)))
-
-    def pure[A](a: => A) =
-      valueSqlConnect(_ => a)
   }
 }
