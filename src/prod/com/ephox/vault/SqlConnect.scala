@@ -73,7 +73,7 @@ trait SqlConnects {
     sqlConnect(_ => v)
 
   def valueSqlConnect[A](f: Connection => A): SqlConnect[A] =
-    sqlConnect(f(_).η[({type λ[α]= SqlValue[α]})#λ])
+    sqlConnect(f(_).η[SqlValue])
 
   def trySqlConnect[A](f: Connection => A): SqlConnect[A] =
     sqlConnect(c => trySqlValue(f(c)))

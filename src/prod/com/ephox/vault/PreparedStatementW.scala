@@ -14,7 +14,7 @@ sealed trait PreparedStatementW {
     SqlValue.trySqlValue(s.executeUpdate)
 
   def executeStatements[T[_], A](as: T[A], k: A => SqlConnect[Unit])(implicit f: Foldable[T]): SqlConnect[Int] =
-    sqlConnect[Int](c => as.foldLeftM[({type λ[α]= SqlValue[α]})#λ, Int](0) {
+    sqlConnect[Int](c => as.foldLeftM[SqlValue, Int](0) {
        case (n, a) => {
          k(a)(c)
          s.tryExecuteUpdate map (n+)
@@ -22,7 +22,7 @@ sealed trait PreparedStatementW {
      })
 
   def foreachStatement[T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[Int] =
-    executeStatements(as, (a: A) => k(a).η[({type λ[α]= SqlConnect[α]})#λ])
+    executeStatements(as, (a: A) => k(a).η[SqlConnect])
 
   def set(values: JDBCType*): Unit =
     setValues(values.toList)
