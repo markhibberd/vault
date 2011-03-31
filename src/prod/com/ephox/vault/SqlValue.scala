@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import scalaz._
 import Scalaz._
+import SqlValue._
 
 sealed trait SqlValue[L, A] extends NewType[Logger[L, Either[SqlException, A]]] {
   def fold[X](err: SqlException => X, v: A => X) =
@@ -51,6 +52,8 @@ sealed trait SqlValue[L, A] extends NewType[Logger[L, Either[SqlException, A]]] 
   }
 }
 
+object SqlValue extends SqlValues
+
 trait SqlValues {
   type SqlException = java.sql.SQLException
 
@@ -69,6 +72,16 @@ trait SqlValues {
       case e: SqlException => sqlError(e)
       case e               => throw e
     }
+
+  def withSqlResource[T, R, L](
+                          value: => T
+                        , evaluate: T => SqlValue[L, R]
+                        , whenClosing: Throwable => Unit = _ => ()
+                        )(implicit r: Resource[T]): SqlValue[L, R] =
+    withResource(value, evaluate, {
+      case e: SqlException => sqlError(e)
+      case e               => throw e
+    }, whenClosing)
 
   implicit def SqlValueInjective[L] = Injective[({type λ[α]= SqlValue[L, α]})#λ]
 

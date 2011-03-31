@@ -1,15 +1,16 @@
-package com.ephox
+package com.ephox.vault
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 
-package object vault
+object Vault
   extends StringQuerys
+  with PossiblyNulls
   with PreparedStatementWs
   with RowValues
   with RowAccesss
   with RowConnects
   with RowQueryConnects
+  with SqlValues
   with SqlAccesss
   with SqlConnects
   with SqlQueryConnects

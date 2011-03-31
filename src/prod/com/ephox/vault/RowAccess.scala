@@ -5,6 +5,7 @@ import Scalaz._
 
 sealed trait RowAccess[L, A] {
   val access: Row => RowValue[L, A]
+  import SqlValue._
 
   def -|>[T](iter: IterV[A, T]): RowQueryConnect[L, IterV[A, T]] =
     rowQueryConnect(query => rowConnect(c => try {
