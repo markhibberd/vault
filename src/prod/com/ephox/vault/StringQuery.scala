@@ -10,6 +10,7 @@ sealed trait StringQuery {
 
   import SqlConnect._
   import PreparedStatementW._
+  import Key._
 
   def executeUpdate[L]: SqlConnect[L, Int] =
     sqlConnect(c => withSqlResource(

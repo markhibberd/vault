@@ -45,6 +45,6 @@ trait Keys {
     shows(_.toString)
 }
 
-object Keys extends Keys
+object Key extends Keys
 
 
