@@ -6,6 +6,7 @@ import Scalaz._
 sealed trait RowAccess[L, A] {
   val access: Row => RowValue[L, A]
   import SqlValue._
+  import SqlAccess._
   import RowValue._
   import RowConnect._
 

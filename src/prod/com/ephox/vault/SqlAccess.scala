@@ -19,6 +19,8 @@ sealed trait SqlAccess[L, A] {
     rowAccess(r => access(r).toRowValue)
 }
 
+object SqlAccess extends SqlAccesss
+
 trait SqlAccesss {
   def sqlAccess[L, A](f: Row => SqlValue[L, A]): SqlAccess[L, A] = new SqlAccess[L, A] {
     val access = f
