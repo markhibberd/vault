@@ -1,7 +1,7 @@
 package com.ephox.vault
 
 import org.scalatest.FunSuite
-import com.ephox.vault._
+import com.ephox.vault._, VaultIteratee._
 import scalaz._
 import Scalaz._
 
