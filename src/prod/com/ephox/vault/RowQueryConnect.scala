@@ -7,6 +7,7 @@ sealed trait RowQueryConnect[L, A] {
   def <|-(sql: Query): RowConnect[L, A]
 
   import SqlQueryConnect._
+  import RowQueryConnect._
 
   def map[B](f: A => B): RowQueryConnect[L, B] =
     rowQueryConnect(s => this <|- s map f)
@@ -30,6 +31,8 @@ sealed trait RowQueryConnect[L, A] {
   def |?(d: => A) = possiblyNullOr(d)
 
 }
+
+object RowQueryConnect extends RowQueryConnects
 
 trait RowQueryConnects {
   def rowQueryConnect[L, A](f: Query => RowConnect[L, A]): RowQueryConnect[L, A] = new RowQueryConnect[L, A] {
