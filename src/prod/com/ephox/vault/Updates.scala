@@ -11,4 +11,4 @@ trait Updates {
   }
 }
 
-object Updates extends Updates
+object Update extends Updates
