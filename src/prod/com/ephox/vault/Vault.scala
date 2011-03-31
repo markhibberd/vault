@@ -20,6 +20,6 @@ object Vault
   with Updates
   with KeyX
   with Keyeds
-  with KeyedWX
+  with KeyedWs
   with Mergers
   with VaultIteratees

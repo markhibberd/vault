@@ -1,6 +1,6 @@
 package com.ephox.vault
 
-import com.ephox.vault._
+import com.ephox.vault._, KeyedW._
 import scalaz._
 import Scalaz._
 
