@@ -51,7 +51,7 @@ object VaultJoinDemo {
   }
 
 
-  def setupData: SqlConnect[L, Int] = {
+  def setupData: SqlConnect[Int] = {
     val creates = List(
       "create table album (id IDENTITY, name VARCHAR(255), band_id INTEGER)"
     , "create table song (id IDENTITY, name VARCHAR(255), album_id INTEGER)"
@@ -62,7 +62,7 @@ object VaultJoinDemo {
 
     for {
       n <- executeUpdates(creates)
-      o <- "insert into muso(id, name, instrument) values (?,?,?)" prepareStatement (s => s.foreachStatement[L, List, Muso](Data.musos, (m: Muso) => m match {
+      o <- "insert into muso(id, name, instrument) values (?,?,?)" prepareStatement (s => s.foreachStatement[List, Muso](Data.musos, (m: Muso) => m match {
              case Muso(id, name, instrument) => {
                s.set(intType(id), stringType(name), stringType(instrument))
              }

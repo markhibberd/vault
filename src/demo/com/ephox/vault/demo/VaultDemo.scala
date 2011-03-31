@@ -37,7 +37,7 @@ object VaultDemo {
       a <- "DROP TABLE IF EXISTS PERSON".executeUpdate
       b <- "CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER, address VARCHAR(255))".executeUpdate
       p <- "INSERT INTO PERSON(name, age, address) VALUES (?,?,?)" prepareStatement
-             (s => s.foreachStatement[L, List, Person](data, (p: Person) => p match {
+             (s => s.foreachStatement[List, Person](data, (p: Person) => p match {
                case Person(name, age, address) => {
                  s.set(stringType(name), intType(age), address toJDBCType stringType)
                }
