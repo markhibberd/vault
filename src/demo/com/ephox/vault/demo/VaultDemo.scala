@@ -1,7 +1,7 @@
 package com.ephox.vault.demo
 
 import scalaz._, Scalaz._
-import com.ephox.vault._, PossiblyNull._, RowAccess._, PreparedStatementW._, StringQuery._, JDBCType._
+import com.ephox.vault._, Vault._
 
 object VaultDemo {
   type L = String
