@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import scalaz._
 import Scalaz._
+import SqlValue._
 import java.sql.{PreparedStatement, Statement}
 
 sealed trait StringQuery {

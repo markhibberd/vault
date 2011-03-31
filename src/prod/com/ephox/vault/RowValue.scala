@@ -2,8 +2,11 @@ package com.ephox.vault
 
 import scalaz._
 import Scalaz._
+import SqlValue._
 
 sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException, A]]]] {
+  import PossiblyNull._
+
   def fold[X](sqlErr: SqlException => X, sqlValue: A => X, nul: => X): X =
     value.over match {
       case None           => nul

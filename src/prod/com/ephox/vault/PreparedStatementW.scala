@@ -8,7 +8,7 @@ sealed trait PreparedStatementW {
   val s: PreparedStatement
 
   def tryExecuteUpdate[L]: SqlValue[L, Int] =
-    trySqlValue(s.executeUpdate)
+    SqlValue.trySqlValue(s.executeUpdate)
 
   def executeStatements[L, T[_], A](as: T[A], k: A => SqlConnect[L, Unit])(implicit f: Foldable[T]): SqlConnect[L, Int] =
     sqlConnect[L, Int](c => as.foldLeftM[({type λ[α]= SqlValue[L, α]})#λ, Int](0) {
