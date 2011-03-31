@@ -6,4 +6,4 @@ import Scalaz._
 package object vault
   extends Querys
   with JDBCTypes
-  with KeyX
+  with Keys

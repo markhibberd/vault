@@ -29,7 +29,7 @@ sealed trait Key {
     )
 }
 
-trait KeyX {
+trait Keys {
   def key(value: Long): Key = new Key {
     def fold[X](none: => X, some: Long => X) = some(value)
   }
@@ -45,6 +45,6 @@ trait KeyX {
     shows(_.toString)
 }
 
-object Keys extends KeyX
+object Keys extends Keys
 
 
