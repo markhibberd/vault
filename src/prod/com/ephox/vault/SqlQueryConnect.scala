@@ -5,12 +5,16 @@ import scalaz._, Scalaz._
 sealed trait SqlQueryConnect[L, A] {
   def <|-(sql: Query): SqlConnect[L, A]
 
+  import SqlQueryConnect._
+
   def map[B](f: A => B): SqlQueryConnect[L, B] =
     sqlQueryConnect(s => this <|- s map f)
 
   def flatMap[B](f: A => SqlQueryConnect[L, B]): SqlQueryConnect[L, B] =
     sqlQueryConnect(s => (this <|- s) flatMap (a => f(a) <|- s))
 }
+
+object SqlQueryConnect extends SqlQueryConnects
 
 trait SqlQueryConnects {
   def sqlQueryConnect[L, A](f: Query => SqlConnect[L, A]): SqlQueryConnect[L, A] = new SqlQueryConnect[L, A] {
