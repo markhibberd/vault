@@ -11,6 +11,7 @@ sealed trait StringQuery {
   import SqlConnect._
   import PreparedStatementW._
   import Key._
+  import Query._
 
   def executeUpdate[L]: SqlConnect[L, Int] =
     sqlConnect(c => withSqlResource(
@@ -57,7 +58,7 @@ sealed trait StringQuery {
   def prepareStatement[L, A](k: PreparedStatement => SqlConnect[L, A]) : SqlConnect[L, A] =
     sqlConnect(c => withSqlResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
 
-  def bindSql(bindings: JDBCType*) = com.ephox.vault.query(query, bindings: _*)
+  def bindSql(bindings: JDBCType*) = Query.query(query, bindings: _*)
 
   def toSql = bindSql()
 }
