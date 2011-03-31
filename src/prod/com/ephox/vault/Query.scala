@@ -5,6 +5,8 @@ trait Query {
   val bindings: List[JDBCType]
 }
 
+object Query extends Querys
+
 trait Querys {
   def query(s: String, b: JDBCType*): Query = new Query {
     val sql = s
