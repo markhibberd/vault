@@ -118,7 +118,7 @@ object Row {
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)
         val z = a
-        if(r.wasNull) rowNull else z.η[({type λ[α]= RowValue[α]})#λ]
+        if(r.wasNull) rowNull else z.η[RowValue]
       } catch {
         case e: SqlValue.SqlException => rowError(e)
         case x => throw x
@@ -127,11 +127,11 @@ object Row {
     def iterate[A, T](ra: RowAccess[A]) =
       iter => {
         def loop(i: IterV[A, T]): RowValue[IterV[A, T]] =
-          i.fold((a, ip) => i.η[({type λ[α]= RowValue[α]})#λ],
+          i.fold((a, ip) => i.η[RowValue],
                  k => {
                    val hasMore = r.next
                    if (hasMore) ra.access(Row.resultSetRow(r)) flatMap (t => loop(k(IterV.El(t))))
-                   else i.η[({type λ[α]= RowValue[α]})#λ]
+                   else i.η[RowValue]
                  })
         loop(iter)
       }

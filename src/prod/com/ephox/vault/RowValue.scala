@@ -57,7 +57,7 @@ sealed trait RowValue[A] extends NewType[Option[Either[SqlException, A]]] {
     unifyNullWithMessage("unify null")
 
   def possiblyNull: SqlValue[PossiblyNull[A]] =
-    optionPossiblyNull(getSqlValue).sequence[({type λ[α]= SqlValue[α]})#λ, A]
+    optionPossiblyNull(getSqlValue).sequence[SqlValue, A]
 
   def possiblyNullOr(d: => A): SqlValue[A] =
     possiblyNull map (_ | d)

@@ -65,7 +65,7 @@ trait RowConnects {
     rowConnect(_ => v)
 
   def valueRowConnect[A](f: Connection => A): RowConnect[A] =
-    rowConnect(f(_).η[({type λ[α]= RowValue[α]})#λ])
+    rowConnect(f(_).η[RowValue])
 
   def tryRowConnect[A](f: Connection => A): RowConnect[A] =
     rowConnect(c => tryRowValue(f(c)))
@@ -80,7 +80,7 @@ trait RowConnects {
 
   implicit val RowConnectPure: Pure[RowConnect] = new Pure[RowConnect] {
     def pure[A](a: => A) =
-      rowConnect(_ => a.η[({type λ[α]= RowValue[α]})#λ])
+      rowConnect(_ => a.η[RowValue])
   }
 
   implicit val RowConnectBind: Bind[RowConnect] = new Bind[RowConnect] {
