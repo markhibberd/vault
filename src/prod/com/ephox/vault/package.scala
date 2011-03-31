@@ -9,7 +9,6 @@ package object vault
   with Querys
   with JDBCTypes
   with SqlTypes
-  with Updates
   with KeyX
   with Keyeds
   with KeyedWX
