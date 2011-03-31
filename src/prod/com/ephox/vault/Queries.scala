@@ -4,6 +4,8 @@ import scalaz._
 import Scalaz._
 
 object Queries {
+  import StringQuery._
+
   def list[L, A](access: RowAccess[L, A], sql: String) =
     (access -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql.toSql) map (_.flatten)
 

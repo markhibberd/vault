@@ -4,8 +4,7 @@ import scalaz._
 import Scalaz._
 
 package object vault
-  extends StringQuerys
-  with RowQueryConnects
+  extends RowQueryConnects
   with SqlQueryConnects
   with Querys
   with JDBCTypes
