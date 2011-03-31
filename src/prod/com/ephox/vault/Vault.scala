@@ -18,7 +18,7 @@ object Vault
   with JDBCTypes
   with SqlTypes
   with Updates
-  with KeyX
+  with Keys
   with Keyeds
   with KeyedWs
   with Mergers
