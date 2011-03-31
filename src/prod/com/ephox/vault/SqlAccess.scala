@@ -5,6 +5,8 @@ import scalaz._, Scalaz._
 sealed trait SqlAccess[L, A] {
   val access: Row => SqlValue[L, A]
 
+  import RowAccess._
+
   def map[B](f: A => B): SqlAccess[L, B] = new SqlAccess[L, B] {
     val access = (r: Row) => SqlAccess.this.access(r) map f
   }

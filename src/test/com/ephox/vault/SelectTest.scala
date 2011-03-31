@@ -3,7 +3,7 @@ package com.ephox.vault
 import org.scalatest.FunSuite
 import scalaz._
 import Scalaz._
-import com.ephox.vault._
+import com.ephox.vault._, Vault._
 
 class SelectTest extends FunSuite {
   type L = String

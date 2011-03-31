@@ -57,6 +57,8 @@ sealed trait RowAccess[L, A] {
   def |?(d: => A) = possiblyNullOr(d)
 }
 
+object RowAccess extends RowAccesss
+
 trait RowAccesss {
   def rowAccess[L, A](f: Row => RowValue[L, A]): RowAccess[L, A] = new RowAccess[L, A] {
     val access = f
