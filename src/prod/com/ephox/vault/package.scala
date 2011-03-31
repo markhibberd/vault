@@ -5,7 +5,6 @@ import Scalaz._
 
 package object vault
   extends RowQueryConnects
-  with SqlQueryConnects
   with Querys
   with JDBCTypes
   with KeyX

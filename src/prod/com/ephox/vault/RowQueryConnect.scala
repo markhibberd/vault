@@ -6,6 +6,8 @@ import Scalaz._
 sealed trait RowQueryConnect[L, A] {
   def <|-(sql: Query): RowConnect[L, A]
 
+  import SqlQueryConnect._
+
   def map[B](f: A => B): RowQueryConnect[L, B] =
     rowQueryConnect(s => this <|- s map f)
 
