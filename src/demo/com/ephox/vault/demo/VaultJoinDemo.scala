@@ -2,7 +2,7 @@ package com.ephox.vault.demo
 
 import scalaz._
 import Scalaz._
-import com.ephox.vault._, PreparedStatementW._, StringQuery._, Update._
+import com.ephox.vault._, PreparedStatementW._, StringQuery._, Update._, JDBCType._
 
 object VaultJoinDemo {
   type L = String
