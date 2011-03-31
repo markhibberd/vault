@@ -27,7 +27,7 @@ class SelectTest extends FunSuite {
     "INSERT INTO FRED (NAME, VALUE) VALUES('f1', 1)",
     "INSERT INTO FRED (NAME, VALUE) VALUES('f2', 2)",
     "INSERT INTO FRED (NAME, VALUE) VALUES('f3', 3)"
-  ).traverse[({type λ[α]= SqlConnect[L, α]})#λ, Int](_.executeUpdate[L])
+  ).traverse(_.executeUpdate)
 
   test("raw insert, and check query") {
     val connection = Connector.hsqltest.nu
