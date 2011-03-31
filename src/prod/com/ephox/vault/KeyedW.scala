@@ -1,7 +1,6 @@
 package com.ephox.vault
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 
 trait KeyedW[A] {
   val value: A

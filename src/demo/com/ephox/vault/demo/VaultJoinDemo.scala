@@ -1,7 +1,6 @@
 package com.ephox.vault.demo
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 import com.ephox.vault._, Vault._
 
 object VaultJoinDemo {

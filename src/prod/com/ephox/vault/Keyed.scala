@@ -1,7 +1,6 @@
 package com.ephox.vault
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 
 sealed trait Keyed[A] {
   def get(a: A): Key

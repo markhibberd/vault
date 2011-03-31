@@ -1,7 +1,6 @@
 package com.ephox.vault
 
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
 
 sealed trait Key {
   def fold[X](none: => X, some: Long => X): X
@@ -30,6 +29,7 @@ sealed trait Key {
 }
 
 trait Keys {
+  val x = 7
   def key(value: Long): Key = new Key {
     def fold[X](none: => X, some: Long => X) = some(value)
   }
