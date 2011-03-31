@@ -7,4 +7,3 @@ package object vault
   extends Querys
   with JDBCTypes
   with KeyX
-  with Keyeds

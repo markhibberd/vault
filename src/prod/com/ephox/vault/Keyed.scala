@@ -8,6 +8,8 @@ sealed trait Keyed[A] {
   def set(a: A, key: Key): A
 }
 
+object Keyed extends Keyeds
+
 trait Keyeds {
   def keyed[A](getf: A => Key, setf: (A, Key) => A): Keyed[A] = new Keyed[A] {
     def get(a: A) = getf(a)
