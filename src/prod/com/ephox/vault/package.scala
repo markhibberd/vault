@@ -8,4 +8,3 @@ package object vault
   with JDBCTypes
   with KeyX
   with Keyeds
-  with KeyedWX

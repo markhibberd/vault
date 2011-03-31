@@ -16,7 +16,9 @@ trait KeyedW[A] {
     eq.equal(id, other.id)
 }
 
-trait KeyedWX {
+object KeyedW extends KeyedWs
+
+trait KeyedWs {
   implicit def KeyedWTo[A](a: A)(implicit keyedf: Keyed[A]): KeyedW[A] = new KeyedW[A] {
     val value = a
     val keyed = keyedf
