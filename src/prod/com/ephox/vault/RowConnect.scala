@@ -8,6 +8,7 @@ sealed trait RowConnect[L, A] {
   val connect: Connection => RowValue[L, A]
 
   import SqlConnect._
+  import RowConnect._
 
   def apply(c: Connection) = connect(c)
 
