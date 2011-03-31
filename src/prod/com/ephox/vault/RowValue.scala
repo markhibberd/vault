@@ -7,6 +7,8 @@ import SqlValue._
 sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException, A]]]] {
   import PossiblyNull._
 
+  import RowValue._
+
   def fold[X](sqlErr: SqlException => X, sqlValue: A => X, nul: => X): X =
     value.over match {
       case None           => nul
@@ -66,6 +68,8 @@ sealed trait RowValue[L, A] extends NewType[Logger[L, Option[Either[SqlException
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
 }
+
+object RowValue extends RowValues
 
 trait RowValues {
   def rowError[L, A](e: SqlException): RowValue[L, A] = new RowValue[L, A] {
