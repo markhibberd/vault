@@ -11,9 +11,9 @@ class SelectTest extends FunSuite {
   case class Fred(key: Key, name: String, value: Long) 
 
   val FredRowAccess = for {
-    key <- idLabel[L]("ID")
-    name <- stringLabel[L]("NAME")
-    value <- longLabel[L]("VALUE")
+    key <- idLabel("ID")
+    name <- stringLabel("NAME")
+    value <- longLabel("VALUE")
   } yield Fred(key, name, value)
 
   val freds = List(

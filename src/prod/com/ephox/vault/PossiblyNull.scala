@@ -74,38 +74,38 @@ trait PossiblyNulls {
   }
 
 
-  implicit def PossiblyNullInjective[L] = Injective[PossiblyNull]
+  implicit val PossiblyNullInjective = Injective[PossiblyNull]
 
-  implicit def PossiblyNullFunctor[L]: Functor[PossiblyNull] = new Functor[PossiblyNull] {
+  implicit val PossiblyNullFunctor: Functor[PossiblyNull] = new Functor[PossiblyNull] {
     def fmap[A, B](r: PossiblyNull[A], f: A => B) =
       r map f
   }
 
-  implicit def PossiblyNullApply[L]: Apply[PossiblyNull] = new Apply[PossiblyNull] {
-    def apply[A, B](f: PossiblyNull[A => B], a: PossiblyNull[A]) =
-      f flatMap (a.map(_))
+  implicit val PossiblyNullBind: Bind[PossiblyNull] = new Bind[PossiblyNull] {
+    def bind[A, B](a: PossiblyNull[A], f: A => PossiblyNull[B]) =
+      a flatMap f
   }
 
-  implicit def PossiblyNullPure[L]: Pure[PossiblyNull] = new Pure[PossiblyNull] {
+  implicit val PossiblyNullPure: Pure[PossiblyNull] = new Pure[PossiblyNull] {
     def pure[A](a: => A) = notNull(a)
   }
 
-  implicit def PossiblyNullEach[L]: Each[PossiblyNull] = new Each[PossiblyNull] {
+  implicit val PossiblyNullEach: Each[PossiblyNull] = new Each[PossiblyNull] {
     def each[A](e: PossiblyNull[A], f: A => Unit) =
       e foreach f
   }
 
-  implicit def PossiblyNullIndex[L]: Index[PossiblyNull] = new Index[PossiblyNull] {
+  implicit val PossiblyNullIndex: Index[PossiblyNull] = new Index[PossiblyNull] {
     def index[A](a: PossiblyNull[A], i: Int) =
       a filter (_ => i == 0) toOption
   }
 
-  implicit def PossiblyNullLength[L]: Length[PossiblyNull] = new Length[PossiblyNull] {
+  implicit val PossiblyNullLength: Length[PossiblyNull] = new Length[PossiblyNull] {
     def len[A](a: PossiblyNull[A]) =
       a ifelse(1, 0)
   }
 
-  implicit def PossiblyNullFoldable[L]: Foldable[PossiblyNull] = new Foldable[PossiblyNull] {
+  implicit val PossiblyNullFoldable: Foldable[PossiblyNull] = new Foldable[PossiblyNull] {
     override def foldLeft[A, B](e: PossiblyNull[A], b: B, f: (B, A) => B) =
       e fold (f(b, _), b)
 
@@ -113,17 +113,17 @@ trait PossiblyNulls {
       e fold (f(_, b), b)
   }
 
-  implicit def PossiblyNullTraverse[L]: Traverse[PossiblyNull] = new Traverse[PossiblyNull] {
+  implicit val PossiblyNullTraverse: Traverse[PossiblyNull] = new Traverse[PossiblyNull] {
     def traverse[F[_] : Applicative, A, B](f: A => F[B], as: PossiblyNull[A]): F[PossiblyNull[B]] =
       as fold (a => f(a) ∘ (notNull(_: B)), isNull[B].pure[F])
   }
 
-  implicit def PossiblyNullPlus[L]: Plus[PossiblyNull] = new Plus[PossiblyNull] {
+  implicit val PossiblyNullPlus: Plus[PossiblyNull] = new Plus[PossiblyNull] {
     def plus[A](a1: PossiblyNull[A], a2: => PossiblyNull[A]) =
       a1 orElse a2
   }
 
-  implicit def PossiblyNullEmpty[L]: Empty[PossiblyNull] = new Empty[PossiblyNull] {
+  implicit val PossiblyNullEmpty: Empty[PossiblyNull] = new Empty[PossiblyNull] {
     def empty[A] = isNull
   }
 

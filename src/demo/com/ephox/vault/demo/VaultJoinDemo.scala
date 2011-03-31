@@ -5,8 +5,6 @@ import Scalaz._
 import com.ephox.vault._, Vault._
 
 object VaultJoinDemo {
-  type L = String
-
   // one-to-many Album -> Song
   // many-to-many Band -> Muso (via BandMuso)
   // many-to-one Album -> Band

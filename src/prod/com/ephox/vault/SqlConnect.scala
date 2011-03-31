@@ -78,7 +78,7 @@ trait SqlConnects {
   def trySqlConnect[A](f: Connection => A): SqlConnect[A] =
     sqlConnect(c => trySqlValue(f(c)))
 
-  def closeSqlConnect[L]: SqlConnect[Unit] =
+  def closeSqlConnect: SqlConnect[Unit] =
     trySqlConnect(_.close)
 
   implicit val SqlConnectFunctor: Functor[SqlConnect] = new Functor[SqlConnect] {
