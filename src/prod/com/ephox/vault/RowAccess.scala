@@ -72,6 +72,7 @@ trait RowAccesss {
   import java.io.{Reader, InputStream}
   import java.net.URL
   import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time}
+  import Key._
 
   def arrayIndex[L](columnIndex: Int): RowAccess[L, java.sql.Array] = rowAccess(_.arrayIndex(columnIndex))
   def arrayLabel[L](columnLabel: String): RowAccess[L, java.sql.Array] = rowAccess(_.arrayLabel(columnLabel))
