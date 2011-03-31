@@ -32,12 +32,6 @@ trait SqlQueryConnects {
       sqlQueryConnect(_ => a.η[SqlConnect])
   }
 
-  implicit val SqlQueryConnectApply: Apply[SqlQueryConnect] = new Apply[SqlQueryConnect] {
-    def apply[A, B](f: SqlQueryConnect[A => B], a: SqlQueryConnect[A]) = {
-      sqlQueryConnect(s => (a <|- s) <*> (f <|- s))
-    }
-  }
-
   implicit val SqlQueryConnectBind: Bind[SqlQueryConnect] = new Bind[SqlQueryConnect] {
     def bind[A, B](a: SqlQueryConnect[A], f: A => SqlQueryConnect[B]) =
       a flatMap f

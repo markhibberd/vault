@@ -180,12 +180,6 @@ trait RowAccesss {
       rowAccess(_ => a.η[RowValue])
   }
 
-  implicit val RowAccessApply: Apply[RowAccess] = new Apply[RowAccess] {
-    def apply[A, B](f: RowAccess[A => B], a: RowAccess[A]) = {
-      rowAccess(r => a.access(r) <*> f.access(r))
-    }
-  }
-
   implicit val RowAccessBind: Bind[RowAccess] = new Bind[RowAccess] {
     def bind[A, B](a: RowAccess[A], f: A => RowAccess[B]) =
       rowAccess(r => a.access(r) >>= (a => f(a) access (r)))

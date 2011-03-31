@@ -83,15 +83,6 @@ trait RowConnects {
       rowConnect(_ => a.η[({type λ[α]= RowValue[α]})#λ])
   }
 
-  implicit val RowConnectApply: Apply[RowConnect] = new Apply[RowConnect] {
-    def apply[A, B](f: RowConnect[A => B], a: RowConnect[A]) = {
-      rowConnect(c => {
-        val fc = f(c)
-        a(c) <*> fc
-      })
-    }
-  }
-
   implicit val RowConnectBind: Bind[RowConnect] = new Bind[RowConnect] {
     def bind[A, B](a: RowConnect[A], f: A => RowConnect[B]) =
       rowConnect(c => a(c) >>= (a => f(a)(c)))
