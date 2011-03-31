@@ -11,4 +11,3 @@ package object vault
   with KeyX
   with Keyeds
   with KeyedWX
-  with Mergers

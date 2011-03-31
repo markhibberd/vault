@@ -10,6 +10,8 @@ trait Merger[A] {
   def apply(a1: A, a2: A) = merge(a1, a2)
 }
 
+object Merger extends Mergers
+
 trait Mergers {
   def merger[A](merger: (A, A) => Option[A]): Merger[A] = new Merger[A] {
     val merge = merger
