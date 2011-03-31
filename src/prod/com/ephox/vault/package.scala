@@ -7,7 +7,6 @@ package object vault
   extends StringQuerys
   with PreparedStatementWs
   with RowQueryConnects
-  with SqlAccesss
   with SqlQueryConnects
   with Querys
   with JDBCTypes
