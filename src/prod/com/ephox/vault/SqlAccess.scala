@@ -36,12 +36,6 @@ trait SqlAccesss {
       sqlAccess(_ => a.η[SqlValue])
   }
 
-  implicit val SqlAccessApply: Apply[SqlAccess] = new Apply[SqlAccess] {
-    def apply[A, B](f: SqlAccess[A => B], a: SqlAccess[A]) = {
-      sqlAccess(r => a.access(r) <*> f.access(r))
-    }
-  }
-
   implicit val SqlAccessBind: Bind[SqlAccess] = new Bind[SqlAccess] {
     def bind[A, B](a: SqlAccess[A], f: A => SqlAccess[B]) =
       sqlAccess(r => a.access(r) >>= (a => f(a) access (r)))
