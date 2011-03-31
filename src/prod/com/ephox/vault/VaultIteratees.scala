@@ -22,3 +22,5 @@ trait VaultIteratees {
   }
 
 }
+
+object VaultIteratee extends VaultIteratees

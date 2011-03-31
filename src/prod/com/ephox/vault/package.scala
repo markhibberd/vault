@@ -12,4 +12,3 @@ package object vault
   with Keyeds
   with KeyedWX
   with Mergers
-  with VaultIteratees
