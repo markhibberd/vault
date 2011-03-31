@@ -5,9 +5,9 @@ import Scalaz._
 import SqlValue._
 import RowValue._
 
-sealed trait SqlValue[L, A] extends NewType[Logger[L, Either[SqlException, A]]] {
+sealed trait SqlValue[A] extends NewType[Either[SqlException, A]] {
   def fold[X](err: SqlException => X, v: A => X) =
-    value.over.fold(err, v)
+    value.fold(err, v)
 
   def isError: Boolean =
     fold(_ => true, _ => false)
@@ -36,20 +36,20 @@ sealed trait SqlValue[L, A] extends NewType[Logger[L, Either[SqlException, A]]] 
   def toValidation: Validation[SqlException, A] =
     fold(failure(_), success(_))
 
-  def toRowValue: RowValue[L, A] =
+  def toRowValue: RowValue[A] =
     fold(rowError, rowValue(_))
 
   def printStackTraceOr(f: A => Unit): Unit =
     fold(_.printStackTrace, f)
 
-  def map[B](f: A => B): SqlValue[L, B] = new SqlValue[L, B] {
+  def map[B](f: A => B): SqlValue[B] = new SqlValue[B] {
     val value =
-      SqlValue.this.value map (_ map f)
+      SqlValue.this.value map f
   }
 
-  def flatMap[B](f: A => SqlValue[L, B]): SqlValue[L, B] = new SqlValue[L, B] {
+  def flatMap[B](f: A => SqlValue[B]): SqlValue[B] = new SqlValue[B] {
     val value =
-      SqlValue.this.value flatMap (e => (e.right flatMap (f(_).toEither)).logger[L])
+      SqlValue.this.value flatMap (e => e.right flatMap (f(_).toEither))
   }
 }
 
@@ -58,17 +58,17 @@ object SqlValue extends SqlValues
 trait SqlValues {
   type SqlException = java.sql.SQLException
 
-  def sqlError[L, A](e: SqlException): SqlValue[L, A] = new SqlValue[L, A] {
-    val value = (Left(e): Either[SqlException, A]).logger[L]
+  def sqlError[A](e: SqlException): SqlValue[A] = new SqlValue[A] {
+    val value = (Left(e): Either[SqlException, A])
   }
 
-  def sqlValue[L, A](v: A): SqlValue[L, A] = new SqlValue[L, A] {
-    val value = (Right(v): Either[SqlException, A]).logger[L]
+  def sqlValue[A](v: A): SqlValue[A] = new SqlValue[A] {
+    val value = (Right(v): Either[SqlException, A])
   }
 
-  def trySqlValue[L, A](a: => A): SqlValue[L, A] =
+  def trySqlValue[A](a: => A): SqlValue[A] =
     try {
-      sqlValue[L, A](a)
+      sqlValue[A](a)
     } catch {
       case e: SqlException => sqlError(e)
       case e               => throw e
@@ -76,91 +76,86 @@ trait SqlValues {
 
   def withSqlResource[T, R, L](
                           value: => T
-                        , evaluate: T => SqlValue[L, R]
+                        , evaluate: T => SqlValue[R]
                         , whenClosing: Throwable => Unit = _ => ()
-                        )(implicit r: Resource[T]): SqlValue[L, R] =
+                        )(implicit r: Resource[T]): SqlValue[R] =
     withResource(value, evaluate, {
       case e: SqlException => sqlError(e)
       case e               => throw e
     }, whenClosing)
 
-  implicit def SqlValueInjective[L] = Injective[({type λ[α]= SqlValue[L, α]})#λ]
+  implicit val SqlValueInjective = Injective[SqlValue]
 
-  implicit def SqlValueFunctor[L]: Functor[({type λ[α]= SqlValue[L, α]})#λ] = new Functor[({type λ[α]= SqlValue[L, α]})#λ] {
-    def fmap[A, B](r: SqlValue[L, A], f: A => B) =
+  implicit val SqlValueFunctor: Functor[SqlValue] = new Functor[SqlValue] {
+    def fmap[A, B](r: SqlValue[A], f: A => B) =
       r map f
   }
 
-  implicit def SqlValueApplicative[L]: Applicative[({type λ[α]= SqlValue[L, α]})#λ] = new Applicative[({type λ[α]= SqlValue[L, α]})#λ] {
-    def apply[A, B](f: SqlValue[L, A => B], a: SqlValue[L, A]) =
-      f fold (sqlError(_), ff => a fold (sqlError(_), aa => sqlValue(ff(aa))))
-
+  implicit val SqlValuePure: Pure[SqlValue] = new Pure[SqlValue] {
     def pure[A](a: => A) = sqlValue(a)
   }
 
-  implicit def SqlValueMonad[L]: Monad[({type λ[α]= SqlValue[L, α]})#λ] = new Monad[({type λ[α]= SqlValue[L, α]})#λ] {
-    def pure[A](a: => A) = sqlValue(a)
-
-    def bind[A, B](a: SqlValue[L, A], f: A => SqlValue[L, B]) = a flatMap f
+  implicit val SqlValueBind: Bind[SqlValue] = new Bind[SqlValue] {
+    def bind[A, B](a: SqlValue[A], f: A => SqlValue[B]) = a flatMap f
   }
 
-  implicit def SqlValueEach[L]: Each[({type λ[α]= SqlValue[L, α]})#λ] = new Each[({type λ[α]= SqlValue[L, α]})#λ] {
-    def each[A](e: SqlValue[L, A], f: A => Unit) =
+  implicit val SqlValueEach: Each[SqlValue] = new Each[SqlValue] {
+    def each[A](e: SqlValue[A], f: A => Unit) =
       e fold (_ => (), f)
   }
 
-  implicit def SqlValueIndex[L]: Index[({type λ[α]= SqlValue[L, α]})#λ] = new Index[({type λ[α]= SqlValue[L, α]})#λ] {
-    def index[A](a: SqlValue[L, A], i: Int) = a.getValue filter (_ => i == 0)
+  implicit val SqlValueIndex: Index[SqlValue] = new Index[SqlValue] {
+    def index[A](a: SqlValue[A], i: Int) = a.getValue filter (_ => i == 0)
   }
 
-  implicit def SqlValueLength[L]: Length[({type λ[α]= SqlValue[L, α]})#λ] = new Length[({type λ[α]= SqlValue[L, α]})#λ] {
-    def len[A](a: SqlValue[L, A]) =
+  implicit val SqlValueLength: Length[SqlValue] = new Length[SqlValue] {
+    def len[A](a: SqlValue[A]) =
       a fold(_ => 0, _ => 1)
   }
 
-  implicit def SqlValueFoldable[L]: Foldable[({type λ[α]= SqlValue[L, α]})#λ] = new Foldable[({type λ[α]= SqlValue[L, α]})#λ] {
-    override def foldLeft[A, B](e: SqlValue[L, A], b: B, f: (B, A) => B) =
+  implicit val SqlValueFoldable: Foldable[SqlValue] = new Foldable[SqlValue] {
+    override def foldLeft[A, B](e: SqlValue[A], b: B, f: (B, A) => B) =
       e fold (_ => b, f(b, _))
 
-    override def foldRight[A, B](e: SqlValue[L, A], b: => B, f: (A, => B) => B) =
+    override def foldRight[A, B](e: SqlValue[A], b: => B, f: (A, => B) => B) =
       e fold (_ => b, f(_, b))
   }
 
-  implicit def SqlValueTraverse[L]: Traverse[({type λ[α]= SqlValue[L, α]})#λ] = new Traverse[({type λ[α]= SqlValue[L, α]})#λ] {
-    def traverse[F[_] : Applicative, A, B](f: A => F[B], as: SqlValue[L, A]): F[SqlValue[L, B]] =
+  implicit val SqlValueTraverse: Traverse[SqlValue] = new Traverse[SqlValue] {
+    def traverse[F[_] : Applicative, A, B](f: A => F[B], as: SqlValue[A]): F[SqlValue[B]] =
       as fold ((e: SqlException) => sqlError(e).η[F], v => f(v) ∘ (sqlValue(_)))
   }
 
 
-  implicit def SqlValuePlus[L]: Plus[({type λ[α]= SqlValue[L, α]})#λ] = new Plus[({type λ[α]= SqlValue[L, α]})#λ] {
-    def plus[A](a1: SqlValue[L, A], a2: => SqlValue[L, A]) =
+  implicit val SqlValuePlus: Plus[SqlValue] = new Plus[SqlValue] {
+    def plus[A](a1: SqlValue[A], a2: => SqlValue[A]) =
       a1 fold (_ => a2 fold (_ => a1, _ => a2), _ => a1)
   }
 
-  implicit def SqlValueEmpty[L]: Empty[({type λ[α]= SqlValue[L, α]})#λ] = new Empty[({type λ[α]= SqlValue[L, α]})#λ] {
+  implicit val SqlValueEmpty: Empty[SqlValue] = new Empty[SqlValue] {
     def empty[A] = sqlError(new SqlException)
   }
 
-  implicit def SqlValueShow[L, A: Show]: Show[SqlValue[L, A]] = new Show[SqlValue[L, A]] {
-    def show(a: SqlValue[L, A]) =
+  implicit def SqlValueShow[A: Show]: Show[SqlValue[A]] = new Show[SqlValue[A]] {
+    def show(a: SqlValue[A]) =
       a fold(
               e => ("error(" + e + ")")
             , a => ("value(" + a.shows + ")")
             ) toList
   }
 
-  implicit def SqlValueEqual[L, A: Equal]: Equal[SqlValue[L, A]] = {
+  implicit def SqlValueEqual[A: Equal]: Equal[SqlValue[A]] = {
     implicit val EqualSqlException: Equal[SqlException] = equalA
     Equal.EitherEqual[SqlException, A] ∙ (_.toEither)
   }
 
-  implicit def SqlValueOrder[L, A: Order]: Order[SqlValue[L, A]] = {
+  implicit def SqlValueOrder[A: Order]: Order[SqlValue[A]] = {
     implicit val OrderSqlException: Order[SqlException] = new Order[SqlException] {
       def order(a1: SqlException, a2: SqlException) = EQ
     }
     Order.EitherOrder[SqlException, A] ∙ (_.toEither)
   }
 
-  implicit def SqlValueZero[L, A: Zero]: Zero[SqlValue[L, A]] =
+  implicit def SqlValueZero[A: Zero]: Zero[SqlValue[A]] =
     zero(sqlValue(∅[A]))
 }

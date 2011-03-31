@@ -13,20 +13,20 @@ sealed trait StringQuery {
   import Key._
   import Query._
 
-  def executeUpdate[L]: SqlConnect[L, Int] =
+  def executeUpdate: SqlConnect[Int] =
     sqlConnect(c => withSqlResource(
                      value = c.createStatement
                    , evaluate = (s: Statement) =>
                        trySqlValue(s executeUpdate query)
                    ))
 
-  def executePreparedUpdate[L](withStatement: PreparedStatement => Unit): SqlConnect[L, Int] =
+  def executePreparedUpdate(withStatement: PreparedStatement => Unit): SqlConnect[Int] =
     prepareStatement(s => sqlConnect(_ => {
       withStatement(s)
       s.tryExecuteUpdate
     }))
 
-  def executeUpdateWithKeys[A, B, L](withStatement: PreparedStatement => A, withRow: Row => A => Int => SqlConnect[L, B]): SqlConnect[L, B] =
+  def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => SqlConnect[B]): SqlConnect[B] =
     sqlConnect(c => withSqlResource(
                      value = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
                    , evaluate = (s: PreparedStatement) => {
@@ -43,19 +43,19 @@ sealed trait StringQuery {
                      }
                    ))
 
-  def executeUpdateWithKeysSet[L, B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): SqlConnect[L, B] =
+  def executeUpdateWithKeysSet[B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B): SqlConnect[B] =
     executeUpdateWithKeys(
       withStatement = withStatement(_)
-    , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[({type λ[α]= SqlConnect[L, α]})#λ]
+    , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[({type λ[α]= SqlConnect[α]})#λ]
     )
 
-  def executeUpdateWithKey[L, A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SqlConnect[L, A] =
+  def executeUpdateWithKey[A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SqlConnect[A] =
     executeUpdateWithKeysSet(
       withStatement,
       r => i => (i, keyed.set(a, r.keyLabel("ID").getValueOr(nokey)))
     ).map(_._2)
 
-  def prepareStatement[L, A](k: PreparedStatement => SqlConnect[L, A]) : SqlConnect[L, A] =
+  def prepareStatement[A](k: PreparedStatement => SqlConnect[A]) : SqlConnect[A] =
     sqlConnect(c => withSqlResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
 
   def bindSql(bindings: JDBCType*) = Query.query(query, bindings: _*)
