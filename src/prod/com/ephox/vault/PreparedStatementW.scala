@@ -7,6 +7,8 @@ import Scalaz._
 sealed trait PreparedStatementW {
   val s: PreparedStatement
 
+  import SqlConnect._
+
   def tryExecuteUpdate[L]: SqlValue[L, Int] =
     SqlValue.trySqlValue(s.executeUpdate)
 

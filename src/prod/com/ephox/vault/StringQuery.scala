@@ -8,6 +8,8 @@ import java.sql.{PreparedStatement, Statement}
 sealed trait StringQuery {
   val query: String
 
+  import SqlConnect._
+
   def executeUpdate[L]: SqlConnect[L, Int] =
     sqlConnect(c => withSqlResource(
                      value = c.createStatement
@@ -57,6 +59,8 @@ sealed trait StringQuery {
 
   def toSql = bindSql()
 }
+
+object StringQuery extends StringQuerys
 
 trait StringQuerys {
   implicit def StringStringQuery(s: String): StringQuery = new StringQuery {

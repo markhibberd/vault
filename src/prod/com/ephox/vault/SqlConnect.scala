@@ -8,6 +8,8 @@ import java.sql._
 sealed trait SqlConnect[L, A] {
   val connect: Connection => SqlValue[L, A]
 
+  import SqlConnect._
+
   def apply(c: Connection) = connect(c)
 
   def executeOrDie(c: Connection) = connect(c).getOrDie
@@ -59,6 +61,8 @@ sealed trait SqlConnect[L, A] {
   def flatMap[B](f: A => SqlConnect[L, B]) =
     sqlConnect(c => connect(c) flatMap (f(_) connect c))
 }
+
+object SqlConnect extends SqlConnects
 
 trait SqlConnects {
   def sqlConnect[L, A](f: Connection => SqlValue[L, A]): SqlConnect[L, A] = new SqlConnect[L, A] {
