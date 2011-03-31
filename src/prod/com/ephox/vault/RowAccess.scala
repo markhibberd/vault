@@ -9,6 +9,7 @@ sealed trait RowAccess[L, A] {
   import SqlAccess._
   import RowValue._
   import RowConnect._
+  import PreparedStatementW._
 
   def -|>[T](iter: IterV[A, T]): RowQueryConnect[L, IterV[A, T]] =
     rowQueryConnect(query => rowConnect(c => try {
