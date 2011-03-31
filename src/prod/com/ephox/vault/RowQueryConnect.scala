@@ -5,7 +5,6 @@ import scalaz._, Scalaz._
 sealed trait RowQueryConnect[A] {
   def <|-(sql: Query): RowConnect[A]
 
-  import SqlQueryConnect._
   import RowQueryConnect._
 
   def map[B](f: A => B): RowQueryConnect[B] =
@@ -13,22 +12,6 @@ sealed trait RowQueryConnect[A] {
 
   def flatMap[B](f: A => RowQueryConnect[B]): RowQueryConnect[B] =
     rowQueryConnect(s => (this <|- s) flatMap (a => f(a) <|- s))
-
-  def unifyNullWithMessage(message: String): SqlQueryConnect[A] =
-    sqlQueryConnect(q => (this <|- q) unifyNullWithMessage message)
-
-  def unifyNull: SqlQueryConnect[A] =
-    sqlQueryConnect(q => (this <|- q) unifyNull)
-
-  def possiblyNull: SqlQueryConnect[PossiblyNull[A]] =
-    sqlQueryConnect(q => (this <|- q) possiblyNull)
-
-  def possiblyNullOr(d: => A): SqlQueryConnect[A] =
-    sqlQueryConnect(q => (this <|- q) possiblyNullOr d)
-
-  // alias for possiblyNullOr
-  def |?(d: => A) = possiblyNullOr(d)
-
 }
 
 object RowQueryConnect extends RowQueryConnects
