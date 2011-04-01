@@ -13,7 +13,7 @@ object Vault
   with SqlValues
   with SqlAccesss
   with SqlConnects
-  with Querys
+  with Sqls
   with JDBCTypes
   with SqlTypes
   with Updates

@@ -57,6 +57,9 @@ sealed trait RowAccess[A] {
   def possiblyNullOr(d: => A): SqlAccess[A] =
     possiblyNull map (_ | d)
 
+  def toList: SqlAccess[List[A]] =
+    possiblyNull.map(_.toList)
+
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
 }
@@ -162,12 +165,12 @@ trait RowAccesss {
   def urlIndex(columnIndex: Int): RowAccess[URL] = rowAccess(_.urlIndex(columnIndex))
   def urlLabel(columnLabel: String): RowAccess[URL] = rowAccess(_.urlLabel(columnLabel))
 
-  def idLabel(label: String): RowAccess[Key] = longLabel(label) map (key(_))
-  def idIndex(index: Int): RowAccess[Key] = longIndex(index) map (key(_))
+  def keyLabel(label: String): RowAccess[Key] = longLabel(label) map (key(_))
+  def keyIndex(index: Int): RowAccess[Key] = longIndex(index) map (key(_))
 
-  def possibleIdLabel(label: String): SqlAccess[Key] = longLabel(label).possiblyNull map (_.toKey)
+  def possibleKeyLabel(label: String): SqlAccess[Key] = longLabel(label).possiblyNull map (_.toKey)
 
-  def possibleIdIndex(index: Int): SqlAccess[Key] = longIndex(index).possiblyNull map (_.toKey)
+  def possibleKeyIndex(index: Int): SqlAccess[Key] = longIndex(index).possiblyNull map (_.toKey)
 
   implicit val RowAccessFunctor: Functor[RowAccess] = new Functor[RowAccess] {
     def fmap[A, B](k: RowAccess[A], f: A => B) =

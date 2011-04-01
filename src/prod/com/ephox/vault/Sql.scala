@@ -1,14 +1,14 @@
 package com.ephox.vault
 
-trait Query {
+trait Sql {
   val sql: String
   val bindings: List[JDBCType]
 }
 
-object Query extends Querys
+object Sql extends Sqls
 
-trait Querys {
-  def query(s: String, b: JDBCType*): Query = new Query {
+trait Sqls {
+  def query(s: String, b: JDBCType*): Sql = new Sql {
     val sql = s
     val bindings = b.toList
   }

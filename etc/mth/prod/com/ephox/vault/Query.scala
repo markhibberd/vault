@@ -7,7 +7,7 @@ sealed trait Query {
 }
 
 object Query {
-  def query(s: String, l: List[_] = List()): Query = new Query {
+  def query(s: String, l: List[_] = List()): Sql = new Sql {
     def fold[A](
       prepared: (String, List[_]) => A
     ) = prepared(s, l)

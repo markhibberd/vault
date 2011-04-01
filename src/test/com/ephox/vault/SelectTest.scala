@@ -10,7 +10,7 @@ class SelectTest extends FunSuite {
   case class Fred(key: Key, name: String, value: Long) 
 
   val FredRowAccess = for {
-    key <- idLabel("ID")
+    key <- keyLabel("ID")
     name <- stringLabel("NAME")
     value <- longLabel("VALUE")
   } yield Fred(key, name, value)
@@ -29,7 +29,7 @@ class SelectTest extends FunSuite {
   ).traverse(_.executeUpdate)
 
   test("raw insert, and check query") {
-    val connection = Connector.hsqltest.nu
+    val connection = Connectors.hsqltest.nu
 
     populate executeOrDie connection
 

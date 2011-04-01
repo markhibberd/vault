@@ -3,7 +3,7 @@ package com.ephox.vault
 import scalaz._, Scalaz._
 
 sealed trait RowQueryConnect[A] {
-  def <|-(sql: Query): RowConnect[A]
+  def <|-(sql: Sql): RowConnect[A]
 
   import RowQueryConnect._
 
@@ -17,8 +17,8 @@ sealed trait RowQueryConnect[A] {
 object RowQueryConnect extends RowQueryConnects
 
 trait RowQueryConnects {
-  def rowQueryConnect[A](f: Query => RowConnect[A]): RowQueryConnect[A] = new RowQueryConnect[A] {
-    def <|-(sql: Query) =
+  def rowQueryConnect[A](f: Sql => RowConnect[A]): RowQueryConnect[A] = new RowQueryConnect[A] {
+    def <|-(sql: Sql) =
       f(sql)
   }
 

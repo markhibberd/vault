@@ -10,7 +10,7 @@ object Queries {
   def list[L, A](access: RowAccess[A], sql: String) =
     (access -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql.toSql) map (_.flatten)
 
-  def first[A](access: RowAccess[A], sql: Query) =
+  def first[A](access: RowAccess[A], sql: Sql) =
     access -||> IterV.head[A] <|- sql
 
   def byId[A](access: RowAccess[A], sql: String, id: Long) =
