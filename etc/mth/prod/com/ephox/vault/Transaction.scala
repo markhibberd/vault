@@ -24,7 +24,7 @@ object Transaction {
     }
   }
 
-  def runQuery[A](tx: Connection)(q: Query, f: ResultSet => A): Either[SQLException, A] =
+  def runQuery[A](tx: Connection)(q: Sql, f: ResultSet => A): Either[SQLException, A] =
     q.fold((sql, params) =>
         statement(tx, sql, params) { stmt =>
           val rs = stmt.executeQuery()

@@ -8,7 +8,7 @@ sealed trait Connector {
   def nu: Connection
 }
 
-object Connector {
+object Connectors {
   def hsqltest: Connector = hsqlmem("testdb", "sa", "")
 
   def hsqlmem(dbname: String, username: String, password: String):Connector = new Connector {

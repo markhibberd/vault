@@ -10,7 +10,7 @@ sealed trait StringQuery {
   import SqlConnect._
   import PreparedStatementW._
   import Key._
-  import Query._
+  import Sql._
 
   def executeUpdate: SqlConnect[Int] =
     sqlConnect(c => withSqlResource(
@@ -48,16 +48,19 @@ sealed trait StringQuery {
     , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[SqlConnect]
     )
 
-  def executeUpdateWithKey[A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SqlConnect[A] =
-    executeUpdateWithKeysSet(
-      withStatement,
-      r => i => (i, keyed.set(a, r.keyLabel("ID").getValueOr(nokey)))
-    ).map(_._2)
+  def insert[A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SqlConnect[A] =
+    if (!keyed.get(a).isSet)
+      executeUpdateWithKeysSet(
+        withStatement,
+        r => i => (i, keyed.set(a, r.keyLabel("ID").getValueOr(nokey)))
+      ).map(_._2)
+    else
+      sqlConnect(_ => a.pure[SqlValue])
 
   def prepareStatement[A](k: PreparedStatement => SqlConnect[A]) : SqlConnect[A] =
     sqlConnect(c => withSqlResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
 
-  def bindSql(bindings: JDBCType*) = Query.query(query, bindings: _*)
+  def bindSql(bindings: JDBCType*) = Sql.query(query, bindings: _*)
 
   def toSql = bindSql()
 }
