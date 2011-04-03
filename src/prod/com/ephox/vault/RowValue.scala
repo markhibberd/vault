@@ -16,8 +16,11 @@ sealed trait RowValue[A] extends NewType[Option[Either[SqlException, A]]] {
     }
 
   def isNull: Boolean = fold(_ => false, _ => false, true)
+  def isNotNull: Boolean = !isNull
   def isError: Boolean = fold(_ => true, _ => false, false)
+  def isNotError: Boolean = !isError
   def isValue: Boolean = fold(_ => false, _ => true, false)
+  def isNotValue: Boolean = !isValue
 
   def getError: Option[SqlException] =
     fold(Some(_), _ => None, None)
@@ -66,6 +69,14 @@ sealed trait RowValue[A] extends NewType[Option[Either[SqlException, A]]] {
 
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
+
+  /**
+   * Lifts this value into a possibly null value. The following holds:
+   *
+   * forall r | r in RowValue[A]. r.liftPossiblyNull.isNotNull
+   */
+  def liftPossiblyNull: RowValue[PossiblyNull[A]] =
+    possiblyNull.toRowValue
 }
 
 object RowValue extends RowValues
