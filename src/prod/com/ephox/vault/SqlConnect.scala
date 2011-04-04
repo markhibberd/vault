@@ -8,6 +8,7 @@ sealed trait SqlConnect[A] {
   val connect: Connection => SqlValue[A]
 
   import SqlConnect._
+  import RowConnect._
 
   def apply(c: Connection) = connect(c)
 
@@ -59,6 +60,9 @@ sealed trait SqlConnect[A] {
 
   def flatMap[B](f: A => SqlConnect[B]) =
     sqlConnect(c => connect(c) flatMap (f(_) connect c))
+
+  def toRowConnect: RowConnect[A] =
+    rowConnect(connect(_).toRowValue)
 }
 
 object SqlConnect extends SqlConnects
