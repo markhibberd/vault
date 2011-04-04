@@ -3,13 +3,13 @@ package com.ephox.vault
 import scalaz._, Scalaz._
 import SqlValue._
 
-sealed trait RowValue[A] extends NewType[Option[Either[SqlException, A]]] {
+sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlException, A]]]] {
   import PossiblyNull._
 
   import RowValue._
 
   def fold[X](sqlErr: SqlException => X, sqlValue: A => X, nul: => X): X =
-    value match {
+    value.over match {
       case None           => nul
       case Some(Left(e))  => sqlErr(e)
       case Some(Right(a)) => sqlValue(a)
@@ -77,21 +77,155 @@ sealed trait RowValue[A] extends NewType[Option[Either[SqlException, A]]] {
    */
   def liftPossiblyNull: RowValue[PossiblyNull[A]] =
     possiblyNull.toRowValue
+
+  /**
+   * Return the log associated with this value.
+   */
+  def log: LOG = value.written
+
+  /**
+   * Sets the log to the given value.
+   */
+  def setLog(k: LOG): RowValue[A] = new RowValue[A] {
+    val value =
+      RowValue.this.value.over set k
+  }
+
+  /**
+   * Transform the log by the given function.
+   */
+  def withLog(k: LOG => LOG): RowValue[A] = new RowValue[A] {
+    val value =
+      RowValue.this.value.over set (k(log))
+  }
+
+  /**
+   * Transform each log value by the given function.
+   */
+  def withEachLog(k: LOGV => LOGV): RowValue[A] =
+    withLog(_ ∘ k)
+
+  /**
+   * Append the given value to the current log.
+   */
+  def :+->(e: LOGV): RowValue[A] =
+    withLog(_ |+| e.η[LOGC])
+
+  /**
+   * Append the given value to the current log by applying to the underlying value.
+   */
+  def :->>(e: Option[Either[SqlException, A]] => LOGV): RowValue[A] =
+    :+->(e(value.over))
+
+  /**
+   * Prepend the given value to the current log.
+   */
+  def <-+:(e: LOGV): RowValue[A] =
+    withLog(e.η[LOGC] |+| _)
+
+  /**
+   * Prepend the given value to the current log by applying to the underlying value.
+   */
+  def <<-:(e: Option[Either[SqlException, A]] => LOGV): RowValue[A] =
+    <-+:(e(value.over))
+/**
+   * Append the given value to the current log.
+   */
+  def :++->(e: LOG): RowValue[A] =
+    withLog(_ |+| e)
+
+  /**
+   * Append the given value to the current log by applying to the underlying value.
+   */
+  def :+->>(e: Option[Either[SqlException, A]] => LOG): RowValue[A] =
+    withLog(_ |+| e(value.over))
+
+  /**
+   * Prepend the given value to the current log.
+   */
+  def <-++:(e: LOG): RowValue[A] =
+    withLog(e |+| _)
+
+  /**
+   * Prepend the given value to the current log by applying to the underlying value.
+   */
+  def <<-+:(e: Option[Either[SqlException, A]] => LOG): RowValue[A] =
+    <-++:(e(value.over))
+
+  /**
+   * Set the log to be empty.
+   */
+  def resetLog: RowValue[A] =
+    withLog(_ => ∅[LOG])
+
+  /**
+   * Runs the given side-effect on the log, then returns this underlying value. '''CAUTION: side-effect'''
+   */
+  def effectLog(k: LOG => Unit): RowValue[A] = {
+    k(log)
+    this
+  }
+
+  /**
+   * Runs the given side-effect on each element of the log, then returns this underlying value. '''CAUTION: side-effect'''
+   */
+  def effectEachLog(k: LOGV => Unit): RowValue[A] =
+    effectLog(_ foreach k)
+
+  /**
+   * Runs the given side-effect on the log, then returns this underlying value with an empty log. '''CAUTION: side-effect'''
+   */
+  def flushLog(k: LOG => Unit): RowValue[A] = {
+    effectLog(k)
+    resetLog
+  }
+
+  /**
+   * Runs the given side-effect on each element of the log, then returns this underlying value with an empty log. '''CAUTION: side-effect'''
+   */
+  def flushEachLog(k: LOGV => Unit): RowValue[A] = {
+    effectLog(_ foreach k)
+    resetLog
+  }
+
+  /**
+   * Prints the log, then returns this underlying value. '''CAUTION: side-effect'''
+   */
+  def printLog: RowValue[A] =
+    effectLog(_.println)
+
+  /**
+   * Prints each element of the log, then returns this underlying value. '''CAUTION: side-effect'''
+   */
+  def printEachLog: RowValue[A] =
+    effectEachLog(_.println)
+
+  /**
+   * Prints the log, then returns this underlying value with an empty log. '''CAUTION: side-effect'''
+   */
+  def printFlushLog: RowValue[A] =
+    flushLog(_.println)
+
+  /**
+   * Prints each element of the log, then returns this underlying value with an empty log. '''CAUTION: side-effect'''
+   */
+  def printFlushEachLog: RowValue[A] =
+    flushEachLog(_.println)
 }
 
 object RowValue extends RowValues
 
 trait RowValues {
   def rowError[A](e: SqlException): RowValue[A] = new RowValue[A] {
-    val value = (Some(Left(e)): Option[Either[SqlException, A]])
+    val value = (Some(Left(e)): Option[Either[SqlException, A]]).η[WLOG]
   }
 
   def rowValue[A](a: A): RowValue[A] = new RowValue[A] {
-    val value = (Some(Right(a)): Option[Either[SqlException, A]])
+    val value = (Some(Right(a)): Option[Either[SqlException, A]]).η[WLOG]
   }
 
   def rowNull[A]: RowValue[A] = new RowValue[A] {
-    val value = (None: Option[Either[SqlException, A]])
+    val value = (None: Option[Either[SqlException, A]]).η[WLOG]
   }
 
   def tryRowValue[A](a: => A): RowValue[A] =
