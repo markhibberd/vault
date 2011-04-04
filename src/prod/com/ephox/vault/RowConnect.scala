@@ -51,6 +51,14 @@ sealed trait RowConnect[A] {
 
   def |?(d: => A): SqlConnect[A] =
     sqlConnect(connect(_) |? d)
+
+  /**
+   * Lifts this value into a possibly null value. The following holds:
+   *
+   * forall r c. r.liftPossiblyNull.connect(c).isNotNull
+   */
+  def liftPossiblyNull: RowConnect[PossiblyNull[A]] =
+    possiblyNull.toRowConnect
 }
 
 object RowConnect extends RowConnects

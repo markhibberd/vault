@@ -62,6 +62,14 @@ sealed trait RowAccess[A] {
 
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
+
+  /**
+   * Lifts this value into a possibly null value. The following holds:
+   *
+   * forall r s. r.liftPossiblyNull.access(s).isNotNull
+   */
+  def liftPossiblyNull: RowAccess[PossiblyNull[A]] =
+    possiblyNull.toRowAccess
 }
 
 object RowAccess extends RowAccesss
