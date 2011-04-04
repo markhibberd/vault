@@ -5,6 +5,7 @@ import scalaz._, Scalaz._
 sealed trait SqlAccess[A] {
   val access: Row => SqlValue[A]
 
+  import SqlValue._
   import RowAccess._
 
   def map[B](f: A => B): SqlAccess[B] = new SqlAccess[B] {
@@ -21,6 +22,83 @@ sealed trait SqlAccess[A] {
 
   def toRowAccess: RowAccess[A] =
     rowAccess(r => access(r).toRowValue)
+
+  /**
+   * Return the log associated with this value.
+   */
+  def log: Row => LOG = access(_).log
+
+  /**
+   * Sets the log to the given value.
+   */
+  def setLog(k: LOG): SqlAccess[A] =
+    mapSqlValue(_ setLog k)
+
+  /**
+   * Transform the log by the given function.
+   */
+  def withLog(k: LOG => LOG): SqlAccess[A] =
+    mapSqlValue(_ withLog k)
+
+  /**
+   * Transform each log value by the given function.
+   */
+  def withEachLog(k: LOGV => LOGV): SqlAccess[A] =
+    mapSqlValue(_ withEachLog k)
+
+  /**
+   * Append the given value to the current log.
+   */
+  def :+->(e: LOGV): SqlAccess[A] =
+    mapSqlValue(_ :+-> e)
+
+  /**
+   * Append the given value to the current log by applying to the underlying value.
+   */
+  def :->>(e: Either[SqlException, A] => LOGV): SqlAccess[A] =
+    mapSqlValue(_ :->> e)
+
+  /**
+   * Prepend the given value to the current log.
+   */
+  def <-+:(e: LOGV): SqlAccess[A] =
+    mapSqlValue(e <-+: _)
+
+  /**
+   * Prepend the given value to the current log by applying to the underlying value.
+   */
+  def <<-:(e: Either[SqlException, A] => LOGV): SqlAccess[A] =
+    mapSqlValue(e <<-: _)
+
+  /**
+   * Append the given value to the current log.
+   */
+  def :++->(e: LOG): SqlAccess[A] =
+    mapSqlValue(_ :++-> e)
+
+  /**
+   * Append the given value to the current log by applying to the underlying value.
+   */
+  def :+->>(e: Either[SqlException, A] => LOG): SqlAccess[A] =
+    mapSqlValue(_ :+->> e)
+
+  /**
+   * Prepend the given value to the current log.
+   */
+  def <-++:(e: LOG): SqlAccess[A] =
+    mapSqlValue(e <-++: _)
+
+  /**
+   * Prepend the given value to the current log by applying to the underlying value.
+   */
+  def <<-+:(e: Either[SqlException, A] => LOG): SqlAccess[A] =
+    mapSqlValue(e <<-+: _)
+
+  /**
+   * Set the log to be empty.
+   */
+  def resetLog: SqlAccess[A] =
+    mapSqlValue(_.resetLog)
 }
 
 object SqlAccess extends SqlAccesss
