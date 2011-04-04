@@ -70,6 +70,83 @@ sealed trait RowAccess[A] {
    */
   def liftPossiblyNull: RowAccess[PossiblyNull[A]] =
     possiblyNull.toRowAccess
+
+  /**
+   * Return the log associated with this value.
+   */
+  def log: Row => LOG = access(_).log
+
+  /**
+   * Sets the log to the given value.
+   */
+  def setLog(k: LOG): RowAccess[A] =
+    mapRowValue(_ setLog k)
+
+  /**
+   * Transform the log by the given function.
+   */
+  def withLog(k: LOG => LOG): RowAccess[A] =
+    mapRowValue(_ withLog k)
+
+  /**
+   * Transform each log value by the given function.
+   */
+  def withEachLog(k: LOGV => LOGV): RowAccess[A] =
+    mapRowValue(_ withEachLog k)
+
+  /**
+   * Append the given value to the current log.
+   */
+  def :+->(e: LOGV): RowAccess[A] =
+    mapRowValue(_ :+-> e)
+
+  /**
+   * Append the given value to the current log by applying to the underlying value.
+   */
+  def :->>(e: Option[Either[SqlException, A]] => LOGV): RowAccess[A] =
+    mapRowValue(_ :->> e)
+
+  /**
+   * Prepend the given value to the current log.
+   */
+  def <-+:(e: LOGV): RowAccess[A] =
+    mapRowValue(e <-+: _)
+
+  /**
+   * Prepend the given value to the current log by applying to the underlying value.
+   */
+  def <<-:(e: Option[Either[SqlException, A]] => LOGV): RowAccess[A] =
+    mapRowValue(e <<-: _)
+
+  /**
+   * Append the given value to the current log.
+   */
+  def :++->(e: LOG): RowAccess[A] =
+    mapRowValue(_ :++-> e)
+
+  /**
+   * Append the given value to the current log by applying to the underlying value.
+   */
+  def :+->>(e: Option[Either[SqlException, A]] => LOG): RowAccess[A] =
+    mapRowValue(_ :+->> e)
+
+  /**
+   * Prepend the given value to the current log.
+   */
+  def <-++:(e: LOG): RowAccess[A] =
+    mapRowValue(e <-++: _)
+
+  /**
+   * Prepend the given value to the current log by applying to the underlying value.
+   */
+  def <<-+:(e: Option[Either[SqlException, A]] => LOG): RowAccess[A] =
+    mapRowValue(e <<-+: _)
+
+  /**
+   * Set the log to be empty.
+   */
+  def resetLog: RowAccess[A] =
+    mapRowValue(_.resetLog)
 }
 
 object RowAccess extends RowAccesss
