@@ -4,7 +4,7 @@ import scalaz._, Scalaz._
 import SqlValue._
 import RowValue._
 
-sealed trait SqlValue[A] extends NewType[Writer[LOG, Either[SqlException, A]]] {
+sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
   def fold[X](err: SqlException => X, v: A => X) =
     value.over.fold(err, v)
 
@@ -190,6 +190,7 @@ object SqlValue extends SqlValues
 
 trait SqlValues {
   type SqlException = java.sql.SQLException
+
   type LOGV = String
   type LOGC[V] = IndSeq[V]
   type LOG = LOGC[LOGV]
