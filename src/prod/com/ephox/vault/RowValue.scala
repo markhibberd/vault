@@ -157,60 +157,6 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlException, A]]]] 
    */
   def resetLog: RowValue[A] =
     withLog(_ => ∅[LOG])
-
-  /**
-   * Runs the given side-effect on the log, then returns this underlying value. '''CAUTION: side-effect'''
-   */
-  def effectLog(k: LOG => Unit): RowValue[A] = {
-    k(log)
-    this
-  }
-
-  /**
-   * Runs the given side-effect on each element of the log, then returns this underlying value. '''CAUTION: side-effect'''
-   */
-  def effectEachLog(k: LOGV => Unit): RowValue[A] =
-    effectLog(_ foreach k)
-
-  /**
-   * Runs the given side-effect on the log, then returns this underlying value with an empty log. '''CAUTION: side-effect'''
-   */
-  def flushLog(k: LOG => Unit): RowValue[A] = {
-    effectLog(k)
-    resetLog
-  }
-
-  /**
-   * Runs the given side-effect on each element of the log, then returns this underlying value with an empty log. '''CAUTION: side-effect'''
-   */
-  def flushEachLog(k: LOGV => Unit): RowValue[A] = {
-    effectLog(_ foreach k)
-    resetLog
-  }
-
-  /**
-   * Prints the log, then returns this underlying value. '''CAUTION: side-effect'''
-   */
-  def printLog: RowValue[A] =
-    effectLog(_.println)
-
-  /**
-   * Prints each element of the log, then returns this underlying value. '''CAUTION: side-effect'''
-   */
-  def printEachLog: RowValue[A] =
-    effectEachLog(_.println)
-
-  /**
-   * Prints the log, then returns this underlying value with an empty log. '''CAUTION: side-effect'''
-   */
-  def printFlushLog: RowValue[A] =
-    flushLog(_.println)
-
-  /**
-   * Prints each element of the log, then returns this underlying value with an empty log. '''CAUTION: side-effect'''
-   */
-  def printFlushEachLog: RowValue[A] =
-    flushEachLog(_.println)
 }
 
 object RowValue extends RowValues
