@@ -73,7 +73,7 @@ sealed trait RowValue[A] extends NewType[Option[Either[SqlException, A]]] {
   /**
    * Lifts this value into a possibly null value. The following holds:
    *
-   * forall r | r in RowValue[A]. r.liftPossiblyNull.isNotNull
+   * forall r. r.liftPossiblyNull.isNotNull
    */
   def liftPossiblyNull: RowValue[PossiblyNull[A]] =
     possiblyNull.toRowValue
