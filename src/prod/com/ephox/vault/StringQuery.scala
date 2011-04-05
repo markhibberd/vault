@@ -57,6 +57,12 @@ sealed trait StringQuery {
     else
       sqlConnect(_ => a.pure[SqlValue])
 
+  def delete[A](a: A)(implicit keyed: Keyed[A]): SqlConnect[Int] =
+    keyed.get(a).fold(
+      constantSqlConnect(0.pure[SqlValue]),
+      id => executePreparedUpdate(_.setLong(0, id))
+    )
+
   def prepareStatement[A](k: PreparedStatement => SqlConnect[A]) : SqlConnect[A] =
     sqlConnect(c => withSqlResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
 

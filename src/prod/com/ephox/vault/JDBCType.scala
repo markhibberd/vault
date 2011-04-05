@@ -22,7 +22,6 @@ sealed trait JDBCType {
              , timeType: Time => X
              , timestampType: Timestamp => X
              , asciiStreamType: InputStream => Int => X
-             , unicodeStreamType: InputStream => Int => X
              , binaryStreamType: InputStream => Int => X
              , objectTypeType: AnyRef => SqlType => X
              , objectType: AnyRef => X
@@ -53,7 +52,6 @@ sealed trait JDBCType {
     case TimeJDBCType(value) => timeType(value)
     case TimestampJDBCType(value) => timestampType(value)
     case AsciiStreamJDBCType(value, length) => asciiStreamType(value)(length)
-    case UnicodeStreamJDBCType(value, length) => unicodeStreamType(value)(length)
     case BinaryStreamJDBCType(value, length) => binaryStreamType(value)(length)
     case ObjectTypeJDBCType(value, typ) => objectTypeType(value)(typ)
     case ObjectJDBCType(value) => objectType(value)
@@ -84,7 +82,6 @@ private case class DateJDBCType(value: Date) extends JDBCType
 private case class TimeJDBCType(value: Time) extends JDBCType
 private case class TimestampJDBCType(value: Timestamp) extends JDBCType
 private case class AsciiStreamJDBCType(value: InputStream, length: Int) extends JDBCType
-private case class UnicodeStreamJDBCType(value: InputStream, length: Int) extends JDBCType
 private case class BinaryStreamJDBCType(value: InputStream, length: Int) extends JDBCType
 private case class ObjectTypeJDBCType(value: AnyRef, typ: SqlType) extends JDBCType
 private case class ObjectJDBCType(value: AnyRef) extends JDBCType
@@ -117,7 +114,6 @@ trait JDBCTypes {
   def timeType: Time => JDBCType = TimeJDBCType(_)
   def timestampType: Timestamp => JDBCType = TimestampJDBCType(_)
   def asciiStreamType: (InputStream, Int) => JDBCType = AsciiStreamJDBCType(_, _)
-  def unicodeStreamType: (InputStream, Int) => JDBCType = UnicodeStreamJDBCType(_, _)
   def binaryStreamType: (InputStream, Int) => JDBCType = BinaryStreamJDBCType(_, _)
   def objectTypeType: (AnyRef, SqlType) => JDBCType = ObjectTypeJDBCType(_, _)
   def objectType: AnyRef => JDBCType = ObjectJDBCType(_)
