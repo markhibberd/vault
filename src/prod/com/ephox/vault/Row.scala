@@ -3,106 +3,106 @@ package com.ephox.vault
 import scalaz._, Scalaz._
 import java.io.{Reader, InputStream}
 import java.util.Calendar
-import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSet}
+import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSet, NClob}
 import java.net.URL
 
 sealed trait Row {
   def iterate[A, T](a: RowAccess[A]): IterV[A, T] => RowValue[IterV[A, T]]
 
-  def arrayIndex(columnIndex: Int): RowValue[java.sql.Array]
-  def arrayLabel(columnLabel: String): RowValue[java.sql.Array]
+  val arrayIndex: Int => RowValue[java.sql.Array]
+  val arrayLabel: String => RowValue[java.sql.Array]
 
-  def asciiStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowValue[A]
-  def asciiStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowValue[A]
+  def asciiStreamIndex[A](withInputStream: InputStream => A): Int => RowValue[A]
+  def asciiStreamLabel[A](withInputStream: InputStream => A): String => RowValue[A]
 
-  def bigDecimalIndex(columnIndex: Int): RowValue[java.math.BigDecimal]
-  def bigDecimalLabel(columnLabel: String): RowValue[java.math.BigDecimal]
+  val bigDecimalIndex: Int => RowValue[java.math.BigDecimal]
+  val bigDecimalLabel: String => RowValue[java.math.BigDecimal]
 
-  def binaryStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowValue[A]
-  def binaryStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowValue[A]
+  def binaryStreamIndex[A](withInputStream: InputStream => A): Int => RowValue[A]
+  def binaryStreamLabel[A](withInputStream: InputStream => A): String => RowValue[A]
 
-  def blobIndex(columnIndex: Int): RowValue[Blob]
-  def blobLabel(columnLabel: String): RowValue[Blob]
+  val blobIndex: Int => RowValue[Blob]
+  val blobLabel: String => RowValue[Blob]
 
-  def booleanIndex(columnIndex: Int): RowValue[Boolean]
-  def booleanLabel(columnLabel: String): RowValue[Boolean]
+  val booleanIndex: Int => RowValue[Boolean]
+  val booleanLabel: String => RowValue[Boolean]
 
-  def byteIndex(columnIndex: Int): RowValue[Byte]
-  def byteLabel(columnLabel: String): RowValue[Byte]
+  val byteIndex: Int => RowValue[Byte]
+  val byteLabel: String => RowValue[Byte]
 
-  def bytesIndex(columnIndex: Int): RowValue[Array[Byte]]
-  def bytesLabel(columnLabel: String): RowValue[Array[Byte]]
+  val bytesIndex: Int => RowValue[Array[Byte]]
+  val bytesLabel: String => RowValue[Array[Byte]]
 
-  def characterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowValue[A]
-  def characterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowValue[A]
+  def characterStreamIndex[A](withReader: Reader => A): Int => RowValue[A]
+  def characterStreamLabel[A](withReader: Reader => A): String => RowValue[A]
 
-  def clobIndex(columnIndex: Int): RowValue[Clob]
-  def clobLabel(columnLabel: String): RowValue[Clob]
+  val clobIndex: Int => RowValue[Clob]
+  val clobLabel: String => RowValue[Clob]
 
-  def dateIndex(columnIndex: Int): RowValue[Date]
-  def dateLabel(columnLabel: String): RowValue[Date]
-  def dateIndexCal(columnIndex: Int, cal: Row.Cal): RowValue[Date]
-  def dateLabelCal(columnLabel: String, cal: Row.Cal): RowValue[Date]
+  val dateIndex: Int => RowValue[Date]
+  val dateLabel: String => RowValue[Date]
+  def dateIndexCal(cal: Row.Cal): Int => RowValue[Date]
+  def dateLabelCal(cal: Row.Cal): String => RowValue[Date]
 
-  def doubleIndex(columnIndex: Int): RowValue[Double]
-  def doubleLabel(columnLabel: String): RowValue[Double]
+  val doubleIndex: Int => RowValue[Double]
+  val doubleLabel: String => RowValue[Double]
 
-  def floatIndex(columnIndex: Int): RowValue[Float]
-  def floatLabel(columnLabel: String): RowValue[Float]
+  val floatIndex: Int => RowValue[Float]
+  val floatLabel: String => RowValue[Float]
 
-  def intIndex(columnIndex: Int): RowValue[Int]
-  def intLabel(columnLabel: String): RowValue[Int]
+  val intIndex: Int => RowValue[Int]
+  val intLabel: String => RowValue[Int]
 
-  def longIndex(columnIndex: Int): RowValue[Long]
-  def longLabel(columnLabel: String): RowValue[Long]
+  val longIndex: Int => RowValue[Long]
+  val longLabel: String => RowValue[Long]
 
-  def ncharacterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowValue[A]
-  def ncharacterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowValue[A]
+  def ncharacterStreamIndex[A](withReader: Reader => A): Int => RowValue[A]
+  def ncharacterStreamLabel[A](withReader: Reader => A): String => RowValue[A]
 
-  def nclobIndex(columnIndex: Int): RowValue[Clob]
-  def nclobLabel(columnLabel: String): RowValue[Clob]
+  val nclobIndex: Int => RowValue[NClob]
+  val nclobLabel: String => RowValue[NClob]
 
-  def nstringIndex(columnIndex: Int): RowValue[String]
-  def nstringLabel(columnLabel: String): RowValue[String]
+  val nstringIndex: Int => RowValue[String]
+  val nstringLabel: String => RowValue[String]
 
-  def objectIndex(columnIndex: Int): RowValue[AnyRef]
-  def objectLabel(columnLabel: String): RowValue[AnyRef]
-  def objectMapIndex(columnIndex: Int, m: Row.ObjectTypeMap): RowValue[AnyRef]
-  def objectMapLabel(columnLabel: String, m: Row.ObjectTypeMap): RowValue[AnyRef]
+  val objectIndex: Int => RowValue[AnyRef]
+  val objectLabel: String => RowValue[AnyRef]
+  def objectMapIndex(m: Row.ObjectTypeMap): Int => RowValue[AnyRef]
+  def objectMapLabel(m: Row.ObjectTypeMap): String => RowValue[AnyRef]
 
-  def refIndex(columnIndex: Int): RowValue[Ref]
-  def refLabel(columnLabel: String): RowValue[Ref]
+  val refIndex: Int => RowValue[Ref]
+  val refLabel: String => RowValue[Ref]
 
-  def rowIdIndex(columnIndex: Int): RowValue[RowId]
-  def rowIdLabel(columnLabel: String): RowValue[RowId]
+  val rowIdIndex: Int => RowValue[RowId]
+  val rowIdLabel: String => RowValue[RowId]
 
-  def shortIndex(columnIndex: Int): RowValue[Short]
-  def shortLabel(columnLabel: String): RowValue[Short]
+  val shortIndex: Int => RowValue[Short]
+  val shortLabel: String => RowValue[Short]
 
-  def sqlxmlIndex(columnIndex: Int): RowValue[SQLXML]
-  def sqlxmlLabel(columnLabel: String): RowValue[SQLXML]
+  val sqlxmlIndex: Int => RowValue[SQLXML]
+  val sqlxmlLabel: String => RowValue[SQLXML]
 
-  def stringIndex(columnIndex: Int): RowValue[String]
-  def stringLabel(columnLabel: String): RowValue[String]
+  val stringIndex: Int => RowValue[String]
+  val stringLabel: String => RowValue[String]
 
-  def timeIndex(columnIndex: Int): RowValue[Time]
-  def timeLabel(columnLabel: String): RowValue[Time]
-  def timeIndexCal(columnIndex: Int, cal: Row.Cal): RowValue[Time]
-  def timeLabelCal(columnLabel: String, cal: Row.Cal): RowValue[Time]
+  val timeIndex: Int => RowValue[Time]
+  val timeLabel: String => RowValue[Time]
+  def timeIndexCal(cal: Row.Cal): Int => RowValue[Time]
+  def timeLabelCal(cal: Row.Cal): String => RowValue[Time]
 
-  def timestampIndex(columnIndex: Int): RowValue[Timestamp]
-  def timestampLabel(columnLabel: String): RowValue[Timestamp]
-  def timestampIndexCal(columnIndex: Int, cal: Row.Cal): RowValue[Timestamp]
-  def timestampLabelCal(columnLabel: String, cal: Row.Cal): RowValue[Timestamp]
+  val timestampIndex: Int => RowValue[Timestamp]
+  val timestampLabel: String => RowValue[Timestamp]
+  def timestampIndexCal(cal: Row.Cal): Int => RowValue[Timestamp]
+  def timestampLabelCal(cal: Row.Cal): String => RowValue[Timestamp]
 
-  def urlIndex(columnIndex: Int): RowValue[URL]
-  def urlLabel(columnLabel: String): RowValue[URL]
+  val urlIndex: Int => RowValue[URL]
+  val urlLabel: String => RowValue[URL]
 
-  def keyLabel(label: String): RowValue[Key]
-  def keyIndex(index: Int): RowValue[Key]
+  val keyIndex: Int => RowValue[Key]
+  val keyLabel: String => RowValue[Key]
 
-  def possibleKeyLabel(label: String): SqlValue[Key]
-  def possibleKeyIndex(index: Int): SqlValue[Key]
+  val possibleKeyIndex: Int => SqlValue[Key]
+  val possibleKeyLabel: String => SqlValue[Key]
 }
 
 object Row {
@@ -135,12 +135,12 @@ object Row {
         loop(iter)
       }
 
-    def arrayIndex(columnIndex: Int) =
+    val arrayIndex = (columnIndex: Int) =>
       tryResultSet(r.getArray(columnIndex))
-    def arrayLabel(columnLabel: String) =
+    val arrayLabel = (columnLabel: String) =>
       tryResultSet(r.getArray(columnLabel))
 
-    def asciiStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A) = {
+    def asciiStreamIndex[A](withInputStream: InputStream => A) = (columnIndex: Int) => {
       val s = r.getAsciiStream(columnIndex)
       try {
         tryResultSet(withInputStream(s))
@@ -149,7 +149,7 @@ object Row {
       }
     }
 
-    def asciiStreamLabel[A](columnLabel: String, withInputStream: InputStream => A) = {
+    def asciiStreamLabel[A](withInputStream: InputStream => A) = (columnLabel: String) => {
       val s = r.getAsciiStream(columnLabel)
       try {
         tryResultSet(withInputStream(s))
@@ -158,12 +158,12 @@ object Row {
       }
     }
 
-    def bigDecimalIndex(columnIndex: Int) =
+    val bigDecimalIndex = (columnIndex: Int) =>
       tryResultSet(r.getBigDecimal(columnIndex))
-    def bigDecimalLabel(columnLabel: String) =
+    val bigDecimalLabel = (columnLabel: String) =>
       tryResultSet(r.getBigDecimal(columnLabel))
 
-    def binaryStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A) = {
+    def binaryStreamIndex[A](withInputStream: InputStream => A) = (columnIndex: Int) => {
       val s = r.getBinaryStream(columnIndex)
       try {
         tryResultSet(withInputStream(s))
@@ -172,7 +172,7 @@ object Row {
       }
     }
 
-    def binaryStreamLabel[A](columnLabel: String, withInputStream: InputStream => A) = {
+    def binaryStreamLabel[A](withInputStream: InputStream => A) = (columnLabel: String) => {
       val s = r.getBinaryStream(columnLabel)
       try {
         tryResultSet(withInputStream(s))
@@ -181,27 +181,27 @@ object Row {
       }
     }
 
-    def blobIndex(columnIndex: Int) =
+    val blobIndex = (columnIndex: Int) =>
       tryResultSet(r.getBlob(columnIndex))
-    def blobLabel(columnLabel: String) =
+    val blobLabel = (columnLabel: String) =>
       tryResultSet(r.getBlob(columnLabel))
 
-    def booleanIndex(columnIndex: Int) =
+    val booleanIndex = (columnIndex: Int) =>
       tryResultSet(r.getBoolean(columnIndex))
-    def booleanLabel(columnLabel: String) =
+    val booleanLabel = (columnLabel: String) =>
       tryResultSet(r.getBoolean(columnLabel))
 
-    def byteIndex(columnIndex: Int) =
+    val byteIndex = (columnIndex: Int) =>
       tryResultSet(r.getByte(columnIndex))
-    def byteLabel(columnLabel: String) =
+    val byteLabel = (columnLabel: String) =>
       tryResultSet(r.getByte(columnLabel))
 
-    def bytesIndex(columnIndex: Int) =
+    val bytesIndex = (columnIndex: Int) =>
       tryResultSet(r.getBytes(columnIndex))
-    def bytesLabel(columnLabel: String) =
+    val bytesLabel = (columnLabel: String) =>
       tryResultSet(r.getBytes(columnLabel))
 
-    def characterStreamIndex[A](columnIndex: Int, withReader: Reader => A) = {
+    def characterStreamIndex[A](withReader: Reader => A) = (columnIndex: Int) => {
       val s = r.getCharacterStream(columnIndex)
       try {
         tryResultSet(withReader(s))
@@ -210,7 +210,7 @@ object Row {
       }
     }
 
-    def characterStreamLabel[A](columnLabel: String, withReader: Reader => A) = {
+    def characterStreamLabel[A](withReader: Reader => A) = (columnLabel: String) => {
       val s = r.getCharacterStream(columnLabel)
       try {
         tryResultSet(withReader(s))
@@ -219,41 +219,41 @@ object Row {
       }
     }
 
-    def clobIndex(columnIndex: Int) =
+    val clobIndex = (columnIndex: Int) =>
       tryResultSet(r.getClob(columnIndex))
-    def clobLabel(columnLabel: String) =
+    val clobLabel = (columnLabel: String) =>
       tryResultSet(r.getClob(columnLabel))
 
-    def dateIndex(columnIndex: Int) =
+    val dateIndex = (columnIndex: Int) =>
       tryResultSet(r.getDate(columnIndex))
-    def dateLabel(columnLabel: String) =
+    val dateLabel = (columnLabel: String) =>
       tryResultSet(r.getDate(columnLabel))
-    def dateIndexCal(columnIndex: Int, cal: Cal) =
+    def dateIndexCal(cal: Cal) = (columnIndex: Int) =>
       tryResultSet(r.getDate(columnIndex, cal))
-    def dateLabelCal(columnLabel: String, cal: Cal) =
+    def dateLabelCal(cal: Cal) = (columnLabel: String) =>
       tryResultSet(r.getDate(columnLabel, cal))
 
-    def doubleIndex(columnIndex: Int) =
+    val doubleIndex = (columnIndex: Int) =>
       tryResultSet(r.getDouble(columnIndex))
-    def doubleLabel(columnLabel: String) =
+    val doubleLabel = (columnLabel: String) =>
       tryResultSet(r.getDouble(columnLabel))
 
-    def floatIndex(columnIndex: Int) =
+    val floatIndex = (columnIndex: Int) =>
       tryResultSet(r.getFloat(columnIndex))
-    def floatLabel(columnLabel: String) =
+    val floatLabel = (columnLabel: String) =>
       tryResultSet(r.getFloat(columnLabel))
 
-    def intIndex(columnIndex: Int) =
+    val intIndex = (columnIndex: Int) =>
       tryResultSet(r.getInt(columnIndex))
-    def intLabel(columnLabel: String) =
+    val intLabel = (columnLabel: String) =>
       tryResultSet(r.getInt(columnLabel))
 
-    def longIndex(columnIndex: Int) =
+    val longIndex = (columnIndex: Int) =>
       tryResultSet(r.getLong(columnIndex))
-    def longLabel(columnLabel: String) =
+    val longLabel = (columnLabel: String) =>
       tryResultSet(r.getLong(columnLabel))
 
-    def ncharacterStreamIndex[A](columnIndex: Int, withReader: Reader => A) = {
+    def ncharacterStreamIndex[A](withReader: Reader => A) = (columnIndex: Int) => {
       val s = r.getNCharacterStream(columnIndex)
       try {
         tryResultSet(withReader(s))
@@ -262,7 +262,7 @@ object Row {
       }
     }
 
-    def ncharacterStreamLabel[A](columnLabel: String, withReader: Reader => A) = {
+    def ncharacterStreamLabel[A](withReader: Reader => A) = (columnLabel: String) => {
       val s = r.getNCharacterStream(columnLabel)
       try {
         tryResultSet(withReader(s))
@@ -271,82 +271,81 @@ object Row {
       }
     }
 
-    def nclobIndex(columnIndex: Int) =
+    val nclobIndex = (columnIndex: Int) =>
       tryResultSet(r.getNClob(columnIndex))
-    def nclobLabel(columnLabel: String) =
+    val nclobLabel = (columnLabel: String) =>
       tryResultSet(r.getNClob(columnLabel))
 
-    def nstringIndex(columnIndex: Int) =
+    val nstringIndex = (columnIndex: Int) =>
       tryResultSet(r.getNString(columnIndex))
-    def nstringLabel(columnLabel: String) =
+    val nstringLabel = (columnLabel: String) =>
       tryResultSet(r.getNString(columnLabel))
 
-    def objectIndex(columnIndex: Int) =
+    val objectIndex = (columnIndex: Int) =>
       tryResultSet(r.getObject(columnIndex))
-    def objectLabel(columnLabel: String) =
+    val objectLabel = (columnLabel: String) =>
       tryResultSet(r.getObject(columnLabel))
-    def objectMapIndex(columnIndex: Int, m: ObjectTypeMap) =
+    def objectMapIndex(m: ObjectTypeMap) = (columnIndex: Int) =>
       tryResultSet(r.getObject(columnIndex, m))
-    def objectMapLabel(columnLabel: String, m: ObjectTypeMap) =
+    def objectMapLabel(m: ObjectTypeMap) = (columnLabel: String) =>
       tryResultSet(r.getObject(columnLabel, m))
 
-    def refIndex(columnIndex: Int) =
+    val refIndex = (columnIndex: Int) =>
       tryResultSet(r.getRef(columnIndex))
-    def refLabel(columnLabel: String) =
+    val refLabel = (columnLabel: String) =>
       tryResultSet(r.getRef(columnLabel))
 
-    def rowIdIndex(columnIndex: Int) =
+    val rowIdIndex = (columnIndex: Int) =>
       tryResultSet(r.getRowId(columnIndex))
-    def rowIdLabel(columnLabel: String) =
+    val rowIdLabel = (columnLabel: String) =>
       tryResultSet(r.getRowId(columnLabel))
 
-    def shortIndex(columnIndex: Int) =
+    val shortIndex = (columnIndex: Int) =>
       tryResultSet(r.getShort(columnIndex))
-    def shortLabel(columnLabel: String) =
+    val shortLabel = (columnLabel: String) =>
       tryResultSet(r.getShort(columnLabel))
 
-    def sqlxmlIndex(columnIndex: Int) =
+    val sqlxmlIndex = (columnIndex: Int) =>
       tryResultSet(r.getSQLXML(columnIndex))
-    def sqlxmlLabel(columnLabel: String) =
+    val sqlxmlLabel = (columnLabel: String) =>
       tryResultSet(r.getSQLXML(columnLabel))
 
-    def stringIndex(columnIndex: Int) =
+    val stringIndex = (columnIndex: Int) =>
       tryResultSet(r.getString(columnIndex))
-    def stringLabel(columnLabel: String) =
+    val stringLabel = (columnLabel: String) =>
       tryResultSet(r.getString(columnLabel))
 
-    def timeIndex(columnIndex: Int) =
+    val timeIndex = (columnIndex: Int) =>
       tryResultSet(r.getTime(columnIndex))
-    def timeLabel(columnLabel: String) =
+    val timeLabel = (columnLabel: String) =>
       tryResultSet(r.getTime(columnLabel))
-    def timeIndexCal(columnIndex: Int, cal: Cal) =
+    def timeIndexCal(cal: Cal) = (columnIndex: Int) =>
       tryResultSet(r.getTime(columnIndex, cal))
-    def timeLabelCal(columnLabel: String, cal: Cal) =
+    def timeLabelCal(cal: Cal) = (columnLabel: String) =>
       tryResultSet(r.getTime(columnLabel, cal))
 
-    def timestampIndex(columnIndex: Int) =
+    val timestampIndex = (columnIndex: Int) =>
       tryResultSet(r.getTimestamp(columnIndex))
-    def timestampLabel(columnLabel: String) =
+    val timestampLabel = (columnLabel: String) =>
       tryResultSet(r.getTimestamp(columnLabel))
-    def timestampIndexCal(columnIndex: Int, cal: Cal) =
+    def timestampIndexCal(cal: Cal) = (columnIndex: Int) =>
       tryResultSet(r.getTimestamp(columnIndex))
-    def timestampLabelCal(columnLabel: String, cal: Cal) =
+    def timestampLabelCal(cal: Cal) = (columnLabel: String) =>
       tryResultSet(r.getTimestamp(columnLabel))
 
-    def urlIndex(columnIndex: Int) =
+    val urlIndex = (columnIndex: Int) =>
       tryResultSet(r.getURL(columnIndex))
-    def urlLabel(columnLabel: String) =
+    val urlLabel = (columnLabel: String) =>
       tryResultSet(r.getURL(columnLabel))
 
-    def keyLabel(label: String) =
-      longLabel(label) map (key(_))
-    def keyIndex(index: Int) =
-      longIndex(index) map (key(_))
+    val keyIndex = (columnIndex: Int) =>
+      longIndex(columnIndex) map (key(_))
+    val keyLabel = (columnLabel: String) =>
+    longLabel(columnLabel) map (key(_))
 
-    def possibleKeyLabel(label: String) =
-      longLabel(label).possiblyNull map (_.toKey)
-
-    def possibleKeyIndex(index: Int) =
-      longIndex(index).possiblyNull map (_.toKey)
+    val possibleKeyIndex = (columnIndex: Int) =>
+      longIndex(columnIndex).possiblyNull map (_.toKey)
+    val possibleKeyLabel = (columnLabel: String) =>
+    longLabel(columnLabel).possiblyNull map (_.toKey)
   }
 }
