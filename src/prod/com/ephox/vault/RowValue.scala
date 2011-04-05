@@ -53,13 +53,13 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlException, A]]]] 
     fold(rowError(_), f, rowNull)
 
   def unifyNullWithMessage(message: String): SqlValue[A] =
-    fold(sqlError(_), sqlValue(_), sqlError(new SqlException(message)))
+    fold[SqlValue[A]](sqlError(_), sqlValue(_), sqlError(new SqlException(message))) setLog log
 
   def unifyNull: SqlValue[A] =
     unifyNullWithMessage("unify null")
 
   def possiblyNull: SqlValue[PossiblyNull[A]] =
-    optionPossiblyNull(getSqlValue).sequence[SqlValue, A]
+    optionPossiblyNull(getSqlValue).sequence[SqlValue, A] setLog log
 
   def possiblyNullOr(d: => A): SqlValue[A] =
     possiblyNull map (_ | d)
