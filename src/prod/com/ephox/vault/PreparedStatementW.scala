@@ -45,7 +45,6 @@ sealed trait PreparedStatementW {
               , s.setTime(n, _)
               , s.setTimestamp(n, _)
               , a => length => s.setAsciiStream(n, a, length)
-              , a => length => s.setUnicodeStream(n, a, length)
               , a => length => s.setBinaryStream(n, a, length)
               , a => t => s.setObject(n, a, t.toType)
               , s.setObject(n, _)
