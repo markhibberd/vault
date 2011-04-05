@@ -161,101 +161,100 @@ trait RowAccesss {
   import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time}
   import Key._
 
-  def arrayIndex(columnIndex: Int): RowAccess[java.sql.Array] = rowAccess(_.arrayIndex(columnIndex))
-  def arrayLabel(columnLabel: String): RowAccess[java.sql.Array] = rowAccess(_.arrayLabel(columnLabel))
+  val arrayIndex: Int => RowAccess[java.sql.Array] = (columnIndex: Int) => rowAccess(_.arrayIndex(columnIndex))
+  val arrayLabel: String => RowAccess[java.sql.Array] = (columnLabel: String) => rowAccess(_.arrayLabel(columnLabel))
 
-  def asciiStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowAccess[A] = rowAccess(_.asciiStreamIndex(columnIndex, withInputStream))
-  def asciiStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowAccess[A] = rowAccess(_.asciiStreamLabel(columnLabel, withInputStream))
+  def asciiStreamIndex[A](withInputStream: InputStream => A): Int => RowAccess[A] = (columnIndex: Int) => rowAccess(_.asciiStreamIndex(columnIndex, withInputStream))
+  def asciiStreamLabel[A](withInputStream: InputStream => A): String => RowAccess[A] = (columnLabel: String) => rowAccess(_.asciiStreamLabel(columnLabel, withInputStream))
 
-  def bigDecimalIndex(columnIndex: Int): RowAccess[java.math.BigDecimal] = rowAccess(_.bigDecimalIndex(columnIndex))
-  def bigDecimalLabel(columnLabel: String): RowAccess[java.math.BigDecimal] = rowAccess(_.bigDecimalLabel(columnLabel))
+  val bigDecimalIndex: Int => RowAccess[java.math.BigDecimal] = (columnIndex: Int) => rowAccess(_.bigDecimalIndex(columnIndex))
+  val bigDecimalLabel: String => RowAccess[java.math.BigDecimal] = (columnLabel: String) => rowAccess(_.bigDecimalLabel(columnLabel))
 
-  def binaryStreamIndex[A](columnIndex: Int, withInputStream: InputStream => A): RowAccess[A] = rowAccess(_.binaryStreamIndex(columnIndex, withInputStream))
-  def binaryStreamLabel[A](columnLabel: String, withInputStream: InputStream => A): RowAccess[A] = rowAccess(_.binaryStreamLabel(columnLabel, withInputStream))
+  def binaryStreamIndex[A](withInputStream: InputStream => A): Int => RowAccess[A] = (columnIndex: Int) => rowAccess(_.binaryStreamIndex(columnIndex, withInputStream))
+  def binaryStreamLabel[A](withInputStream: InputStream => A): String => RowAccess[A] = (columnLabel: String) => rowAccess(_.binaryStreamLabel(columnLabel, withInputStream))
 
-  def blobIndex(columnIndex: Int): RowAccess[Blob] = rowAccess(_.blobIndex(columnIndex))
-  def blobLabel(columnLabel: String): RowAccess[Blob] = rowAccess(_.blobLabel(columnLabel))
+  val blobIndex: Int => RowAccess[Blob] = (columnIndex: Int) => rowAccess(_.blobIndex(columnIndex))
+  val blobLabel: String => RowAccess[Blob] = (columnLabel: String) => rowAccess(_.blobLabel(columnLabel))
 
-  def booleanIndex(columnIndex: Int): RowAccess[Boolean] = rowAccess(_.booleanIndex(columnIndex))
-  def booleanLabel(columnLabel: String): RowAccess[Boolean] = rowAccess(_.booleanLabel(columnLabel))
+  val booleanIndex: Int => RowAccess[Boolean] = (columnIndex: Int) => rowAccess(_.booleanIndex(columnIndex))
+  val booleanLabel: String => RowAccess[Boolean] = (columnLabel: String) => rowAccess(_.booleanLabel(columnLabel))
 
-  def byteIndex(columnIndex: Int): RowAccess[Byte] = rowAccess(_.byteIndex(columnIndex))
-  def byteLabel(columnLabel: String): RowAccess[Byte] = rowAccess(_.byteLabel(columnLabel))
+  val byteIndex: Int => RowAccess[Byte] = (columnIndex: Int) => rowAccess(_.byteIndex(columnIndex))
+  val byteLabel: String => RowAccess[Byte] = (columnLabel: String) => rowAccess(_.byteLabel(columnLabel))
 
-  def bytesIndex(columnIndex: Int): RowAccess[Array[Byte]] = rowAccess(_.bytesIndex(columnIndex))
-  def bytesLabel(columnLabel: String): RowAccess[Array[Byte]] = rowAccess(_.bytesLabel(columnLabel))
+  val bytesIndex: Int => RowAccess[Array[Byte]] = (columnIndex: Int) => rowAccess(_.bytesIndex(columnIndex))
+  val bytesLabel: String => RowAccess[Array[Byte]] = (columnLabel: String) => rowAccess(_.bytesLabel(columnLabel))
 
-  def characterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowAccess[A] = rowAccess(_.characterStreamIndex(columnIndex, withReader))
-  def characterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowAccess[A] = rowAccess(_.characterStreamLabel(columnLabel, withReader))
+  def characterStreamIndex[A](withReader: Reader => A): Int => RowAccess[A] = (columnIndex: Int) => rowAccess(_.characterStreamIndex(columnIndex, withReader))
+  def characterStreamLabel[A](withReader: Reader => A): String => RowAccess[A] = (columnLabel: String) => rowAccess(_.characterStreamLabel(columnLabel, withReader))
 
-  def clobIndex(columnIndex: Int): RowAccess[Clob] = rowAccess(_.clobIndex(columnIndex))
-  def clobLabel(columnLabel: String): RowAccess[Clob] = rowAccess(_.clobLabel(columnLabel))
+  val clobIndex: Int => RowAccess[Clob] = (columnIndex: Int) => rowAccess(_.clobIndex(columnIndex))
+  val clobLabel: String => RowAccess[Clob] = (columnLabel: String) => rowAccess(_.clobLabel(columnLabel))
 
-  def dateIndex(columnIndex: Int): RowAccess[Date] = rowAccess(_.dateIndex(columnIndex))
-  def dateLabel(columnLabel: String): RowAccess[Date] = rowAccess(_.dateLabel(columnLabel))
-  def dateIndexCal(columnIndex: Int, cal: Row.Cal): RowAccess[Date] = rowAccess(_.dateIndexCal(columnIndex, cal))
-  def dateLabelCal(columnLabel: String, cal: Row.Cal): RowAccess[Date] = rowAccess(_.dateLabelCal(columnLabel, cal))
+  val dateIndex: Int => RowAccess[Date] = (columnIndex: Int) => rowAccess(_.dateIndex(columnIndex))
+  val dateLabel: String => RowAccess[Date] = (columnLabel: String) => rowAccess(_.dateLabel(columnLabel))
+  def dateIndexCal(cal: Row.Cal): Int => RowAccess[Date] = (columnIndex: Int) => rowAccess(_.dateIndexCal(columnIndex, cal))
+  def dateLabelCal(cal: Row.Cal): String => RowAccess[Date] = (columnLabel: String) => rowAccess(_.dateLabelCal(columnLabel, cal))
 
-  def doubleIndex(columnIndex: Int): RowAccess[Double] = rowAccess(_.doubleIndex(columnIndex))
-  def doubleLabel(columnLabel: String): RowAccess[Double] = rowAccess(_.doubleLabel(columnLabel))
+  val doubleIndex: Int => RowAccess[Double] = (columnIndex: Int) => rowAccess(_.doubleIndex(columnIndex))
+  val doubleLabel: String => RowAccess[Double] = (columnLabel: String) => rowAccess(_.doubleLabel(columnLabel))
 
-  def floatIndex(columnIndex: Int): RowAccess[Float] = rowAccess(_.floatIndex(columnIndex))
-  def floatLabel(columnLabel: String): RowAccess[Float] = rowAccess(_.floatLabel(columnLabel))
+  val floatIndex: Int => RowAccess[Float] = (columnIndex: Int) => rowAccess(_.floatIndex(columnIndex))
+  val floatLabel: String => RowAccess[Float] = (columnLabel: String) => rowAccess(_.floatLabel(columnLabel))
 
-  def intIndex(columnIndex: Int): RowAccess[Int] = rowAccess(_.intIndex(columnIndex))
-  def intLabel(columnLabel: String): RowAccess[Int] = rowAccess(_.intLabel(columnLabel))
+  val intIndex: Int => RowAccess[Int] = (columnIndex: Int) => rowAccess(_.intIndex(columnIndex))
+  val intLabel: String => RowAccess[Int] = (columnLabel: String) => rowAccess(_.intLabel(columnLabel))
 
-  def longIndex(columnIndex: Int): RowAccess[Long] = rowAccess(_.longIndex(columnIndex))
-  def longLabel(columnLabel: String): RowAccess[Long] = rowAccess(_.longLabel(columnLabel))
+  val longIndex: Int => RowAccess[Long] = (columnIndex: Int) => rowAccess(_.longIndex(columnIndex))
+  val longLabel: String => RowAccess[Long] = (columnLabel: String) => rowAccess(_.longLabel(columnLabel))
 
-  def ncharacterStreamIndex[A](columnIndex: Int, withReader: Reader => A): RowAccess[A] = rowAccess(_.ncharacterStreamIndex(columnIndex, withReader))
-  def ncharacterStreamLabel[A](columnLabel: String, withReader: Reader => A): RowAccess[A] = rowAccess(_.ncharacterStreamLabel(columnLabel, withReader))
+  def ncharacterStreamIndex[A](withReader: Reader => A): Int => RowAccess[A] = (columnIndex: Int) => rowAccess(_.ncharacterStreamIndex(columnIndex, withReader))
+  def ncharacterStreamLabel[A](withReader: Reader => A): String => RowAccess[A] = (columnLabel: String) => rowAccess(_.ncharacterStreamLabel(columnLabel, withReader))
 
-  def nclobIndex(columnIndex: Int): RowAccess[Clob] = rowAccess(_.nclobIndex(columnIndex))
-  def nclobLabel(columnLabel: String): RowAccess[Clob] = rowAccess(_.nclobLabel(columnLabel))
+  val nclobIndex: Int => RowAccess[Clob] = (columnIndex: Int) => rowAccess(_.nclobIndex(columnIndex))
+  val nclobLabel: String => RowAccess[Clob] = (columnLabel: String) => rowAccess(_.nclobLabel(columnLabel))
 
-  def nstringIndex(columnIndex: Int): RowAccess[String] = rowAccess(_.nstringIndex(columnIndex))
-  def nstringLabel(columnLabel: String): RowAccess[String] = rowAccess(_.nstringLabel(columnLabel))
+  val nstringIndex: Int => RowAccess[String] = (columnIndex: Int) => rowAccess(_.nstringIndex(columnIndex))
+  val nstringLabel: String => RowAccess[String] = (columnLabel: String) => rowAccess(_.nstringLabel(columnLabel))
 
-  def objectIndex(columnIndex: Int): RowAccess[AnyRef] = rowAccess(_.objectIndex(columnIndex))
-  def objectLabel(columnLabel: String): RowAccess[AnyRef] = rowAccess(_.objectLabel(columnLabel))
-  def objectMapIndex(columnIndex: Int, m: Row.ObjectTypeMap): RowAccess[AnyRef] = rowAccess(_.objectMapIndex(columnIndex, m))
-  def objectMapLabel(columnLabel: String, m: Row.ObjectTypeMap): RowAccess[AnyRef] = rowAccess(_.objectMapLabel(columnLabel, m))
+  val objectIndex: Int => RowAccess[AnyRef] = (columnIndex: Int) => rowAccess(_.objectIndex(columnIndex))
+  val objectLabel: String => RowAccess[AnyRef] = (columnLabel: String) => rowAccess(_.objectLabel(columnLabel))
+  def objectMapIndex(m: Row.ObjectTypeMap): Int => RowAccess[AnyRef] = (columnIndex: Int) => rowAccess(_.objectMapIndex(columnIndex, m))
+  def objectMapLabel(m: Row.ObjectTypeMap): String => RowAccess[AnyRef] = (columnLabel: String) => rowAccess(_.objectMapLabel(columnLabel, m))
 
-  def refIndex(columnIndex: Int): RowAccess[Ref] = rowAccess(_.refIndex(columnIndex))
-  def refLabel(columnLabel: String): RowAccess[Ref] = rowAccess(_.refLabel(columnLabel))
+  val refIndex: Int => RowAccess[Ref] = (columnIndex: Int) => rowAccess(_.refIndex(columnIndex))
+  val refLabel: String => RowAccess[Ref] = (columnLabel: String) => rowAccess(_.refLabel(columnLabel))
 
-  def rowIdIndex(columnIndex: Int): RowAccess[RowId] = rowAccess(_.rowIdIndex(columnIndex))
-  def rowIdLabel(columnLabel: String): RowAccess[RowId] = rowAccess(_.rowIdLabel(columnLabel))
+  val rowIdIndex: Int => RowAccess[RowId] = (columnIndex: Int) => rowAccess(_.rowIdIndex(columnIndex))
+  val rowIdLabel: String => RowAccess[RowId] = (columnLabel: String) => rowAccess(_.rowIdLabel(columnLabel))
 
-  def shortIndex(columnIndex: Int): RowAccess[Short] = rowAccess(_.shortIndex(columnIndex))
-  def shortLabel(columnLabel: String): RowAccess[Short] = rowAccess(_.shortLabel(columnLabel))
+  val shortIndex: Int => RowAccess[Short] = (columnIndex: Int) => rowAccess(_.shortIndex(columnIndex))
+  val shortLabel: String => RowAccess[Short] = (columnLabel: String) => rowAccess(_.shortLabel(columnLabel))
 
-  def sqlxmlIndex(columnIndex: Int): RowAccess[SQLXML] = rowAccess(_.sqlxmlIndex(columnIndex))
-  def sqlxmlLabel(columnLabel: String): RowAccess[SQLXML] = rowAccess(_.sqlxmlLabel(columnLabel))
+  val sqlxmlIndex: Int => RowAccess[SQLXML] = (columnIndex: Int) => rowAccess(_.sqlxmlIndex(columnIndex))
+  val sqlxmlLabel: String => RowAccess[SQLXML] = (columnLabel: String) => rowAccess(_.sqlxmlLabel(columnLabel))
 
-  def stringIndex(columnIndex: Int): RowAccess[String] = rowAccess(_.stringIndex(columnIndex))
-  def stringLabel(columnLabel: String): RowAccess[String] = rowAccess(_.stringLabel(columnLabel))
+  val stringIndex: Int => RowAccess[String] = (columnIndex: Int) => rowAccess(_.stringIndex(columnIndex))
+  val stringLabel: String => RowAccess[String] = (columnLabel: String) => rowAccess(_.stringLabel(columnLabel))
 
-  def timeIndex(columnIndex: Int): RowAccess[Time] = rowAccess(_.timeIndex(columnIndex))
-  def timeLabel(columnLabel: String): RowAccess[Time] = rowAccess(_.timeLabel(columnLabel))
-  def timeIndexCal(columnIndex: Int, cal: Row.Cal): RowAccess[Time] = rowAccess(_.timeIndexCal(columnIndex, cal))
-  def timeLabelCal(columnLabel: String, cal: Row.Cal): RowAccess[Time] = rowAccess(_.timeLabelCal(columnLabel, cal))
+  val timeIndex: Int => RowAccess[Time] = (columnIndex: Int) => rowAccess(_.timeIndex(columnIndex))
+  val timeLabel: String => RowAccess[Time] = (columnLabel: String) => rowAccess(_.timeLabel(columnLabel))
+  def timeIndexCal(cal: Row.Cal): Int => RowAccess[Time] = (columnIndex: Int) => rowAccess(_.timeIndexCal(columnIndex, cal))
+  def timeLabelCal(cal: Row.Cal): String => RowAccess[Time] = (columnLabel: String) => rowAccess(_.timeLabelCal(columnLabel, cal))
 
-  def timestampIndex(columnIndex: Int): RowAccess[Timestamp] = rowAccess(_.timestampIndex(columnIndex))
-  def timestampLabel(columnLabel: String): RowAccess[Timestamp] = rowAccess(_.timestampLabel(columnLabel))
-  def timestampIndexCal(columnIndex: Int, cal: Row.Cal): RowAccess[Timestamp] = rowAccess(_.timestampIndexCal(columnIndex, cal))
-  def timestampLabelCal(columnLabel: String, cal: Row.Cal): RowAccess[Timestamp] = rowAccess(_.timestampLabelCal(columnLabel, cal))
+  val timestampIndex: Int => RowAccess[Timestamp] = (columnIndex: Int) => rowAccess(_.timestampIndex(columnIndex))
+  val timestampLabel: String => RowAccess[Timestamp] = (columnLabel: String) => rowAccess(_.timestampLabel(columnLabel))
+  def timestampIndexCal(cal: Row.Cal): Int => RowAccess[Timestamp] = (columnIndex: Int) => rowAccess(_.timestampIndexCal(columnIndex, cal))
+  def timestampLabelCal(cal: Row.Cal): String => RowAccess[Timestamp] = (columnLabel: String) => rowAccess(_.timestampLabelCal(columnLabel, cal))
 
-  def urlIndex(columnIndex: Int): RowAccess[URL] = rowAccess(_.urlIndex(columnIndex))
-  def urlLabel(columnLabel: String): RowAccess[URL] = rowAccess(_.urlLabel(columnLabel))
+  val urlIndex: Int => RowAccess[URL] = (columnIndex: Int) => rowAccess(_.urlIndex(columnIndex))
+  val urlLabel: String => RowAccess[URL] = (columnLabel: String) => rowAccess(_.urlLabel(columnLabel))
 
-  def keyLabel(label: String): RowAccess[Key] = longLabel(label) map (key(_))
-  def keyIndex(index: Int): RowAccess[Key] = longIndex(index) map (key(_))
+  val keyIndex: Int => RowAccess[Key] = (columnIndex: Int) => longIndex(columnIndex) map (key(_))
+  val keyLabel: String => RowAccess[Key] = (columnLabel: String) => longLabel(columnLabel) map (key(_))
 
-  def possibleKeyLabel(label: String): SqlAccess[Key] = longLabel(label).possiblyNull map (_.toKey)
-
-  def possibleKeyIndex(index: Int): SqlAccess[Key] = longIndex(index).possiblyNull map (_.toKey)
+  val possibleKeyIndex: Int => SqlAccess[Key] = (columnIndex: Int) => longIndex(columnIndex).possiblyNull map (_.toKey)
+  val possibleKeyLabel: String => SqlAccess[Key] = (columnLabel: String) => longLabel(columnLabel).possiblyNull map (_.toKey)
 
   implicit val RowAccessFunctor: Functor[RowAccess] = new Functor[RowAccess] {
     def fmap[A, B](k: RowAccess[A], f: A => B) =
