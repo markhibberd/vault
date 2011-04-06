@@ -81,7 +81,8 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlException, A]]]] 
   /**
    * Return the log associated with this value.
    */
-  def log: LOG = value.written
+  def log: LOG =
+    value.written
 
   /**
    * Sets the log to the given value.
@@ -96,7 +97,7 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlException, A]]]] 
    */
   def withLog(k: LOG => LOG): RowValue[A] = new RowValue[A] {
     val value =
-      RowValue.this.value.over set (k(log))
+      RowValue.this.value.over set (k(RowValue.this.log))
   }
 
   /**
