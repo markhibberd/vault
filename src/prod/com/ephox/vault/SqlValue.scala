@@ -69,7 +69,7 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
    */
   def withLog(k: LOG => LOG): SqlValue[A] = new SqlValue[A] {
     val value =
-      SqlValue.this.value.over set (k(log))
+      SqlValue.this.value.over set (k(SqlValue.this.log))
   }
 
   /**

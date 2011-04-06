@@ -162,7 +162,7 @@ trait RowAccesss {
   import Key._
 
   private def log[T, U](c: Class[_], z: String, k: Row => U => RowValue[T]): U => RowAccess[T] =
-    (column: U) => rowAccess(r => k(r)(column)) :+-> ("column type [" + c + "] at " + z + " [" + column + "]")
+    (column: U) => rowAccess(r => k(r)(column)) :+-> ("column type [" + c.getName + "] at " + z + " [" + column + "]")
 
   private def logIndex[T](c: Class[_], k: Row => Int => RowValue[T]): Int => RowAccess[T] =
     log(c, "index", k)
