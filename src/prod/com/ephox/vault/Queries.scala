@@ -7,7 +7,7 @@ object Queries {
   import VaultIteratee._
   import JDBCType._
 
-  def list[L, A](access: RowAccess[A], sql: String) =
+  def list[poA](access: RowAccess[A], sql: String) =
     (access -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql.toSql) map (_.flatten)
 
   def first[A](access: RowAccess[A], sql: Sql) =
