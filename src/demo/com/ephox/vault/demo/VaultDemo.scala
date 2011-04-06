@@ -68,7 +68,7 @@ object VaultDemo {
       setupData commitRollback connection printStackTraceOr (n => println(n + " rows affected"))
 
       // get result and close connection
-      val combinedPerson = PersonSql.toRowAccess -||> combine <|- "SELECT * FROM PERSON".toSql finalyClose connection
+      val combinedPerson = PersonSql -||> combine <|- "SELECT * FROM PERSON".toSql finalyClose connection
 
       // print the result
       combinedPerson.println

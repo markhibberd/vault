@@ -8,6 +8,18 @@ sealed trait SqlAccess[A] {
   import SqlValue._
   import RowAccess._
 
+  /**
+   * lifted to row-access.
+   */
+  def -|>[T](iter: IterV[A, T]): RowQueryConnect[IterV[A, T]] =
+    toRowAccess -|> iter
+
+  /**
+   * lifted to row-access.
+   */
+  def -||>[T](iter: IterV[A, T]): RowQueryConnect[T] =
+    toRowAccess -||> iter
+
   def map[B](f: A => B): SqlAccess[B] = new SqlAccess[B] {
     val access = (r: Row) => SqlAccess.this.access(r) map f
   }
