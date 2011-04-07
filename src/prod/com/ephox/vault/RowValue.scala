@@ -29,6 +29,9 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlExceptionContext,
   def getErrorOr(e: => SqlExceptionContext): SqlExceptionContext =
     getError getOrElse e
 
+  def mapError(k: SqlExceptionContext => SqlExceptionContext): RowValue[A] =
+    fold(e => rowError(k(e)) setLog log, _ => this, this)
+
   def getValue: Option[A] =
     fold(_ => None, Some(_), None)
 
