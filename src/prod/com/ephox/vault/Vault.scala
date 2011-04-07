@@ -6,6 +6,7 @@ object Vault
   extends StringQuerys
   with PossiblyNulls
   with PreparedStatementWs
+  with PreparedStatementContexts
   with RowValues
   with RowAccesss
   with RowConnects
@@ -21,4 +22,5 @@ object Vault
   with Keyeds
   with KeyedWs
   with Mergers
+  with SqlExceptionContexts
   with VaultIteratees

@@ -5,6 +5,7 @@ import java.io.{Reader, InputStream}
 import java.util.Calendar
 import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSet, NClob}
 import java.net.URL
+import SqlExceptionContext._
 
 sealed trait Row {
   def iterate[A, T](a: RowAccess[A]): IterV[A, T] => RowValue[IterV[A, T]]
@@ -114,13 +115,12 @@ object Row {
 
   private[vault] def resultSetRow(r: ResultSet): Row = new Row {
     private def tryResultSet[A](a: => A): RowValue[A] =
-      // todo capture context
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)
         val z = a
         if(r.wasNull) rowNull else z.η[RowValue]
       } catch {
-        case e: SqlValue.SqlException => rowError(e)
+        case e: SqlException => rowError(sqlExceptionContext(e))
         case x => throw x
       }
 
