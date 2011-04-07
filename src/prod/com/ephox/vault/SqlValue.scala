@@ -36,7 +36,7 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
     fold(failure(_), success(_))
 
   def toRowValue: RowValue[A] =
-    fold[RowValue[A]](rowError, rowValue(_)) setLog log
+    fold[RowValue[A]](rowError, rowValue(_)) :++-> log
 
   def printStackTraceOr(f: A => Unit): Unit =
     fold(_.printStackTrace, f)
