@@ -37,6 +37,7 @@ sealed trait SqlConnect[A] {
    * If the failure is an `SqlException` then this is returned in the `SqlValue`, otherwise, the exception is rethrown.
    */
   def commitRollback: SqlConnect[A] =
+    // todo capture context
     sqlConnect(c => try {
       val r = connect(c)
       c.commit

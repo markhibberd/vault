@@ -114,6 +114,7 @@ object Row {
 
   private[vault] def resultSetRow(r: ResultSet): Row = new Row {
     private def tryResultSet[A](a: => A): RowValue[A] =
+      // todo capture context
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)
         val z = a
