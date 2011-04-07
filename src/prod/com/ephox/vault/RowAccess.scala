@@ -2,7 +2,8 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._
 import SqlValue._
-import com.ephox.vault.RowValue._
+import SqlExceptionContext._
+import RowValue._
 
 sealed trait RowAccess[A] {
   import RowAccess._
@@ -21,6 +22,7 @@ sealed trait RowAccess[A] {
     // todo capture context
     rowQueryConnect(query => rowConnect(c => try {
       val st = c prepareStatement query.sql
+      // todo not ignore result
       st.set(query.bindings:_*)
       try {
         val r = st.executeQuery
@@ -33,7 +35,7 @@ sealed trait RowAccess[A] {
         st.close
       }
     } catch {
-      case e: SqlException => rowError(e)
+      case e: SqlException => rowError(sqlExceptionContext(e))
       case x               => throw x
     }))
 

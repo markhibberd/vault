@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._
 import SqlValue._
+import SqlExceptionContext._
 import java.sql._
 
 sealed trait SqlConnect[A] {
@@ -37,7 +38,6 @@ sealed trait SqlConnect[A] {
    * If the failure is an `SqlException` then this is returned in the `SqlValue`, otherwise, the exception is rethrown.
    */
   def commitRollback: SqlConnect[A] =
-    // todo capture context
     sqlConnect(c => try {
       val r = connect(c)
       c.commit
@@ -45,7 +45,7 @@ sealed trait SqlConnect[A] {
     } catch {
       case e: SqlException => {
         c.rollback
-        sqlError(e)
+        sqlError(sqlExceptionContext(e))
       }
       case e => {
         c.rollback

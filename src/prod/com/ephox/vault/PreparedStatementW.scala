@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import java.sql.PreparedStatement
 import scalaz._, Scalaz._
+import SqlValue._
 
 sealed trait PreparedStatementW {
   val s: PreparedStatement
@@ -23,10 +24,50 @@ sealed trait PreparedStatementW {
   def foreachStatement[T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[Int] =
     executeStatements(as, (a: A) => k(a).η[SqlConnect])
 
-  def set(values: JDBCType*): Unit =
+  def set(values: JDBCType*): SqlValue[Unit] =
     setValues(values.toList)
 
-  def setValues[F[_]](values: F[JDBCType])(implicit fold: Foldable[F]): Unit =
+  def setValues[F[_]](values: F[JDBCType])(implicit fold: Foldable[F]): SqlValue[Unit] =
+    values.foldLeftM[SqlValue, Int](1) {
+      case (n, v) => {
+        trySqlValue({
+          v.fold(
+                  t => s.setNull(n, t.toType)
+                , s.setBoolean(n, _)
+                , s.setByte(n, _)
+                , s.setShort(n, _)
+                , s.setInt(n, _)
+                , s.setLong(n, _)
+                , s.setFloat(n, _)
+                , s.setDouble(n, _)
+                , s.setBigDecimal(n, _)
+                , s.setString(n, _)
+                , s.setBytes(n, _)
+                , s.setDate(n, _)
+                , s.setTime(n, _)
+                , s.setTimestamp(n, _)
+                , a => length => s.setAsciiStream(n, a, length)
+                , a => length => s.setBinaryStream(n, a, length)
+                , a => t => s.setObject(n, a, t.toType)
+                , s.setObject(n, _)
+                , a => length => s.setCharacterStream(n, a, length)
+                , s.setRef(n, _)
+                , s.setBlob(n, _)
+                , s.setClob(n, _)
+                , s.setArray(n, _)
+                , a => cal => s.setDate(n, a, cal)
+                , a => cal => s.setTime(n, a, cal)
+                , a => cal => s.setTimestamp(n, a, cal)
+                , t => m => s.setNull(n, t.toType, m)
+                , s.setURL(n, _)
+                )
+          n + 1
+        })
+      }
+    } map (_ => ())
+
+  //   def foldLeftM[N[_], B](b: B)(f: (B, A) => N[B])(implicit fr: Foldable[M], m: Monad[N]): N[B] =
+  /*
     values.foldl(1) {
       case (n, v) => {
         v.fold(
@@ -62,7 +103,7 @@ sealed trait PreparedStatementW {
         n + 1
       }
     }
-
+    */
 }
 
 object PreparedStatementW extends PreparedStatementWs
