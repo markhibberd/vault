@@ -1,15 +1,23 @@
 package com.ephox.vault
 
 import scalaz._, Scalaz._
+import SqlValue._
+import com.ephox.vault.RowValue._
 
 sealed trait RowAccess[A] {
-  val access: Row => RowValue[A]
-  import SqlValue._
+  private def value = this match {
+    case RowAccess_(v) => v
+  }
+
+  import RowAccess._
   import SqlAccess._
   import RowValue._
   import RowConnect._
   import RowQueryConnect._
   import PreparedStatementW._
+
+  def access: Row => RowValue[A] =
+    r => value.over(r) :++-> value.written
 
   def -|>[T](iter: IterV[A, T]): RowQueryConnect[IterV[A, T]] =
     rowQueryConnect(query => rowConnect(c => try {
@@ -30,20 +38,15 @@ sealed trait RowAccess[A] {
       case x               => throw x
     }))
 
+
   def -||>[T](iter: IterV[A, T]): RowQueryConnect[T] =
     -|>(iter) map (_.run)
 
-  def map[B](f: A => B): RowAccess[B] = new RowAccess[B] {
-    val access = (r: Row) => RowAccess.this.access(r) map f
-  }
+  def map[B](f: A => B): RowAccess[B] = rowAccess((r: Row) => RowAccess.this.access(r) map f)
 
-  def flatMap[B](f: A => RowAccess[B]): RowAccess[B] = new RowAccess[B] {
-    val access = (r: Row) => RowAccess.this.access(r) flatMap (a => f(a).access(r))
-  }
+  def flatMap[B](f: A => RowAccess[B]): RowAccess[B] = rowAccess((r: Row) => RowAccess.this.access(r) flatMap (a => f(a).access(r)))
 
-  def mapRowValue[B](f: RowValue[A] => RowValue[B]): RowAccess[B] = new RowAccess[B] {
-    val access = (r: Row) => f(RowAccess.this.access(r))
-  }
+  def mapRowValue[B](f: RowValue[A] => RowValue[B]): RowAccess[B] = rowAccess((r: Row) => f(RowAccess.this.access(r)))
 
   def unifyNullWithMessage(message: String): SqlAccess[A] =
     sqlAccess((r: Row) => RowAccess.this.access(r) unifyNullWithMessage message)
@@ -70,91 +73,13 @@ sealed trait RowAccess[A] {
    */
   def liftPossiblyNull: RowAccess[PossiblyNull[A]] =
     possiblyNull.toRowAccess
-
-  /**
-   * Return the log associated with this value.
-   */
-  def log: Row => LOG = access(_).log
-
-  /**
-   * Sets the log to the given value.
-   */
-  def setLog(k: LOG): RowAccess[A] =
-    mapRowValue(_ setLog k)
-
-  /**
-   * Transform the log by the given function.
-   */
-  def withLog(k: LOG => LOG): RowAccess[A] =
-    mapRowValue(_ withLog k)
-
-  /**
-   * Transform each log value by the given function.
-   */
-  def withEachLog(k: LOGV => LOGV): RowAccess[A] =
-    mapRowValue(_ withEachLog k)
-
-  /**
-   * Append the given value to the current log.
-   */
-  def :+->(e: LOGV): RowAccess[A] =
-    mapRowValue(_ :+-> e)
-
-  /**
-   * Append the given value to the current log by applying to the underlying value.
-   */
-  def :->>(e: Option[Either[SqlException, A]] => LOGV): RowAccess[A] =
-    mapRowValue(_ :->> e)
-
-  /**
-   * Prepend the given value to the current log.
-   */
-  def <-+:(e: LOGV): RowAccess[A] =
-    mapRowValue(e <-+: _)
-
-  /**
-   * Prepend the given value to the current log by applying to the underlying value.
-   */
-  def <<-:(e: Option[Either[SqlException, A]] => LOGV): RowAccess[A] =
-    mapRowValue(e <<-: _)
-
-  /**
-   * Append the given value to the current log.
-   */
-  def :++->(e: LOG): RowAccess[A] =
-    mapRowValue(_ :++-> e)
-
-  /**
-   * Append the given value to the current log by applying to the underlying value.
-   */
-  def :+->>(e: Option[Either[SqlException, A]] => LOG): RowAccess[A] =
-    mapRowValue(_ :+->> e)
-
-  /**
-   * Prepend the given value to the current log.
-   */
-  def <-++:(e: LOG): RowAccess[A] =
-    mapRowValue(e <-++: _)
-
-  /**
-   * Prepend the given value to the current log by applying to the underlying value.
-   */
-  def <<-+:(e: Option[Either[SqlException, A]] => LOG): RowAccess[A] =
-    mapRowValue(e <<-+: _)
-
-  /**
-   * Set the log to be empty.
-   */
-  def resetLog: RowAccess[A] =
-    mapRowValue(_.resetLog)
 }
+private final case class RowAccess_[A](v: WLOG[Row => RowValue[A]]) extends RowAccess[A]
 
 object RowAccess extends RowAccesss
 
 trait RowAccesss {
-  def rowAccess[A](f: Row => RowValue[A]): RowAccess[A] = new RowAccess[A] {
-    val access = f
-  }
+  def rowAccess[A](f: Row => RowValue[A]): RowAccess[A] = RowAccess_(f set ∅[LOG])
 
   import java.io.{Reader, InputStream}
   import java.net.URL
@@ -162,7 +87,7 @@ trait RowAccesss {
   import Key._
 
   private def log[T, U](c: Class[_], z: String, k: Row => U => RowValue[T]): U => RowAccess[T] =
-    (column: U) => rowAccess(r => k(r)(column)) :+-> ("column type [" + c.getName + "] at " + z + " [" + column + "]")
+    (column: U) => rowAccess(r => k(r)(column)) // :+-> ("column type [" + c.getName + "] at " + z + " [" + column + "]")
 
   private def logIndex[T](c: Class[_], k: Row => Int => RowValue[T]): Int => RowAccess[T] =
     log(c, "index", k)
