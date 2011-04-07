@@ -2,9 +2,23 @@ package com.ephox.vault
 
 import java.sql.PreparedStatement
 
+import PreparedStatementContext._
+
 sealed trait PreparedStatementContext {
   val preparedStatement: PreparedStatement
   val parameters: Option[(JDBCType, Int)]
+
+  def setParameters(t: JDBCType, n: Int) =
+    preparedStatementContextPS(preparedStatement, t, n)
+
+  def unsetParameters =
+    preparedStatementContext(preparedStatement)
+
+  def withParameters(k: (JDBCType, Int) => (JDBCType, Int)) =
+    parameters match {
+      case None         => this
+      case Some((p, q)) => k(p, q) match { case (x, y) => setParameters(x, y) }
+    }
 }
 
 object PreparedStatementContext extends PreparedStatementContexts
