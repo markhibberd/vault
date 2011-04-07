@@ -38,7 +38,7 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlException, A]]]] 
     fold(e => throw new VaultException(e), x => x, throw new VaultException("Unexpected database null."))
 
   def getSqlValue: Option[SqlValue[A]] =
-    fold(e => Some(sqlError(e)), a => Some(sqlValue(a)), None)
+    fold(e => Some(sqlError(e) setLog log), a => Some(sqlValue(a) setLog log), None)
 
   def getSqlValueOr(v: => SqlValue[A]): SqlValue[A] =
     getSqlValue getOrElse v

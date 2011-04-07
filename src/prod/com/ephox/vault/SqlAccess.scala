@@ -5,14 +5,12 @@ import SqlValue._
 import RowAccess._
 
 sealed trait SqlAccess[A] {
-  private def value = this match {
-    case SqlAccess_(v) => v
-  }
-
   import SqlAccess._
 
   def access: Row => SqlValue[A] =
-    r => value.over(r) :++-> value.written
+    this match {
+      case SqlAccess_(v) => v
+    }
 
   def toRowAccess: RowAccess[A] =
     rowAccess(r => access(r).toRowValue)
@@ -36,12 +34,12 @@ sealed trait SqlAccess[A] {
 
   def mapSqlValue[B](f: SqlValue[A] => SqlValue[B]): SqlAccess[B] = sqlAccess((r: Row) => f(SqlAccess.this.access(r)))
 }
-private final case class SqlAccess_[A](v: WLOG[Row => SqlValue[A]]) extends SqlAccess[A]
+private final case class SqlAccess_[A](v: Row => SqlValue[A]) extends SqlAccess[A]
 
 object SqlAccess extends SqlAccesss
 
 trait SqlAccesss {
-  def sqlAccess[A](f: Row => SqlValue[A]): SqlAccess[A] = SqlAccess_(f set ∅[LOG])
+  def sqlAccess[A](f: Row => SqlValue[A]): SqlAccess[A] = SqlAccess_(f)
 
   implicit val SqlAccessFunctor: Functor[SqlAccess] = new Functor[SqlAccess] {
     def fmap[A, B](k: SqlAccess[A], f: A => B) =
