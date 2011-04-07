@@ -18,6 +18,7 @@ sealed trait RowAccess[A] {
     }
 
   def -|>[T](iter: IterV[A, T]): RowQueryConnect[IterV[A, T]] =
+    // todo capture context
     rowQueryConnect(query => rowConnect(c => try {
       val st = c prepareStatement query.sql
       st.set(query.bindings:_*)

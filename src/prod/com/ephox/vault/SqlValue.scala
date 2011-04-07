@@ -151,6 +151,7 @@ trait SqlValues {
   }
 
   def trySqlValue[A](a: => A): SqlValue[A] =
+    // todo capture context
     try {
       sqlValue[A](a)
     } catch {
