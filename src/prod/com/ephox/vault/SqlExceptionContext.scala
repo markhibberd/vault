@@ -1,6 +1,8 @@
 package com.ephox.vault
 
 import SqlExceptionContext._
+import PreparedStatementContext._
+import java.sql.PreparedStatement
 
 sealed trait SqlExceptionContext {
   val sqlException: SqlException
@@ -41,6 +43,18 @@ sealed trait SqlExceptionContext {
     val sqlException = SqlExceptionContext.this.sqlException
     val prepareStatementContext = SqlExceptionContext.this.prepareStatementContext
     val query = SqlExceptionContext.this.query map k
+  }
+
+  def setQueryPreparedStatement(q: Sql, p: java.sql.PreparedStatement): SqlExceptionContext = new SqlExceptionContext {
+    val sqlException = SqlExceptionContext.this.sqlException
+    val prepareStatementContext = Some(preparedStatementContext(p))
+    val query = Some(q)
+  }
+
+  def setQueryPreparedStatementPS(q: Sql, p: java.sql.PreparedStatement, t: JDBCType, i: Int): SqlExceptionContext = new SqlExceptionContext {
+    val sqlException = SqlExceptionContext.this.sqlException
+    val prepareStatementContext = Some(preparedStatementContextPS(p, t, i))
+    val query = Some(q)
   }
 }
 
