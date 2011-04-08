@@ -19,26 +19,21 @@ sealed trait RowAccess[A] {
     }
 
   def -|>[T](iter: IterV[A, T]): RowQueryConnect[IterV[A, T]] =
-    // todo capture context
-    rowQueryConnect(query => rowConnect(c => try {
-      val st = c prepareStatement query.sql
-      // todo not ignore result
-      st.set(query.bindings:_*)
-      try {
-        val r = st.executeQuery
-        try {
-          Row.resultSetRow(r).iterate[A, T](this)(iter)
-        } finally {
-          r.close
-        }
-      } finally {
-        st.close
-      }
-    } catch {
-      case e: SqlException => rowError(sqlExceptionContext(e))
-      case x               => throw x
+    rowQueryConnect(query => rowConnect(c => {
+      tryRowValue(c prepareStatement query.sql). mapError(_ setQuery query) flatMap (st =>
+        st.set(query.bindings:_*).toRowValue.mapError(e => e.setQueryPreparedStatement(query, st)) >>=| (
+          try {
+            tryRowValue(st.executeQuery) flatMap (r =>
+              try {
+                Row.resultSetRow(r).iterate[A, T](this)(iter)
+              } finally {
+                r.close
+              })
+          } finally {
+            st.close
+          })
+      )
     }))
-
 
   def -||>[T](iter: IterV[A, T]): RowQueryConnect[T] =
     -|>(iter) map (_.run)
