@@ -4,6 +4,7 @@ import java.util.Calendar
 import java.io.{Reader, InputStream}
 import java.net.URL
 import java.sql.{Clob, Blob, Ref, Timestamp, Time, Date}
+import scalaz._, Scalaz._
 
 sealed trait JDBCType {
   def fold[X](
@@ -128,4 +129,6 @@ trait JDBCTypes {
   def userNullType: (SqlType, String) => JDBCType = UserNullJDBCType(_, _)
   def urlType: URL => JDBCType = URLJDBCType(_)
   def idType: Key => JDBCType = (value: Key) => value.fold(nullType(NumericType), longType(_))
+
+  implicit val JDBCTypeShow: Show[JDBCType] = showA
 }
