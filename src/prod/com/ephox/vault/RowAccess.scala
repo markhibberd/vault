@@ -20,7 +20,7 @@ sealed trait RowAccess[A] {
 
   def -|>[T](iter: IterV[A, T]): RowQueryConnect[IterV[A, T]] =
     rowQueryConnect(query => rowConnect(c => {
-      tryRowValue(c prepareStatement query.sql). mapError(_ setQuery query) flatMap (st =>
+      tryRowValue(c prepareStatement query.sql).mapError(_ setQuery query) flatMap (st =>
         st.set(query.bindings:_*).toRowValue.mapError(e => e.setQueryPreparedStatement(query, st)) >>=| (
           try {
             tryRowValue(st.executeQuery) flatMap (r =>
