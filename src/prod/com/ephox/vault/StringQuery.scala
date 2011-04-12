@@ -69,10 +69,10 @@ sealed trait StringQuery {
       id => executePreparedUpdate(_.set(longType(id)))
     )
 
-  def update[A](a: A, update: (A, PreparedStatement) => Unit)(implicit keyed: Keyed[A]): SqlConnect[Int] =
+  def update[A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SqlConnect[A] =
     keyed.get(a).fold(
       constantSqlConnect(sqlError(sqlExceptionContext(new SQLException("Can not update a key that is not set.")))),
-      id => executePreparedUpdate(update(a, _))
+      id => executePreparedUpdate(withStatement) map (_ => a)
     )
 
   def prepareStatement[A](k: PreparedStatement => SqlConnect[A]) : SqlConnect[A] =
