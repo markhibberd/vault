@@ -2,7 +2,7 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._
 import SqlValue._
-import java.sql.{PreparedStatement, Statement}
+import java.sql.{SQLException, PreparedStatement, Statement}
 
 sealed trait StringQuery {
   val query: String
@@ -11,6 +11,7 @@ sealed trait StringQuery {
   import PreparedStatementW._
   import Key._
   import Sql._
+  import JDBCType._
 
   def executeUpdate: SqlConnect[Int] =
     sqlConnect(c => withSqlResource(
@@ -48,19 +49,29 @@ sealed trait StringQuery {
     , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[SqlConnect]
     )
 
+  // FIX comback and clean-up error handling, trying to get the right sematics at the moment.
   def insert[A](a: A, withStatement: PreparedStatement => Unit)(implicit keyed: Keyed[A]): SqlConnect[A] =
-    if (!keyed.get(a).isSet)
+    keyed.get(a).fold(
       executeUpdateWithKeysSet(
         withStatement,
         r => i => (i, keyed.set(a, r.keyLabel("ID").getValueOr(nokey)))
-      ).map(_._2)
-    else
-      sqlConnect(_ => a.pure[SqlValue])
+      ).map(_._2),
+      id => constantSqlConnect(sqlError(new SQLException("Can not insert. Key is already set: " + id)))
+    )
 
   def delete[A](a: A)(implicit keyed: Keyed[A]): SqlConnect[Int] =
+    deleteKey(keyed.get(a))
+
+  def deleteKey(key: Key): SqlConnect[Int] =
+    key.fold(
+      constantSqlConnect(sqlError(new SQLException("Can not delete a key that is not set."))),
+      id => executePreparedUpdate(_.set(longType(id)))
+    )
+
+  def update[A](a: A, update: (A, PreparedStatement) => Unit)(implicit keyed: Keyed[A]): SqlConnect[Int] =
     keyed.get(a).fold(
-      constantSqlConnect(0.pure[SqlValue]),
-      id => executePreparedUpdate(_.setLong(0, id))
+      constantSqlConnect(sqlError(new SQLException("Can not update a key that is not set."))),
+      id => executePreparedUpdate(update(a, _))
     )
 
   def prepareStatement[A](k: PreparedStatement => SqlConnect[A]) : SqlConnect[A] =
