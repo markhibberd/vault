@@ -3,9 +3,10 @@ package com.ephox.vault
 import scalaz._, Scalaz._
 import SqlValue._
 import RowValue._
+import SqlExceptionContext._
 
-sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
-  def fold[X](err: SqlException => X, v: A => X) =
+sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlExceptionContext, A]]] {
+  def fold[X](err: SqlExceptionContext => X, v: A => X) =
     value.over.fold(err, v)
 
   def isError: Boolean =
@@ -14,11 +15,14 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
   def isValue: Boolean =
     !isError
 
-  def getError: Option[SqlException] =
+  def getError: Option[SqlExceptionContext] =
     fold(Some(_), _ => None)
 
-  def getErrorOr(e: => SqlException): SqlException =
+  def getErrorOr(e: => SqlExceptionContext): SqlExceptionContext =
     getError getOrElse e
+
+  def mapError(k: SqlExceptionContext => SqlExceptionContext): SqlValue[A] =
+    fold(e => sqlError(k(e)) setLog log, _ => this)
 
   def getValue: Option[A] =
     fold(_ => None, Some(_))
@@ -27,19 +31,19 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
     getValue getOrElse v
 
   def getOrDie: A =
-    fold(e => throw new VaultException(e), x => x)
+    fold(e => throw new VaultException(e.sqlException), x => x)
 
-  def toEither:Either[SqlException, A] =
+  def toEither:Either[SqlExceptionContext, A] =
     fold(Left(_), Right(_))
 
-  def toValidation: Validation[SqlException, A] =
+  def toValidation: Validation[SqlExceptionContext, A] =
     fold(failure(_), success(_))
 
   def toRowValue: RowValue[A] =
     fold[RowValue[A]](rowError, rowValue(_)) setLog log
 
   def printStackTraceOr(f: A => Unit): Unit =
-    fold(_.printStackTrace, f)
+    fold(_.sqlException.printStackTrace, f)
 
   def map[B](f: A => B): SqlValue[B] = new SqlValue[B] {
     val value =
@@ -87,7 +91,7 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
   /**
    * Append the given value to the current log by applying to the underlying value.
    */
-  def :->>(e: Either[SqlException, A] => LOGV): SqlValue[A] =
+  def :->>(e: Either[SqlExceptionContext, A] => LOGV): SqlValue[A] =
     :+->(e(value.over))
 
   /**
@@ -99,7 +103,7 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
   /**
    * Prepend the given value to the current log by applying to the underlying value.
    */
-  def <<-:(e: Either[SqlException, A] => LOGV): SqlValue[A] =
+  def <<-:(e: Either[SqlExceptionContext, A] => LOGV): SqlValue[A] =
     <-+:(e(value.over))
 /**
    * Append the given value to the current log.
@@ -110,7 +114,7 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
   /**
    * Append the given value to the current log by applying to the underlying value.
    */
-  def :+->>(e: Either[SqlException, A] => LOG): SqlValue[A] =
+  def :+->>(e: Either[SqlExceptionContext, A] => LOG): SqlValue[A] =
     withLog(_ |+| e(value.over))
 
   /**
@@ -122,7 +126,7 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
   /**
    * Prepend the given value to the current log by applying to the underlying value.
    */
-  def <<-+:(e: Either[SqlException, A] => LOG): SqlValue[A] =
+  def <<-+:(e: Either[SqlExceptionContext, A] => LOG): SqlValue[A] =
     <-++:(e(value.over))
 
   /**
@@ -135,26 +139,24 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlException, A]]] {
 object SqlValue extends SqlValues
 
 trait SqlValues {
-  type SqlException = java.sql.SQLException
-
   type LOGV = String
   type LOGC[V] = IndSeq[V]
   type LOG = LOGC[LOGV]
   type WLOG[A] = Writer[LOG, A]
 
-  def sqlError[A](e: SqlException): SqlValue[A] = new SqlValue[A] {
-    val value = (Left(e): Either[SqlException, A]).η[WLOG]
+  def sqlError[A](e: SqlExceptionContext): SqlValue[A] = new SqlValue[A] {
+    val value = (Left(e): Either[SqlExceptionContext, A]).η[WLOG]
   }
 
   def sqlValue[A](v: A): SqlValue[A] = new SqlValue[A] {
-    val value = (Right(v): Either[SqlException, A]).η[WLOG]
+    val value = (Right(v): Either[SqlExceptionContext, A]).η[WLOG]
   }
 
   def trySqlValue[A](a: => A): SqlValue[A] =
     try {
       sqlValue[A](a)
     } catch {
-      case e: SqlException => sqlError(e)
+      case e: SqlException => sqlError(sqlExceptionContext(e))
       case e               => throw e
     }
 
@@ -164,7 +166,7 @@ trait SqlValues {
                         , whenClosing: Throwable => Unit = _ => ()
                         )(implicit r: Resource[T]): SqlValue[R] =
     withResource(value, evaluate, {
-      case e: SqlException => sqlError(e)
+      case e: SqlException => sqlError(sqlExceptionContext(e))
       case e               => throw e
     }, whenClosing)
 
@@ -207,7 +209,7 @@ trait SqlValues {
 
   implicit val SqlValueTraverse: Traverse[SqlValue] = new Traverse[SqlValue] {
     def traverse[F[_] : Applicative, A, B](f: A => F[B], as: SqlValue[A]): F[SqlValue[B]] =
-      as fold ((e: SqlException) => sqlError(e).η[F], v => f(v) ∘ (sqlValue(_)))
+      as fold ((e: SqlExceptionContext) => sqlError(e).η[F], v => f(v) ∘ (sqlValue(_)))
   }
 
 
@@ -217,7 +219,7 @@ trait SqlValues {
   }
 
   implicit val SqlValueEmpty: Empty[SqlValue] = new Empty[SqlValue] {
-    def empty[A] = sqlError(new SqlException)
+    def empty[A] = sqlError(sqlExceptionContext(new SqlException))
   }
 
   implicit def SqlValueShow[A: Show]: Show[SqlValue[A]] = new Show[SqlValue[A]] {
@@ -229,15 +231,17 @@ trait SqlValues {
   }
 
   implicit def SqlValueEqual[A: Equal]: Equal[SqlValue[A]] = {
-    implicit val EqualSqlException: Equal[SqlException] = equalA
-    Equal.EitherEqual[SqlException, A] ∙ (_.toEither)
+    implicit val EqualSqlExceptionContext: Equal[SqlExceptionContext] = new Equal[SqlExceptionContext] {
+      def equal(a1: SqlExceptionContext, a2: SqlExceptionContext) = true
+    }
+    Equal.EitherEqual[SqlExceptionContext, A] ∙ (_.toEither)
   }
 
   implicit def SqlValueOrder[A: Order]: Order[SqlValue[A]] = {
-    implicit val OrderSqlException: Order[SqlException] = new Order[SqlException] {
-      def order(a1: SqlException, a2: SqlException) = EQ
+    implicit val OrderSqlExceptionContext: Order[SqlExceptionContext] = new Order[SqlExceptionContext] {
+      def order(a1: SqlExceptionContext, a2: SqlExceptionContext) = EQ
     }
-    Order.EitherOrder[SqlException, A] ∙ (_.toEither)
+    Order.EitherOrder[SqlExceptionContext, A] ∙ (_.toEither)
   }
 
   implicit def SqlValueZero[A: Zero]: Zero[SqlValue[A]] =
