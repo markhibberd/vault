@@ -77,13 +77,23 @@ object RowAccess extends RowAccesss
 trait RowAccesss {
   def rowAccess[A](f: Row => RowValue[A]): RowAccess[A] = RowAccess_(f)
 
+  def rowAccessNiceNull[A](f: Row => RowValue[A], note: String): RowAccess[A] =
+    rowAccess(r => {
+      val x = f(r)
+      x.fold(
+        _ => x,
+        _ => x,
+        _ => rowNullNice(note)
+      )
+    })
+
   import java.io.{Reader, InputStream}
   import java.net.URL
   import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, NClob}
   import Key._
 
   private def forEither[T, U](c: Class[_], z: String, k: Row => U => RowValue[T]): U => RowAccess[T] =
-    (column: U) => rowAccess(r => k(r)(column))
+    (column: U) => rowAccessNiceNull(r => k(r)(column), z + "[" + column + "]")
 
   private def forIndex[T](c: Class[_], k: Row => Int => RowValue[T]): Int => RowAccess[T] =
     forEither(c, "index", k)
