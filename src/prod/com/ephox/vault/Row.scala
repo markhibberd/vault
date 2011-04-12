@@ -118,7 +118,7 @@ object Row {
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)
         val z = a
-        if(r.wasNull) rowNull else z.η[RowValue]
+        if(r.wasNull) rowNullNotNice else z.η[RowValue]
       } catch {
         case e: SqlException => rowError(sqlExceptionContext(e))
         case x => throw x

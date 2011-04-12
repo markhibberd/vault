@@ -4,60 +4,60 @@ import scalaz._, Scalaz._
 import SqlValue._
 import SqlExceptionContext._
 
-sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlExceptionContext, A]]]] {
+sealed trait RowValue[A] extends NewType[WLOG[Either[Option[String], Either[SqlExceptionContext, A]]]] {
   import PossiblyNull._
 
   import RowValue._
 
-  def fold[X](sqlErr: SqlExceptionContext => X, sqlValue: A => X, nul: => X): X =
+  def fold[X](sqlErr: SqlExceptionContext => X, sqlValue: A => X, nul: Option[String] => X): X =
     value.over match {
-      case None           => nul
-      case Some(Left(e))  => sqlErr(e)
-      case Some(Right(a)) => sqlValue(a)
+      case Left(n)         => nul(n)
+      case Right(Left(e))  => sqlErr(e)
+      case Right(Right(a)) => sqlValue(a)
     }
 
-  def isNull: Boolean = fold(_ => false, _ => false, true)
+  def isNull: Boolean = fold(_ => false, _ => false, _ => true)
   def isNotNull: Boolean = !isNull
-  def isError: Boolean = fold(_ => true, _ => false, false)
+  def isError: Boolean = fold(_ => true, _ => false, _ => false)
   def isNotError: Boolean = !isError
-  def isValue: Boolean = fold(_ => false, _ => true, false)
+  def isValue: Boolean = fold(_ => false, _ => true, _ => false)
   def isNotValue: Boolean = !isValue
 
   def getError: Option[SqlExceptionContext] =
-    fold(Some(_), _ => None, None)
+    fold(Some(_), _ => None, _ => None)
 
   def getErrorOr(e: => SqlExceptionContext): SqlExceptionContext =
     getError getOrElse e
 
   def mapError(k: SqlExceptionContext => SqlExceptionContext): RowValue[A] =
-    fold(e => rowError(k(e)) setLog log, _ => this, this)
+    fold(e => rowError(k(e)) setLog log, _ => this, _ => this)
 
   def getValue: Option[A] =
-    fold(_ => None, Some(_), None)
+    fold(_ => None, Some(_), _ => None)
 
   def getValueOr(v: => A): A =
     getValue getOrElse v
 
   def getOrDie: A =
-    fold(e => throw new VaultException(e.sqlException), x => x, throw new VaultException("Unexpected database null."))
+    fold(e => throw new VaultException(e.sqlException), x => x, n => throw new VaultException("Unexpected database null: " + n.getOrElse("")))
 
   def getSqlValue: Option[SqlValue[A]] =
-    fold(e => Some(sqlError(e) setLog log), a => Some(sqlValue(a) setLog log), None)
+    fold(e => Some(sqlError(e) setLog log), a => Some(sqlValue(a) setLog log), _ => None)
 
   def getSqlValueOr(v: => SqlValue[A]): SqlValue[A] =
     getSqlValue getOrElse v
 
-  def printStackTraceOr(v: A => Unit, nul: => Unit): Unit =
+  def printStackTraceOr(v: A => Unit, nul: Option[String] => Unit): Unit =
     fold(_ => (), v, nul)
 
   def map[B](f: A => B): RowValue[B] =
-    fold(rowError(_), a => rowValue(f(a)), rowNull)
+    fold(rowError(_), a => rowValue(f(a)), rowNull(_))
 
   def flatMap[B](f: A => RowValue[B]): RowValue[B] =
-    fold(rowError(_), f, rowNull)
+    fold(rowError(_), f, rowNull(_))
 
   def unifyNullWithMessage(message: String): SqlValue[A] =
-    fold[SqlValue[A]](sqlError(_), sqlValue(_), sqlError(sqlExceptionContext(new SqlException(message)))) setLog log
+    fold[SqlValue[A]](sqlError(_), sqlValue(_), _ => sqlError(sqlExceptionContext(new SqlException(message)))) setLog log
 
   def unifyNull: SqlValue[A] =
     unifyNullWithMessage("unify null")
@@ -119,7 +119,7 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlExceptionContext,
   /**
    * Append the given value to the current log by applying to the underlying value.
    */
-  def :->>(e: Option[Either[SqlExceptionContext, A]] => LOGV): RowValue[A] =
+  def :->>(e: Either[Option[String], Either[SqlExceptionContext, A]] => LOGV): RowValue[A] =
     :+->(e(value.over))
 
   /**
@@ -131,7 +131,7 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlExceptionContext,
   /**
    * Prepend the given value to the current log by applying to the underlying value.
    */
-  def <<-:(e: Option[Either[SqlExceptionContext, A]] => LOGV): RowValue[A] =
+  def <<-:(e: Either[Option[String], Either[SqlExceptionContext, A]] => LOGV): RowValue[A] =
     <-+:(e(value.over))
 /**
    * Append the given value to the current log.
@@ -142,7 +142,7 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlExceptionContext,
   /**
    * Append the given value to the current log by applying to the underlying value.
    */
-  def :+->>(e: Option[Either[SqlExceptionContext, A]] => LOG): RowValue[A] =
+  def :+->>(e: Either[Option[String], Either[SqlExceptionContext, A]] => LOG): RowValue[A] =
     withLog(_ |+| e(value.over))
 
   /**
@@ -154,7 +154,7 @@ sealed trait RowValue[A] extends NewType[WLOG[Option[Either[SqlExceptionContext,
   /**
    * Prepend the given value to the current log by applying to the underlying value.
    */
-  def <<-+:(e: Option[Either[SqlExceptionContext, A]] => LOG): RowValue[A] =
+  def <<-+:(e: Either[Option[String], Either[SqlExceptionContext, A]] => LOG): RowValue[A] =
     <-++:(e(value.over))
 
   /**
@@ -168,16 +168,20 @@ object RowValue extends RowValues
 
 trait RowValues {
   def rowError[A](e: SqlExceptionContext): RowValue[A] = new RowValue[A] {
-    val value = (Some(Left(e)): Option[Either[SqlExceptionContext, A]]).η[WLOG]
+    val value = (Right(Left(e)): Either[Option[String], Either[SqlExceptionContext, A]]).η[WLOG]
   }
 
   def rowValue[A](a: A): RowValue[A] = new RowValue[A] {
-    val value = (Some(Right(a)): Option[Either[SqlExceptionContext, A]]).η[WLOG]
+    val value = (Right(Right(a)): Either[Option[String], Either[SqlExceptionContext, A]]).η[WLOG]
   }
 
-  def rowNull[A]: RowValue[A] = new RowValue[A] {
-    val value = (None: Option[Either[SqlExceptionContext, A]]).η[WLOG]
+  def rowNull[A](note: Option[String]): RowValue[A] = new RowValue[A] {
+    val value = (Left(note): Either[Option[String], Either[SqlExceptionContext, A]]).η[WLOG]
   }
+
+  def rowNullNotNice[A]: RowValue[A] = rowNull(None)
+
+  def rowNullNice[A](note: String): RowValue[A] = rowNull(Some(note))
 
   def tryRowValue[A](a: => A): RowValue[A] =
     trySqlValue(a).toRowValue
@@ -196,12 +200,12 @@ trait RowValues {
 
   implicit val RowValueBind: Bind[RowValue] = new Bind[RowValue] {
     def bind[A, B](a: RowValue[A], f: A => RowValue[B]) =
-      a fold (rowError(_), f, rowNull)
+      a fold (rowError(_), f, rowNull(_))
   }
 
   implicit val RowValueEach: Each[RowValue] = new Each[RowValue] {
     def each[A](e: RowValue[A], f: A => Unit) =
-      e fold (_ => (), f, ())
+      e fold (_ => (), f, _ => ())
   }
 
   implicit val RowAccessIndex: Index[RowValue] = new Index[RowValue] {
@@ -210,20 +214,20 @@ trait RowValues {
 
   implicit val RowAccessLength: Length[RowValue] = new Length[RowValue] {
     def len[A](a: RowValue[A]) =
-      a fold (_ => 0, _ => 1, 0)
+      a fold (_ => 0, _ => 1, _ => 0)
   }
 
   implicit val RowAccessFoldable: Foldable[RowValue] = new Foldable[RowValue] {
     override def foldLeft[A, B](e: RowValue[A], b: B, f: (B, A) => B) =
-      e fold (_ => b, f(b, _), b)
+      e fold (_ => b, f(b, _), _ => b)
 
     override def foldRight[A, B](e: RowValue[A], b: => B, f: (A, => B) => B) =
-      e fold (_ => b, f(_, b), b)
+      e fold (_ => b, f(_, b), _ => b)
   }
 
   implicit val RowAccessTraverse: Traverse[RowValue] = new Traverse[RowValue] {
     def traverse[F[_] : Applicative, A, B](f: A => F[B], as: RowValue[A]): F[RowValue[B]] =
-      as fold ((e: SqlExceptionContext) => rowError(e).η[F], v => f(v) ∘ (rowValue(_)), rowNull.η[F])
+      as fold ((e: SqlExceptionContext) => rowError(e).η[F], v => f(v) ∘ (rowValue(_)), _ => rowNullNotNice.η[F])
   }
 
   implicit def RowAccessShow[A: Show]: Show[RowValue[A]] = new Show[RowValue[A]] {
@@ -231,7 +235,7 @@ trait RowValues {
       a fold (
               e => ("row-error(" + e + ")")
             , a => ("row-value(" + a.shows + ")")
-            , "row-null"
+            , o => "row-null[" + o.getOrElse("") + "]"
             ) toList
   }
 
@@ -239,8 +243,8 @@ trait RowValues {
     def equal(a1: RowValue[A], a2: RowValue[A]) =
       a1 fold (
         _ => a2.isError
-      , t => a2 fold (_ => false, t === _, false)
-      , a2.isNull)
+      , t => a2 fold (_ => false, t === _, _ => false)
+      , _ => a2.isNull)
   }
 
   implicit def RowAccessZero[A: Zero]: Zero[RowValue[A]] = zero(rowValue(∅[A]))
