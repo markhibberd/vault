@@ -12,6 +12,7 @@ sealed trait StringQuery {
   import Key._
   import Sql._
   import JDBCType._
+  import SqlExceptionContext._
 
   def executeUpdate: SqlConnect[Int] =
     sqlConnect(c => withSqlResource(
