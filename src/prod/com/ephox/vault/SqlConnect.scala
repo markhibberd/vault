@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._
 import SqlValue._
+import SqlExceptionContext._
 import java.sql._
 
 sealed trait SqlConnect[A] {
@@ -44,7 +45,7 @@ sealed trait SqlConnect[A] {
     } catch {
       case e: SqlException => {
         c.rollback
-        sqlError(e)
+        sqlError(sqlExceptionContext(e))
       }
       case e => {
         c.rollback
