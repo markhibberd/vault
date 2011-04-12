@@ -56,7 +56,7 @@ sealed trait StringQuery {
         withStatement,
         r => i => (i, keyed.set(a, r.keyLabel("ID").getValueOr(nokey)))
       ).map(_._2),
-      id => constantSqlConnect(sqlError(new SQLException("Can not insert. Key is already set: " + id)))
+      id => constantSqlConnect(sqlError(sqlExceptionContext(new SQLException("Can not insert. Key is already set: " + id))))
     )
 
   def delete[A](a: A)(implicit keyed: Keyed[A]): SqlConnect[Int] =
@@ -64,13 +64,13 @@ sealed trait StringQuery {
 
   def deleteKey(key: Key): SqlConnect[Int] =
     key.fold(
-      constantSqlConnect(sqlError(new SQLException("Can not delete a key that is not set."))),
+      constantSqlConnect(sqlError(sqlExceptionContext(new SQLException("Can not delete a key that is not set.")))),
       id => executePreparedUpdate(_.set(longType(id)))
     )
 
   def update[A](a: A, update: (A, PreparedStatement) => Unit)(implicit keyed: Keyed[A]): SqlConnect[Int] =
     keyed.get(a).fold(
-      constantSqlConnect(sqlError(new SQLException("Can not update a key that is not set."))),
+      constantSqlConnect(sqlError(sqlExceptionContext(new SQLException("Can not update a key that is not set.")))),
       id => executePreparedUpdate(update(a, _))
     )
 
