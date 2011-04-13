@@ -89,45 +89,22 @@ sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlExceptionContext, A]]] {
     withLog(_ |+| e.η[LOGC])
 
   /**
-   * Append the given value to the current log by applying to the underlying value.
-   */
-  def :->>(e: Either[SqlExceptionContext, A] => LOGV): SqlValue[A] =
-    :+->(e(value.over))
-
-  /**
    * Prepend the given value to the current log.
    */
   def <-+:(e: LOGV): SqlValue[A] =
     withLog(e.η[LOGC] |+| _)
 
   /**
-   * Prepend the given value to the current log by applying to the underlying value.
-   */
-  def <<-:(e: Either[SqlExceptionContext, A] => LOGV): SqlValue[A] =
-    <-+:(e(value.over))
-/**
    * Append the given value to the current log.
    */
   def :++->(e: LOG): SqlValue[A] =
     withLog(_ |+| e)
 
   /**
-   * Append the given value to the current log by applying to the underlying value.
-   */
-  def :+->>(e: Either[SqlExceptionContext, A] => LOG): SqlValue[A] =
-    withLog(_ |+| e(value.over))
-
-  /**
    * Prepend the given value to the current log.
    */
   def <-++:(e: LOG): SqlValue[A] =
     withLog(e |+| _)
-
-  /**
-   * Prepend the given value to the current log by applying to the underlying value.
-   */
-  def <<-+:(e: Either[SqlExceptionContext, A] => LOG): SqlValue[A] =
-    <-++:(e(value.over))
 
   /**
    * Set the log to be empty.
