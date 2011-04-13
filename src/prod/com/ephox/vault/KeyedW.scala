@@ -8,13 +8,13 @@ trait KeyedW[A] {
 
   def id = keyed.get(value)
 
-  def idBy(a: A) =
+  def withId(a: A) =
     keyed.set(value,
       keyed.get(a)
     )
 
-  def maybeIdBy(maybe: Option[A]) =
-    maybe.map(idBy(_)).getOrElse(value)
+  def tryWithId(maybe: Option[A]) =
+    maybe.map(withId(_)).getOrElse(value)
 
   def =@=(other: KeyedW[A])(implicit eq: Equal[Key]) =
     eq.equal(id, other.id)
