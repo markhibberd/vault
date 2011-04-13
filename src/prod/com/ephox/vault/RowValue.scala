@@ -4,6 +4,7 @@ import scalaz._, Scalaz._
 import SqlValue._
 import RowValue._
 import SqlExceptionContext._
+import scala.Option._
 
 sealed trait RowValue[A] {
   protected val value: WLOG[Either[Option[NullMsg], Either[SqlExceptionContext, A]]]
@@ -16,6 +17,9 @@ sealed trait RowValue[A] {
       case Right(Left(e))  => sqlErr(e)
       case Right(Right(a)) => sqlValue(a)
     }
+
+  def foldOrNullMsg[X](defaultNullMsg: => NullMsg)(sqlErr: SqlExceptionContext => X, sqlValue: A => X, nul: NullMsg => X) =
+    fold(sqlErr, sqlValue, m => nul(m getOrElse defaultNullMsg))
 
   def isNull: Boolean = fold(_ => false, _ => false, _ => true)
   def isNotNull: Boolean = !isNull
@@ -47,6 +51,12 @@ sealed trait RowValue[A] {
 
   def getSqlValueOr(v: => SqlValue[A]): SqlValue[A] =
     getSqlValue getOrElse v
+
+  def getNullMsg: Option[NullMsg] =
+    fold(_ => None, _ => None, x => x)
+
+  def getNullMsgOr(o: => NullMsg): NullMsg =
+    getNullMsg getOrElse o
 
   def printStackTraceOr(v: A => Unit, nul: Option[NullMsg] => Unit): Unit =
     fold(_ => (), v, nul)
