@@ -93,7 +93,7 @@ trait RowAccesss {
   import Key._
 
   private def forEither[T, U](c: Class[_], z: String, k: Row => U => RowValue[T]): U => RowAccess[T] =
-    (column: U) => rowAccessNiceNull(r => k(r)(column), z + "[" + column + "]")
+    (column: U) => rowAccessNiceNull(r => k(r)(column), "column type [" + c.getName + "] at " + z + " [" + column + "]")
 
   private def forIndex[T](c: Class[_], k: Row => Int => RowValue[T]): Int => RowAccess[T] =
     forEither(c, "index", k)

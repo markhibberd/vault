@@ -37,11 +37,12 @@ object VaultNullDemo {
 
     val x = nuller connect connection
 
-    val result = x.fold(
+    val result = x.foldOrNullMsg("Null <no message>")(
       err => "Error: " + err,
       value => "Value: " + value,
       nully => "Null:" + nully
     )
+
     println(result)
   }
 }
