@@ -19,6 +19,9 @@ object Queries {
   def listm[A](access: RowAccess[A], sql: String)(implicit merge: Merger[A]) =
     access -||> combineAll <|- sql.toSql
 
+  def firstm[A](access: RowAccess[A], sql: Sql)(implicit merge: Merger[A]) =
+    access -||> combine <|- sql
+
   def byIdm[A](access: RowAccess[A], sql: String, id: Long)(implicit merge: Merger[A]) =
-    access -||> combine <|- sql.bindSql(longType(id))
+    firstm(access,  sql.bindSql(longType(id)))
 }
