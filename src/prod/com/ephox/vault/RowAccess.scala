@@ -83,7 +83,7 @@ trait RowAccesss {
       x.fold(
         _ => x,
         _ => x,
-        _ => rowNullNice(note)
+        _ => rowNullMsg(note)
       )
     })
 
