@@ -5,7 +5,9 @@ import SqlValue._
 import RowValue._
 import SqlExceptionContext._
 
-sealed trait SqlValue[A] extends NewType[WLOG[Either[SqlExceptionContext, A]]] {
+sealed trait SqlValue[A] {
+  protected val value: WLOG[Either[SqlExceptionContext, A]]
+
   def fold[X](err: SqlExceptionContext => X, v: A => X) =
     value.over.fold(err, v)
 
