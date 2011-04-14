@@ -5,7 +5,7 @@ import scalaz._, Scalaz._
 // isomorphic to Option[A]
 sealed trait PossiblyNull[A] {
   import PossiblyNull._
-  import Key._
+  import CampanionKey._
 
   def fold[X](nn: A => X, in: => X): X = this match {
     case NotNull(a) => nn(a)

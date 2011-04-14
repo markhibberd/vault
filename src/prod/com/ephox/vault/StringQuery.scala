@@ -9,7 +9,7 @@ sealed trait StringQuery {
 
   import SqlConnect._
   import PreparedStatementW._
-  import Key._
+  import CampanionKey._
   import Sql._
   import JDBCType._
   import SqlExceptionContext._

@@ -90,7 +90,7 @@ trait RowAccesss {
   import java.io.{Reader, InputStream}
   import java.net.URL
   import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, NClob}
-  import Key._
+  import CampanionKey._
 
   private def forEither[T, U](c: Class[_], z: String, k: Row => U => RowValue[T]): U => RowAccess[T] =
     (column: U) => rowAccessNiceNull(r => k(r)(column), "column type [" + c.getName + "] at " + z + " [" + column + "]")
