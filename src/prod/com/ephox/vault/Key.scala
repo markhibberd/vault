@@ -45,6 +45,7 @@ trait Keys {
     shows(_.toString)
 }
 
-object Key extends Keys
+/* Do not rename me to Key, breaks java'ry things at the moment */
+object CampanionKey extends Keys
 
 

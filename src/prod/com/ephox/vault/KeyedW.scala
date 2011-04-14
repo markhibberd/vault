@@ -1,6 +1,7 @@
 package com.ephox.vault
 
 import scalaz._, Scalaz._
+import CampanionKey._
 
 trait KeyedW[A] {
   val value: A
