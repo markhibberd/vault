@@ -26,10 +26,11 @@ sealed trait Key {
     o.isInstanceOf[Key] && o.asInstanceOf[Key].fold(
       !isSet, value => fold(false, _ == value)
     )
+
+  def idType = fold(JDBCType.nullType(NumericType), JDBCType.longType(_))
 }
 
 trait Keys {
-  val x = 7
   def key(value: Long): Key = new Key {
     def fold[X](none: => X, some: Long => X) = some(value)
   }
