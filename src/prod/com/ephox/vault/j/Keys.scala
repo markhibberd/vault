@@ -1,4 +1,5 @@
-package com.ephox.vault.j
+package com.ephox.vault
+package j
 
 import com.ephox.vault.Vault
 
