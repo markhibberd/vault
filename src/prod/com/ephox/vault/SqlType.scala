@@ -331,7 +331,7 @@ trait SqlTypes {
    * @param n The value used in [[java.sql.Types]].
    * @param t The default value to use if the given [[java.sql.Types]] value is invalid.
    */
-  def sqlTypeFromIntOr(n: Int, t: => SqlType): Option[SqlType] =
+  def sqlTypeFromIntOr(n: Int, t: => SqlType): SqlType =
     sqlTypeFromInt(n) getOrElse t
 
 }
