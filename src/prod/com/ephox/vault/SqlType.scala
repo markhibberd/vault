@@ -326,12 +326,12 @@ trait SqlTypes {
   }
 
   /**
-   * Construct a generic SQL type from a value used in [[java.sql.Types]] or using the given default in the absence of a correspodence.
+   * Construct a generic SQL type from a value used in [[java.sql.Types]] or using the given default in the absence of a correspondence.
    *
    * @param n The value used in [[java.sql.Types]].
    * @param t The default value to use if the given [[java.sql.Types]] value is invalid.
    */
-  def sqlTypeFromIntOr(n: Int, t: => SqlType): Option[SqlType] =
+  def sqlTypeFromIntOr(n: Int, t: => SqlType): SqlType =
     sqlTypeFromInt(n) getOrElse t
 
 }
