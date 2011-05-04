@@ -7,8 +7,8 @@ object Queries {
   import VaultIteratee._
   import JDBCType._
 
-  def list[A](access: RowAccess[A], sql: String) =
-    (access -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql.toSql) map (_.flatten)
+  def list[A](access: RowAccess[A], sql: Sql) =
+    (access -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql) map (_.flatten)
 
   def first[A](access: RowAccess[A], sql: Sql) =
     access -||> IterV.head[A] <|- sql
@@ -16,8 +16,8 @@ object Queries {
   def byId[A](access: RowAccess[A], sql: String, id: Long) =
     first(access, sql.bindSql(longType(id)))
 
-  def listm[A](access: RowAccess[A], sql: String)(implicit merge: Merger[A]) =
-    access -||> combineAll <|- sql.toSql
+  def listm[A](access: RowAccess[A], sql: Sql)(implicit merge: Merger[A]) =
+    access -||> combineAll <|- sql
 
   def firstm[A](access: RowAccess[A], sql: Sql)(implicit merge: Merger[A]) =
     access -||> combine <|- sql
