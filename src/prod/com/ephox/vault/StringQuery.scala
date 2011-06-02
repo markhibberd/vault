@@ -78,7 +78,9 @@ sealed trait StringQuery {
   def prepareStatement[A](k: PreparedStatement => SqlConnect[A]) : SqlConnect[A] =
     sqlConnect(c => withSqlResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)))
 
-  def bindSql(bindings: JDBCType*) = Sql.query(query, bindings: _*)
+  def bindTypes(bindings: JDBCType*) = bind(bindings.toList)
+
+  def bind(bindings: List[JDBCType]) = Sql.query(query, bindings)
 
   def toSql = bindSql()
 }
