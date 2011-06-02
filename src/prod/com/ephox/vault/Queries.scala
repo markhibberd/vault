@@ -14,7 +14,7 @@ object Queries {
     access -||> IterV.head[A] <|- sql
 
   def byId[A](access: RowAccess[A], sql: String, id: Long) =
-    first(access, sql.bindSql(longType(id)))
+    first(access, sql.bindValues(longType(id)))
 
   def listm[A](access: RowAccess[A], sql: Sql)(implicit merge: Merger[A]) =
     access -||> combineAll <|- sql
@@ -23,5 +23,5 @@ object Queries {
     access -||> combine <|- sql
 
   def byIdm[A](access: RowAccess[A], sql: String, id: Long)(implicit merge: Merger[A]) =
-    firstm(access,  sql.bindSql(longType(id)))
+    firstm(access,  sql.bindValues(longType(id)))
 }
