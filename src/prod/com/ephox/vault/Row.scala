@@ -57,15 +57,6 @@ sealed trait Row {
   val longIndex: Int => RowValue[Long]
   val longLabel: String => RowValue[Long]
 
-  def ncharacterStreamIndex[A](withReader: Reader => A): Int => RowValue[A]
-  def ncharacterStreamLabel[A](withReader: Reader => A): String => RowValue[A]
-
-  val nclobIndex: Int => RowValue[NClob]
-  val nclobLabel: String => RowValue[NClob]
-
-  val nstringIndex: Int => RowValue[String]
-  val nstringLabel: String => RowValue[String]
-
   val objectIndex: Int => RowValue[AnyRef]
   val objectLabel: String => RowValue[AnyRef]
   def objectMapIndex(m: Row.ObjectTypeMap): Int => RowValue[AnyRef]
@@ -74,14 +65,8 @@ sealed trait Row {
   val refIndex: Int => RowValue[Ref]
   val refLabel: String => RowValue[Ref]
 
-  val rowIdIndex: Int => RowValue[RowId]
-  val rowIdLabel: String => RowValue[RowId]
-
   val shortIndex: Int => RowValue[Short]
   val shortLabel: String => RowValue[Short]
-
-  val sqlxmlIndex: Int => RowValue[SQLXML]
-  val sqlxmlLabel: String => RowValue[SQLXML]
 
   val stringIndex: Int => RowValue[String]
   val stringLabel: String => RowValue[String]
@@ -104,6 +89,25 @@ sealed trait Row {
 
   val possibleKeyIndex: Int => SqlValue[Key]
   val possibleKeyLabel: String => SqlValue[Key]
+
+//   -- JDBC 4.0 disabled for the time being --
+//
+//  def ncharacterStreamIndex[A](withReader: Reader => A): Int => RowValue[A]
+//  def ncharacterStreamLabel[A](withReader: Reader => A): String => RowValue[A]
+//
+//  val nclobIndex: Int => RowValue[NClob]
+//  val nclobLabel: String => RowValue[NClob]
+//
+//  val nstringIndex: Int => RowValue[String]
+//  val nstringLabel: String => RowValue[String]
+//
+//
+//  val rowIdIndex: Int => RowValue[RowId]
+//  val rowIdLabel: String => RowValue[RowId]
+//
+//  val sqlxmlIndex: Int => RowValue[SQLXML]
+//  val sqlxmlLabel: String => RowValue[SQLXML]
+
 }
 
 object Row {
@@ -254,34 +258,6 @@ object Row {
     val longLabel = (columnLabel: String) =>
       tryResultSet(r.getLong(columnLabel))
 
-    def ncharacterStreamIndex[A](withReader: Reader => A) = (columnIndex: Int) => {
-      val s = r.getNCharacterStream(columnIndex)
-      try {
-        tryResultSet(withReader(s))
-      } finally {
-        s.close
-      }
-    }
-
-    def ncharacterStreamLabel[A](withReader: Reader => A) = (columnLabel: String) => {
-      val s = r.getNCharacterStream(columnLabel)
-      try {
-        tryResultSet(withReader(s))
-      } finally {
-        s.close
-      }
-    }
-
-    val nclobIndex = (columnIndex: Int) =>
-      tryResultSet(r.getNClob(columnIndex))
-    val nclobLabel = (columnLabel: String) =>
-      tryResultSet(r.getNClob(columnLabel))
-
-    val nstringIndex = (columnIndex: Int) =>
-      tryResultSet(r.getNString(columnIndex))
-    val nstringLabel = (columnLabel: String) =>
-      tryResultSet(r.getNString(columnLabel))
-
     val objectIndex = (columnIndex: Int) =>
       tryResultSet(r.getObject(columnIndex))
     val objectLabel = (columnLabel: String) =>
@@ -296,20 +272,10 @@ object Row {
     val refLabel = (columnLabel: String) =>
       tryResultSet(r.getRef(columnLabel))
 
-    val rowIdIndex = (columnIndex: Int) =>
-      tryResultSet(r.getRowId(columnIndex))
-    val rowIdLabel = (columnLabel: String) =>
-      tryResultSet(r.getRowId(columnLabel))
-
     val shortIndex = (columnIndex: Int) =>
       tryResultSet(r.getShort(columnIndex))
     val shortLabel = (columnLabel: String) =>
       tryResultSet(r.getShort(columnLabel))
-
-    val sqlxmlIndex = (columnIndex: Int) =>
-      tryResultSet(r.getSQLXML(columnIndex))
-    val sqlxmlLabel = (columnLabel: String) =>
-      tryResultSet(r.getSQLXML(columnLabel))
 
     val stringIndex = (columnIndex: Int) =>
       tryResultSet(r.getString(columnIndex))
@@ -348,5 +314,45 @@ object Row {
       longIndex(columnIndex).possiblyNull map (_.toKey)
     val possibleKeyLabel = (columnLabel: String) =>
     longLabel(columnLabel).possiblyNull map (_.toKey)
+
+//   -- JDBC 4.0 disabled for the time being --
+//
+//    def ncharacterStreamIndex[A](withReader: Reader => A) = (columnIndex: Int) => {
+//      val s = r.getNCharacterStream(columnIndex)
+//      try {
+//        tryResultSet(withReader(s))
+//      } finally {
+//        s.close
+//      }
+//    }
+//
+//    def ncharacterStreamLabel[A](withReader: Reader => A) = (columnLabel: String) => {
+//      val s = r.getNCharacterStream(columnLabel)
+//      try {
+//        tryResultSet(withReader(s))
+//      } finally {
+//        s.close
+//      }
+//    }
+//
+//    val nclobIndex = (columnIndex: Int) =>
+//      tryResultSet(r.getNClob(columnIndex))
+//    val nclobLabel = (columnLabel: String) =>
+//      tryResultSet(r.getNClob(columnLabel))
+//
+//    val nstringIndex = (columnIndex: Int) =>
+//      tryResultSet(r.getNString(columnIndex))
+//    val nstringLabel = (columnLabel: String) =>
+//      tryResultSet(r.getNString(columnLabel))
+//
+//    val rowIdIndex = (columnIndex: Int) =>
+//      tryResultSet(r.getRowId(columnIndex))
+//    val rowIdLabel = (columnLabel: String) =>
+//      tryResultSet(r.getRowId(columnLabel))
+//
+//    val sqlxmlIndex = (columnIndex: Int) =>
+//      tryResultSet(r.getSQLXML(columnIndex))
+//    val sqlxmlLabel = (columnLabel: String) =>
+//      tryResultSet(r.getSQLXML(columnLabel))
   }
 }
