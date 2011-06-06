@@ -34,26 +34,30 @@ sealed trait SqlType {
     case FloatType => FLOAT
     case IntegerType => INTEGER
     case JavaObjectType => JAVA_OBJECT
-    case LongNVarCharType => LONGNVARCHAR
     case LongVarBinaryType => LONGVARBINARY
     case LongVarCharType => LONGVARCHAR
-    case NCharType => NCHAR
-    case NClobType => NCLOB
     case NullType => NULL
     case NumericType => NUMERIC
-    case NVarCharType => NVARCHAR
     case OtherType => OTHER
     case RealType => REAL
     case RefType => REF
-    case RowIdType => ROWID
     case SmallIntType => SMALLINT
-    case SqlXmlType => SQLXML
     case StructType => STRUCT
     case TimeType => TIME
     case TimestampType => TIMESTAMP
     case TinyIntType => TINYINT
     case VarBinaryType => VARBINARY
     case VarCharType => VARCHAR
+
+//    -- JDBC 4.0 disabled for the time being --
+//
+//    case NCharType => NCHAR
+//    case NVarCharType => NVARCHAR
+//    case NClobType => NCLOB
+//    case LongNVarCharType => LONGNVARCHAR
+//    case RowIdType => ROWID
+//    case SqlXmlType => SQLXML
+
   }
 }
 
@@ -138,11 +142,6 @@ case object IntegerType extends SqlType
 case object JavaObjectType extends SqlType
 
 /**
- * `LONGNVARCHAR`
- */
-case object LongNVarCharType extends SqlType
-
-/**
  * `LONGVARBINARY`
  */
 case object LongVarBinaryType extends SqlType
@@ -151,16 +150,6 @@ case object LongVarBinaryType extends SqlType
  * `LONGVARCHAR`
  */
 case object LongVarCharType extends SqlType
-
-/**
- * `NCHAR`
- */
-case object NCharType extends SqlType
-
-/**
- * `NCLOB`
- */
-case object NClobType extends SqlType
 
 /**
  * `NULL`
@@ -172,10 +161,6 @@ case object NullType extends SqlType
  */
 case object NumericType extends SqlType
 
-/**
- * `NVARCHAR`
- */
-case object NVarCharType extends SqlType
 
 /**
  * `OTHER`
@@ -193,19 +178,9 @@ case object RealType extends SqlType
 case object RefType extends SqlType
 
 /**
- * `ROWID`
- */
-case object RowIdType extends SqlType
-
-/**
  * `SMALLINT`
  */
 case object SmallIntType extends SqlType
-
-/**
- * `SQLXML`
- */
-case object SqlXmlType extends SqlType
 
 /**
  * `STRUCT`
@@ -237,6 +212,40 @@ case object VarBinaryType extends SqlType
  */
 case object VarCharType extends SqlType
 
+// -- JDBC 4.0 disabled for the time being --
+//
+//**
+// * `LONGNVARCHAR`
+// */
+//case object LongNVarCharType extends SqlType
+//
+///**
+// * `NCHAR`
+// */
+//case object NCharType extends SqlType
+//
+///**
+// * `NCLOB`
+// */
+//case object NClobType extends SqlType
+//
+///**
+// * `NVARCHAR`
+// */
+//case object NVarCharType extends SqlType
+//
+//
+///**
+// * `ROWID`
+// */
+//case object RowIdType extends SqlType
+//
+///**
+// * `SQLXML`
+// */
+//case object SqlXmlType extends SqlType
+
+
 trait SqlTypes {
   /**
    * All possible generic SQL types.
@@ -258,26 +267,31 @@ trait SqlTypes {
                     , FloatType
                     , IntegerType
                     , JavaObjectType
-                    , LongNVarCharType
                     , LongVarBinaryType
                     , LongVarCharType
-                    , NCharType
-                    , NClobType
                     , NullType
                     , NumericType
-                    , NVarCharType
                     , OtherType
                     , RealType
                     , RefType
-                    , RowIdType
                     , SmallIntType
-                    , SqlXmlType
                     , StructType
                     , TimeType
                     , TimestampType
                     , TinyIntType
                     , VarBinaryType
                     , VarCharType
+
+// -- JDBC 4.0 disabled for the time being --
+//
+//                  , LongNVarCharType
+//                  , NCharType
+//                  , NClobType
+//                  , NVarCharType
+//                  , RowIdType
+//                  , SqlXmlType
+//
+
                     )
 
   /**
@@ -302,26 +316,30 @@ trait SqlTypes {
     case FLOAT => Some(FloatType)
     case INTEGER => Some(IntegerType)
     case JAVA_OBJECT => Some(JavaObjectType)
-    case LONGNVARCHAR => Some(LongNVarCharType)
     case LONGVARBINARY => Some(LongVarBinaryType)
     case LONGVARCHAR => Some(LongVarCharType)
-    case NCHAR => Some(NCharType)
-    case NCLOB => Some(NClobType)
     case NULL => Some(NullType)
     case NUMERIC => Some(NumericType)
-    case NVARCHAR => Some(NVarCharType)
     case OTHER => Some(OtherType)
     case REAL => Some(RealType)
     case REF => Some(RefType)
-    case ROWID => Some(RowIdType)
     case SMALLINT => Some(SmallIntType)
-    case SQLXML => Some(SqlXmlType)
     case STRUCT => Some(StructType)
     case TIME => Some(TimeType)
     case TIMESTAMP => Some(TimestampType)
     case TINYINT => Some(TinyIntType)
     case VARBINARY => Some(VarBinaryType)
     case VARCHAR => Some(VarCharType)
+
+//   -- JDBC 4.0 disabled for the time being --
+//
+//    case LONGNVARCHAR => Some(LongNVarCharType)
+//    case NCHAR => Some(NCharType)
+//    case NVARCHAR => Some(NVarCharType)
+//    case NCLOB => Some(NClobType)
+//    case SQLXML => Some(SqlXmlType)
+//    case ROWID => Some(RowIdType)
+
     case _ => None
   }
 

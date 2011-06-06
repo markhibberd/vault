@@ -148,15 +148,6 @@ trait RowAccesss {
   val longIndex: Int => RowAccess[Long] = forIndex(classOf[Long], (_.longIndex))
   val longLabel: String => RowAccess[Long] = forLabel(classOf[Long], (_.longLabel))
 
-  def ncharacterStreamIndex[A](withReader: Reader => A): Int => RowAccess[A] = forIndex(classOf[Reader], (_.ncharacterStreamIndex(withReader)))
-  def ncharacterStreamLabel[A](withReader: Reader => A): String => RowAccess[A] = forLabel(classOf[Reader], (_.ncharacterStreamLabel(withReader)))
-
-  val nclobIndex: Int => RowAccess[NClob] = forIndex(classOf[NClob], (_.nclobIndex))
-  val nclobLabel: String => RowAccess[NClob] = forLabel(classOf[NClob], (_.nclobLabel))
-
-  val nstringIndex: Int => RowAccess[String] = forIndex(classOf[String], (_.nstringIndex))
-  val nstringLabel: String => RowAccess[String] = forLabel(classOf[String], (_.nstringLabel))
-
   val objectIndex: Int => RowAccess[AnyRef] = forIndex(classOf[AnyRef], (_.objectIndex))
   val objectLabel: String => RowAccess[AnyRef] = forLabel(classOf[AnyRef], (_.objectLabel))
   def objectMapIndex(m: Row.ObjectTypeMap): Int => RowAccess[AnyRef] = forIndex(classOf[Row.ObjectTypeMap], (_.objectMapIndex(m)))
@@ -165,14 +156,8 @@ trait RowAccesss {
   val refIndex: Int => RowAccess[Ref] = forIndex(classOf[Ref], (_.refIndex))
   val refLabel: String => RowAccess[Ref] = forLabel(classOf[Ref], (_.refLabel))
 
-  val rowIdIndex: Int => RowAccess[RowId] = forIndex(classOf[RowId], (_.rowIdIndex))
-  val rowIdLabel: String => RowAccess[RowId] = forLabel(classOf[RowId], (_.rowIdLabel))
-
   val shortIndex: Int => RowAccess[Short] = forIndex(classOf[Short], (_.shortIndex))
   val shortLabel: String => RowAccess[Short] = forLabel(classOf[Short], (_.shortLabel))
-
-  val sqlxmlIndex: Int => RowAccess[SQLXML] = forIndex(classOf[SQLXML], (_.sqlxmlIndex))
-  val sqlxmlLabel: String => RowAccess[SQLXML] = forLabel(classOf[SQLXML], (_.sqlxmlLabel))
 
   val stringIndex: Int => RowAccess[String] = forIndex(classOf[String], (_.stringIndex))
   val stringLabel: String => RowAccess[String] = forLabel(classOf[String], (_.stringLabel))
@@ -197,6 +182,24 @@ trait RowAccesss {
     i => forIndex(classOf[Key], r => columnIndex => r.longIndex(columnIndex))(i).possiblyNull map (_.toKey)
   val possibleKeyLabel: String => SqlAccess[Key] =
     i => forLabel(classOf[Key], r => columnLabel => r.longLabel(columnLabel))(i).possiblyNull map (_.toKey)
+
+//   -- JDBC 4.0 disabled for the time being --
+//
+//  def ncharacterStreamIndex[A](withReader: Reader => A): Int => RowAccess[A] = forIndex(classOf[Reader], (_.ncharacterStreamIndex(withReader)))
+//  def ncharacterStreamLabel[A](withReader: Reader => A): String => RowAccess[A] = forLabel(classOf[Reader], (_.ncharacterStreamLabel(withReader)))
+//
+//  val nclobIndex: Int => RowAccess[NClob] = forIndex(classOf[NClob], (_.nclobIndex))
+//  val nclobLabel: String => RowAccess[NClob] = forLabel(classOf[NClob], (_.nclobLabel))
+//
+//  val nstringIndex: Int => RowAccess[String] = forIndex(classOf[String], (_.nstringIndex))
+//  val nstringLabel: String => RowAccess[String] = forLabel(classOf[String], (_.nstringLabel))
+//
+//  val rowIdIndex: Int => RowAccess[RowId] = forIndex(classOf[RowId], (_.rowIdIndex))
+//  val rowIdLabel: String => RowAccess[RowId] = forLabel(classOf[RowId], (_.rowIdLabel))
+//
+//  val sqlxmlIndex: Int => RowAccess[SQLXML] = forIndex(classOf[SQLXML], (_.sqlxmlIndex))
+//  val sqlxmlLabel: String => RowAccess[SQLXML] = forLabel(classOf[SQLXML], (_.sqlxmlLabel))
+
 
   implicit val RowAccessFunctor: Functor[RowAccess] = new Functor[RowAccess] {
     def fmap[A, B](k: RowAccess[A], f: A => B) =
