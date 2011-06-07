@@ -107,6 +107,8 @@ object Connectors {
 
   def mkConnection(driver: String, url: String, username: String, password: String): Connection = {
     Class.forName(driver)
-    DriverManager.getConnection(url, username, password)
+    val c = DriverManager.getConnection(url, username, password)
+    c.setAutoCommit(false)
+    c
   }
 }
