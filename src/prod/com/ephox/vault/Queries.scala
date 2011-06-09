@@ -8,7 +8,7 @@ object Queries {
   import JDBCType._
 
   def list[A](access: RowAccess[A], sql: Sql) =
-    (access -||> IterV.repeat[A, Option[A], List](IterV.head[A]) <|- sql) map (_.flatten)
+    access -||> IterV.collect[A,  List] <|- sql
 
   def first[A](access: RowAccess[A], sql: Sql) =
     access -||> IterV.head[A] <|- sql
