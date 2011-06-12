@@ -62,6 +62,9 @@ sealed trait RowAccess[A] {
   def asList: RowAccess[List[A]] =
     toList.toRowAccess
 
+  def asOption: RowAccess[Option[A]] =
+    possiblyNull.toRowAccess map (_.toOption)
+
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
 
