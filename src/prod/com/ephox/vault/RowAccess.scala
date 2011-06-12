@@ -59,6 +59,9 @@ sealed trait RowAccess[A] {
   def toList: SqlAccess[List[A]] =
     possiblyNull.map(_.toList)
 
+  def asList: RowAccess[List[A]] =
+    toList.toRowAccess
+
   // alias for possiblyNullOr
   def |?(d: => A) = possiblyNullOr(d)
 
