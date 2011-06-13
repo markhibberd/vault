@@ -20,7 +20,6 @@ object Vault
   with Updates
   with Keys
   with Keyeds
-  with KeyedWs
   with Mergers
   with SqlExceptionContexts
   with VaultIteratees
