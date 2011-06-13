@@ -65,4 +65,6 @@ trait Mergers {
     }
   }
 
+  implicit def DefaultIdMerge[A](implicit k: Keyed[A]): Merger[A] =
+    merge0
 }
