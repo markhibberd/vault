@@ -44,7 +44,7 @@ sealed trait RowValue[A] {
     getValue getOrElse v
 
   def getOrDie: A =
-    fold(e => throw new VaultException(e.sqlException), x => x, n => throw new VaultException("Unexpected database null: " + n.getOrElse("")))
+    fold(e => throw new VaultException(e.detail, e.sqlException), x => x, n => throw new VaultException("Unexpected database null: " + n.getOrElse("")))
 
   def getSqlValue: Option[SqlValue[A]] =
     fold(e => Some(sqlError(e) setLog log), a => Some(sqlValue(a) setLog log), _ => None)
