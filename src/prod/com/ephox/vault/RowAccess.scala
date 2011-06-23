@@ -2,8 +2,9 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._
 import SqlValue._
-import SqlExceptionContext._
 import RowValue._
+import java.sql.ResultSet
+import com.ephox.vault.SqlExceptionContext._
 
 sealed trait RowAccess[A] {
   import RowAccess._
@@ -21,9 +22,9 @@ sealed trait RowAccess[A] {
   def -|>[T](iter: IterV[A, T]): RowQueryConnect[IterV[A, T]] =
     rowQueryConnect(query => rowConnect(c => {
       tryRowValue(c prepareStatement query.sql).mapError(_ setQuery query) flatMap (st =>
-        st.set(query.bindings:_*).toRowValue.mapError(e => e.setQueryPreparedStatement(query, st)) >>=| (
+        st.set(query.bindings:_*).toRowValue >>=| (
           try {
-            tryRowValue(st.executeQuery) flatMap (r =>
+            tryRowValue(st.executeQuery) flatMap ((r: ResultSet) =>
               try {
                 Row.resultSetRow(r).iterate[A, T](this)(iter)
               } finally {
@@ -31,8 +32,7 @@ sealed trait RowAccess[A] {
               })
           } finally {
             st.close
-          })
-      )
+          }).mapError(e => e.setQueryPreparedStatement(query, st)))
     }))
 
   def -||>[T](iter: IterV[A, T]): RowQueryConnect[T] =
