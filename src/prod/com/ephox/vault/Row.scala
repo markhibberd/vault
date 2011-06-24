@@ -10,6 +10,9 @@ import SqlExceptionContext._
 sealed trait Row {
   def iterate[A, T](a: RowAccess[A]): IterV[A, T] => RowValue[IterV[A, T]]
 
+  def columns: List[String]
+  def indexFor(table: String, column: String): Option[Int]
+
   val arrayIndex: Int => RowValue[java.sql.Array]
   val arrayLabel: String => RowValue[java.sql.Array]
 
@@ -118,6 +121,21 @@ object Row {
   type Cal = Calendar
 
   private[vault] def resultSetRow(r: ResultSet): Row = new Row {
+    private case class Index(table: String, column: String)
+
+    val meta: Map[Index, Int] = {
+      val md = r.getMetaData
+      val n = md.getColumnCount
+      (for (i <- 1 to n)
+        yield (Index(md.getTableName(i).toUpperCase, md.getColumnName(i).toUpperCase), i)
+      ).toMap
+    }
+
+    def indexFor(table: String, column: String) =
+      meta.get(Index(table.toUpperCase, column.toUpperCase))
+
+    def columns = meta.keys.toList.map(i => i.table + "." + i.column)
+
     private def tryResultSet[A](a: => A): RowValue[A] =
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)
