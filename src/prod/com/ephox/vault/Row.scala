@@ -146,17 +146,22 @@ object Row {
         case x => throw x
       }
 
-    def iterate[A, T](ra: RowAccess[A]) =
-      iter => {
-        def loop(i: IterV[A, T]): RowValue[IterV[A, T]] =
-          i.fold((a, ip) => i.η[RowValue],
-                 k => {
-                   val hasMore = r.next
-                   if (hasMore) ra.access(Row.resultSetRow(r)) flatMap (t => loop(k(IterV.El(t))))
-                   else i.η[RowValue]
-                 })
-        loop(iter)
-      }
+    def iterate[A, T](ra: RowAccess[A]) = iter =>
+      iter.pure[RowValue].loop(
+        e => rowError(e),
+        i => i match {
+          case IterV.Done(a, ip) =>
+            Left(i.pure[RowValue])
+          case IterV.Cont(k) => {
+            val hasMore = r.next
+            if (!hasMore)
+              Left(i.pure[RowValue])
+            else
+              Right(ra.access(Row.resultSetRow(r)) map (zz => k(IterV.El(zz))))
+          }
+        },
+        n => rowNullPossibleMsg(n)
+      )
 
     val arrayIndex = (columnIndex: Int) =>
       tryResultSet(r.getArray(columnIndex))
