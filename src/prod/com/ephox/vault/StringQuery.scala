@@ -42,7 +42,7 @@ sealed trait StringQuery {
                          } yield b
                          o(c).mapError(handle)
                      }
-                   ))
+                   ).mapError(handle))
 
   def executeUpdateWithKeysSet[B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B, handle: SqlExceptionContext => SqlExceptionContext = x => x): SqlConnect[B] =
     executeUpdateWithKeys(
