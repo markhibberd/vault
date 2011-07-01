@@ -44,7 +44,11 @@ object Connectors {
   }
 
   def datasource(ds: DataSource, name: String = "provided"): Connector = new Connector {
-    def nu = ds.getConnection
+    def nu = {
+      val connection = ds.getConnection
+      connection.setAutoCommit(false)
+      connection
+    }
 
     override def toString = "datasource[" + name + "]"
   }
