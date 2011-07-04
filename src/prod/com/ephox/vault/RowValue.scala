@@ -4,7 +4,6 @@ import scalaz._, Scalaz._
 import SqlValue._
 import RowValue._
 import SqlExceptionContext._
-import scala.Option._
 
 sealed trait RowValue[A] {
   protected val value: WLOG[Either[Option[NullMsg], Either[SqlExceptionContext, A]]]
@@ -20,6 +19,18 @@ sealed trait RowValue[A] {
 
   def foldOrNullMsg[X](defaultNullMsg: => NullMsg)(sqlErr: SqlExceptionContext => X, sqlValue: A => X, nul: NullMsg => X) =
     fold(sqlErr, sqlValue, m => nul(m getOrElse defaultNullMsg))
+
+  @scala.annotation.tailrec
+  final def loop[X](e: SqlExceptionContext => X, v: A => Either[X, RowValue[A]], n: Option[NullMsg] => X): X =
+    if (isNull)
+      n(getNullMsg)
+    else if (isError)
+      e(getError.get)
+    else
+      v(getValue.get) match {
+        case Left(x) => x
+        case Right(r) => r.loop(e, v, n)
+      }
 
   def isNull: Boolean = fold(_ => false, _ => false, _ => true)
   def isNotNull: Boolean = !isNull
@@ -44,7 +55,7 @@ sealed trait RowValue[A] {
     getValue getOrElse v
 
   def getOrDie: A =
-    fold(e => throw new VaultException(e.sqlException), x => x, n => throw new VaultException("Unexpected database null: " + n.getOrElse("")))
+    fold(e => throw new VaultException(e.detail, e.sqlException), x => x, n => throw new VaultException("Unexpected database null: " + n.getOrElse("")))
 
   def getSqlValue: Option[SqlValue[A]] =
     fold(e => Some(sqlError(e) setLog log), a => Some(sqlValue(a) setLog log), _ => None)

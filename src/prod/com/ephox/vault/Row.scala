@@ -10,6 +10,9 @@ import SqlExceptionContext._
 sealed trait Row {
   def iterate[A, T](a: RowAccess[A]): IterV[A, T] => RowValue[IterV[A, T]]
 
+  def columns: List[String]
+  def indexFor(table: String, column: String): Option[Int]
+
   val arrayIndex: Int => RowValue[java.sql.Array]
   val arrayLabel: String => RowValue[java.sql.Array]
 
@@ -57,15 +60,6 @@ sealed trait Row {
   val longIndex: Int => RowValue[Long]
   val longLabel: String => RowValue[Long]
 
-  def ncharacterStreamIndex[A](withReader: Reader => A): Int => RowValue[A]
-  def ncharacterStreamLabel[A](withReader: Reader => A): String => RowValue[A]
-
-  val nclobIndex: Int => RowValue[NClob]
-  val nclobLabel: String => RowValue[NClob]
-
-  val nstringIndex: Int => RowValue[String]
-  val nstringLabel: String => RowValue[String]
-
   val objectIndex: Int => RowValue[AnyRef]
   val objectLabel: String => RowValue[AnyRef]
   def objectMapIndex(m: Row.ObjectTypeMap): Int => RowValue[AnyRef]
@@ -74,14 +68,8 @@ sealed trait Row {
   val refIndex: Int => RowValue[Ref]
   val refLabel: String => RowValue[Ref]
 
-  val rowIdIndex: Int => RowValue[RowId]
-  val rowIdLabel: String => RowValue[RowId]
-
   val shortIndex: Int => RowValue[Short]
   val shortLabel: String => RowValue[Short]
-
-  val sqlxmlIndex: Int => RowValue[SQLXML]
-  val sqlxmlLabel: String => RowValue[SQLXML]
 
   val stringIndex: Int => RowValue[String]
   val stringLabel: String => RowValue[String]
@@ -104,6 +92,25 @@ sealed trait Row {
 
   val possibleKeyIndex: Int => SqlValue[Key]
   val possibleKeyLabel: String => SqlValue[Key]
+
+//   -- JDBC 4.0 disabled for the time being --
+//
+//  def ncharacterStreamIndex[A](withReader: Reader => A): Int => RowValue[A]
+//  def ncharacterStreamLabel[A](withReader: Reader => A): String => RowValue[A]
+//
+//  val nclobIndex: Int => RowValue[NClob]
+//  val nclobLabel: String => RowValue[NClob]
+//
+//  val nstringIndex: Int => RowValue[String]
+//  val nstringLabel: String => RowValue[String]
+//
+//
+//  val rowIdIndex: Int => RowValue[RowId]
+//  val rowIdLabel: String => RowValue[RowId]
+//
+//  val sqlxmlIndex: Int => RowValue[SQLXML]
+//  val sqlxmlLabel: String => RowValue[SQLXML]
+
 }
 
 object Row {
@@ -114,6 +121,21 @@ object Row {
   type Cal = Calendar
 
   private[vault] def resultSetRow(r: ResultSet): Row = new Row {
+    private case class Index(table: String, column: String)
+
+    val meta: Map[Index, Int] = {
+      val md = r.getMetaData
+      val n = md.getColumnCount
+      (for (i <- 1 to n)
+        yield (Index(md.getTableName(i).toUpperCase, md.getColumnName(i).toUpperCase), i)
+      ).toMap
+    }
+
+    def indexFor(table: String, column: String) =
+      meta.get(Index(table.toUpperCase, column.toUpperCase))
+
+    def columns = meta.keys.toList.map(i => i.table + "." + i.column)
+
     private def tryResultSet[A](a: => A): RowValue[A] =
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)
@@ -124,17 +146,22 @@ object Row {
         case x => throw x
       }
 
-    def iterate[A, T](ra: RowAccess[A]) =
-      iter => {
-        def loop(i: IterV[A, T]): RowValue[IterV[A, T]] =
-          i.fold((a, ip) => i.η[RowValue],
-                 k => {
-                   val hasMore = r.next
-                   if (hasMore) ra.access(Row.resultSetRow(r)) flatMap (t => loop(k(IterV.El(t))))
-                   else i.η[RowValue]
-                 })
-        loop(iter)
-      }
+    def iterate[A, T](ra: RowAccess[A]) = iter =>
+      iter.pure[RowValue].loop(
+        e => rowError(e),
+        i => i match {
+          case IterV.Done(a, ip) =>
+            Left(i.pure[RowValue])
+          case IterV.Cont(k) => {
+            val hasMore = r.next
+            if (!hasMore)
+              Left(i.pure[RowValue])
+            else
+              Right(ra.access(Row.resultSetRow(r)) map (zz => k(IterV.El(zz))))
+          }
+        },
+        n => rowNullPossibleMsg(n)
+      )
 
     val arrayIndex = (columnIndex: Int) =>
       tryResultSet(r.getArray(columnIndex))
@@ -254,34 +281,6 @@ object Row {
     val longLabel = (columnLabel: String) =>
       tryResultSet(r.getLong(columnLabel))
 
-    def ncharacterStreamIndex[A](withReader: Reader => A) = (columnIndex: Int) => {
-      val s = r.getNCharacterStream(columnIndex)
-      try {
-        tryResultSet(withReader(s))
-      } finally {
-        s.close
-      }
-    }
-
-    def ncharacterStreamLabel[A](withReader: Reader => A) = (columnLabel: String) => {
-      val s = r.getNCharacterStream(columnLabel)
-      try {
-        tryResultSet(withReader(s))
-      } finally {
-        s.close
-      }
-    }
-
-    val nclobIndex = (columnIndex: Int) =>
-      tryResultSet(r.getNClob(columnIndex))
-    val nclobLabel = (columnLabel: String) =>
-      tryResultSet(r.getNClob(columnLabel))
-
-    val nstringIndex = (columnIndex: Int) =>
-      tryResultSet(r.getNString(columnIndex))
-    val nstringLabel = (columnLabel: String) =>
-      tryResultSet(r.getNString(columnLabel))
-
     val objectIndex = (columnIndex: Int) =>
       tryResultSet(r.getObject(columnIndex))
     val objectLabel = (columnLabel: String) =>
@@ -296,20 +295,10 @@ object Row {
     val refLabel = (columnLabel: String) =>
       tryResultSet(r.getRef(columnLabel))
 
-    val rowIdIndex = (columnIndex: Int) =>
-      tryResultSet(r.getRowId(columnIndex))
-    val rowIdLabel = (columnLabel: String) =>
-      tryResultSet(r.getRowId(columnLabel))
-
     val shortIndex = (columnIndex: Int) =>
       tryResultSet(r.getShort(columnIndex))
     val shortLabel = (columnLabel: String) =>
       tryResultSet(r.getShort(columnLabel))
-
-    val sqlxmlIndex = (columnIndex: Int) =>
-      tryResultSet(r.getSQLXML(columnIndex))
-    val sqlxmlLabel = (columnLabel: String) =>
-      tryResultSet(r.getSQLXML(columnLabel))
 
     val stringIndex = (columnIndex: Int) =>
       tryResultSet(r.getString(columnIndex))
@@ -348,5 +337,45 @@ object Row {
       longIndex(columnIndex).possiblyNull map (_.toKey)
     val possibleKeyLabel = (columnLabel: String) =>
     longLabel(columnLabel).possiblyNull map (_.toKey)
+
+//   -- JDBC 4.0 disabled for the time being --
+//
+//    def ncharacterStreamIndex[A](withReader: Reader => A) = (columnIndex: Int) => {
+//      val s = r.getNCharacterStream(columnIndex)
+//      try {
+//        tryResultSet(withReader(s))
+//      } finally {
+//        s.close
+//      }
+//    }
+//
+//    def ncharacterStreamLabel[A](withReader: Reader => A) = (columnLabel: String) => {
+//      val s = r.getNCharacterStream(columnLabel)
+//      try {
+//        tryResultSet(withReader(s))
+//      } finally {
+//        s.close
+//      }
+//    }
+//
+//    val nclobIndex = (columnIndex: Int) =>
+//      tryResultSet(r.getNClob(columnIndex))
+//    val nclobLabel = (columnLabel: String) =>
+//      tryResultSet(r.getNClob(columnLabel))
+//
+//    val nstringIndex = (columnIndex: Int) =>
+//      tryResultSet(r.getNString(columnIndex))
+//    val nstringLabel = (columnLabel: String) =>
+//      tryResultSet(r.getNString(columnLabel))
+//
+//    val rowIdIndex = (columnIndex: Int) =>
+//      tryResultSet(r.getRowId(columnIndex))
+//    val rowIdLabel = (columnLabel: String) =>
+//      tryResultSet(r.getRowId(columnLabel))
+//
+//    val sqlxmlIndex = (columnIndex: Int) =>
+//      tryResultSet(r.getSQLXML(columnIndex))
+//    val sqlxmlLabel = (columnLabel: String) =>
+//      tryResultSet(r.getSQLXML(columnLabel))
   }
 }

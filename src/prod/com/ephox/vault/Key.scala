@@ -35,7 +35,7 @@ trait Keys {
     def fold[X](none: => X, some: Long => X) = some(value)
   }
 
-  def nokey = new Key {
+  def nokey: Key = new Key {
     def fold[X](none: => X, some: Long => X) = none
   }
 

@@ -1,8 +1,6 @@
 package com.ephox.vault
 
-import com.ephox.vault._, KeyedW._
 import scalaz._, Scalaz._
-import CampanionKey._
 
 trait Merger[A] {
   val merge: (A, A) => Option[A]
@@ -10,7 +8,9 @@ trait Merger[A] {
   def apply(a1: A, a2: A) = merge(a1, a2)
 }
 
-object Merger extends Mergers
+object Merger extends Mergers with LowPriorityMergers
+
+
 
 trait Mergers {
   def merger[A](merger: (A, A) => Option[A]): Merger[A] = new Merger[A] {
@@ -27,7 +27,7 @@ trait Mergers {
 
   def ifelseMerger[A](p: (A, A) => Boolean, t: (A, A) => A) = merger[A]((a1, a2) => if(p(a1, a2))  Some(t(a1, a2)) else None)
 
-  def idMerger[A](t: (A, A) => A)(implicit k: Keyed[A]) = ifelseMerger[A](_ =@= _, t)
+  def idMerger[A](t: (A, A) => A)(implicit k: Keyed[A]) = ifelseMerger[A]((a, b) => k.get(a) == k.get(b), t)
 
   def merge0[A](implicit k: Keyed[A]) = idMerger[A]((a1, a2) => a1)
 
@@ -64,5 +64,9 @@ trait Mergers {
       case (value, acc) => value.fold(_ :: acc, acc)
     }
   }
+}
 
+trait LowPriorityMergers { 
+  implicit def DefaultIdMerge[A](implicit k: Keyed[A]): Merger[A] =
+    Merger.merge0
 }

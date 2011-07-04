@@ -44,7 +44,11 @@ object Connectors {
   }
 
   def datasource(ds: DataSource, name: String = "provided"): Connector = new Connector {
-    def nu = ds.getConnection
+    def nu = {
+      val connection = ds.getConnection
+      connection.setAutoCommit(false)
+      connection
+    }
 
     override def toString = "datasource[" + name + "]"
   }
@@ -107,6 +111,8 @@ object Connectors {
 
   def mkConnection(driver: String, url: String, username: String, password: String): Connection = {
     Class.forName(driver)
-    DriverManager.getConnection(url, username, password)
+    val c = DriverManager.getConnection(url, username, password)
+    c.setAutoCommit(false)
+    c
   }
 }

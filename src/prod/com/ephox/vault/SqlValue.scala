@@ -4,6 +4,7 @@ import scalaz._, Scalaz._
 import SqlValue._
 import RowValue._
 import SqlExceptionContext._
+import java.sql.PreparedStatement
 
 sealed trait SqlValue[A] {
   protected val value: WLOG[Either[SqlExceptionContext, A]]
@@ -33,7 +34,7 @@ sealed trait SqlValue[A] {
     getValue getOrElse v
 
   def getOrDie: A =
-    fold(e => throw new VaultException(e.sqlException), x => x)
+    fold(e => throw new VaultException(e.detail, e.sqlException), x => x)
 
   def toEither:Either[SqlExceptionContext, A] =
     fold(Left(_), Right(_))
