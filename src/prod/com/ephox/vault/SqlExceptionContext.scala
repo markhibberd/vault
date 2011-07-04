@@ -9,6 +9,20 @@ sealed trait SqlExceptionContext {
   val prepareStatementContext: Option[PreparedStatementContext]
   val query: Option[Sql]
 
+  def detail =
+    ("""Unexpected database error:
+      | Vault sql:
+      |    """ + (query match {
+          case None => "no sql set."
+          case Some(q) => "sql[" + q.sql + "], bindings[" + q.bindings.mkString(", ") + "]"
+        }) + """
+      | JDBC prepared statement:
+      |    """ + (prepareStatementContext match {
+          case None => "No prepared statement created."
+          case Some(s) => "statement[" + s.preparedStatement + "], bindings[" + s.parameters + "]"
+        }) + """
+    """).stripMargin
+
   def setPreparedStatementContext(c: PreparedStatementContext): SqlExceptionContext = new SqlExceptionContext {
     val sqlException = SqlExceptionContext.this.sqlException
     val prepareStatementContext = Some(c)
