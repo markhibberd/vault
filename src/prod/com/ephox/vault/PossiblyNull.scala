@@ -130,8 +130,8 @@ trait PossiblyNulls {
   implicit def PossiblyNullShow[A: Show]: Show[PossiblyNull[A]] = new Show[PossiblyNull[A]] {
     def show(a: PossiblyNull[A]) =
       a fold(
-              a => ("not-null(" + a + ")")
-            , ("is-null(" + a.shows + ")")
+              a => "not-null(" + a.shows + ")"
+            , "is-null"
             ) toList
   }
 
