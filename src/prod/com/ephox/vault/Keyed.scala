@@ -14,5 +14,7 @@ trait Keyeds {
     def get(a: A) = getf(a)
     def set(a: A, key: Key) = setf(a, key)
   }
-}
 
+  implicit def KeyKeyed: Keyed[Key] =
+    keyed(z => z, (_, k) => k)
+}
