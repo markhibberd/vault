@@ -28,6 +28,7 @@ object MergerDemo {
       , Person(key(7), "Bob", 17)
       , Person(key(8), "Bob", 18)
       , Person(key(12), "Mary", 23)
+      , Person(key(2), "Tom", 55)
       ))
 
     val ra =
@@ -42,7 +43,8 @@ object MergerDemo {
     assert(implicitly[Merger[People]] merge (pa, qa), Some(ra))
   }
 
-  def assert[A](a1: A, a2: A) =
+  def assert[A](a1: A, a2: A) {
     if(a1 != a2)
       println(a1 + " ≠ " + a2)
+  }
 }
