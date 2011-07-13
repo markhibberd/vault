@@ -20,7 +20,7 @@ sealed trait RowValue[A] {
   def foldOrNullMsg[X](defaultNullMsg: => NullMsg)(sqlErr: SqlExceptionContext => X, sqlValue: A => X, nul: NullMsg => X) =
     fold(sqlErr, sqlValue, m => nul(m getOrElse defaultNullMsg))
 
-  @scala.annotation.tailrec
+  @annotation.tailrec
   final def loop[X](e: SqlExceptionContext => X, v: A => Either[X, RowValue[A]], n: Option[NullMsg] => X): X =
     if (isNull)
       n(getNullMsg)
