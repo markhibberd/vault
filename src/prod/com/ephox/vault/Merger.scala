@@ -9,6 +9,14 @@ trait Merger[A] {
    */
   val merge: (A, A) => Option[A]
 
+  /** Merge the two values and return whether or not the merge succeeds. */
+  def succeeds: (A, A) => Boolean =
+    (a1, a2) => merge(a1, a2).isDefined
+
+  /** Merge the two values and return whether or not the merge fails. */
+  def fails: (A, A) => Boolean =
+    (a1, a2) => !succeeds(a1, a2)
+
   /**
    * If the merge fails use the given default.
    */
@@ -33,13 +41,16 @@ trait Merger[A] {
   def apply(a1: A, a2: A) = merge(a1, a2)
 }
 
-object Merger extends Mergers with LowPriorityMergers
+object Merger extends Mergers with LowPriorityMergers {
+  def apply[A](m: (A, A) => Option[A]): Merger[A] =
+    merger(m)
+}
 
 
 
 trait Mergers {
   /** A synonym for a merger that always succeeds with a value */
-  type SuccMerge[A] =
+  type SuccMerger[A] =
     (A, A) => A
 
   /** Construct a merger from the given function which takes two values and may successfully merge (`Some`) or fail to merge (`None`). */
@@ -57,13 +68,13 @@ trait Mergers {
   def mergeSome[A](a: => A): Merger[A] = constant(Some(a))
 
   /** A merger that always successfully merges using the given function */
-  def someMerger[A](f: SuccMerge[A]) = merger[A]((a1, a2) => Some(f(a1, a2)))
+  def someMerger[A](f: SuccMerger[A]) = merger[A]((a1, a2) => Some(f(a1, a2)))
 
   /** A merger that successfully merges using the given function, only if the given predicate holds. */
-  def ifelseMerger[A](p: (A, A) => Boolean, t: SuccMerge[A]) = merger[A]((a1, a2) => if(p(a1, a2))  Some(t(a1, a2)) else None)
+  def ifelseMerger[A](p: (A, A) => Boolean, t: SuccMerger[A]) = merger[A]((a1, a2) => if(p(a1, a2))  Some(t(a1, a2)) else None)
 
   /** A merger that successfully merges using the given function only if the ids of the two values are equivalent */
-  def idMerger[A](t: SuccMerge[A])(implicit k: Keyed[A]) = ifelseMerger[A]((a, b) => k.get(a) == k.get(b), t)
+  def idMerger[A](t: SuccMerger[A])(implicit k: Keyed[A]) = ifelseMerger[A]((a, b) => k.get(a) == k.get(b), t)
 
   /** A merger that successfully merges to the first value only if the ids of the two values are equivalent. */
   def merge0[A](implicit k: Keyed[A]) = idMerger[A]((a1, _) => a1)
