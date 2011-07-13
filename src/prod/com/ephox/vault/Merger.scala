@@ -49,10 +49,10 @@ trait Mergers {
   def merge1n1[A, B, C](getB: A => List[B], getC: A => C, set: (A, List[B], C) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], mb: Merger[B], mc: Merger[C]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(getB(a1), getB(a2)), mc(getC(a1), getC(a2)).getOrElse(getC(a1))))
 
-  def listMerge[A](x: List[A], y: List[A])(implicit k: Keyed[A], merge: Merger[A]): List[A] =
+  def listMerge[A](x: List[A], y: List[A])(implicit merge: Merger[A]): List[A] =
     y.foldRight[List[A]](x)((a, acc) => valueMerge(acc, a))
 
-  def valueMerge[A](x: List[A], y: A)(implicit k: Keyed[A], merge: Merger[A]): List[A] = {
+  def valueMerge[A](x: List[A], y: A)(implicit merge: Merger[A]): List[A] = {
     (x.foldRight((some(y), nil[A])) {
       case (v, (None, acc)) => (None, v :: acc)
       case (v, (Some(a), acc)) =>
