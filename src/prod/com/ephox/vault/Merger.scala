@@ -2,8 +2,18 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._
 
+/** A merger accepts two values of the same structure and either successfully merges them to a value of same structure or fails. */
 trait Merger[A] {
   val merge: (A, A) => Option[A]
+
+  def mergeOr(a: => A): (A, A) => A =
+    (a1, a2) => merge(a1, a2) getOrElse a
+
+  def mergeOrFirst: (A, A) => A =
+    (a1, a2) => mergeOr(a1)(a1, a2)
+
+  def mergeOrSecond: (A, A) => A =
+    (a1, a2) => mergeOr(a2)(a1, a2)
 
   def apply(a1: A, a2: A) = merge(a1, a2)
 }
@@ -13,40 +23,54 @@ object Merger extends Mergers with LowPriorityMergers
 
 
 trait Mergers {
+  /** A synonym for a merger that always succeeds with a value */
+  type SuccMerge[A] =
+    (A, A) => A
+
+  /** Construct a merger from the given function which takes two values and may successfully merge (`Some`) or fail to merge (`None`). */
   def merger[A](merger: (A, A) => Option[A]): Merger[A] = new Merger[A] {
     val merge = merger
   }
 
+  /** A merger that does not inspect its values */
   def constant[A](c: => Option[A]) = merger[A]((_, _) => c)
 
+  /** A merger that always fails to merge */
   def mergeNone[A]: Merger[A] = constant(None)
 
+  /** A merger that always successfully merges with the given value */
   def mergeSome[A](a: => A): Merger[A] = constant(Some(a))
 
-  def someMerger[A](f: (A, A) => A) = merger[A]((a1, a2) => Some(f(a1, a2)))
+  /** A merger that always successfully merges using the given function */
+  def someMerger[A](f: SuccMerge[A]) = merger[A]((a1, a2) => Some(f(a1, a2)))
 
-  def ifelseMerger[A](p: (A, A) => Boolean, t: (A, A) => A) = merger[A]((a1, a2) => if(p(a1, a2))  Some(t(a1, a2)) else None)
+  /** A merger that successfully merges using the given function, only if the given predicate holds. */
+  def ifelseMerger[A](p: (A, A) => Boolean, t: SuccMerge[A]) = merger[A]((a1, a2) => if(p(a1, a2))  Some(t(a1, a2)) else None)
 
-  def idMerger[A](t: (A, A) => A)(implicit k: Keyed[A]) = ifelseMerger[A]((a, b) => k.get(a) == k.get(b), t)
+  /** A merger that successfully merges using the given function only if the ids of the two values are equivalent */
+  def idMerger[A](t: SuccMerge[A])(implicit k: Keyed[A]) = ifelseMerger[A]((a, b) => k.get(a) == k.get(b), t)
 
-  def merge0[A](implicit k: Keyed[A]) = idMerger[A]((a1, a2) => a1)
+  /** A merger that successfully merges to the first value only if the ids of the two values are equivalent. */
+  def merge0[A](implicit k: Keyed[A]) = idMerger[A]((a1, _) => a1)
 
-  def merge1[A, B](get: A => B, set: (A, B) => A)(implicit ka: Keyed[A], kb: Keyed[B], mb: Merger[B]): Merger[A] =
+  /** A merger that successfully merges using the given merger and lens if the ids of the two values are equivalent, otherwise, produces the first value. */
+  def merge1[A, B](get: A => B, set: (A, B) => A)(implicit ka: Keyed[A], mb: Merger[B]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, mb(get(a1), get(a2)).getOrElse(get(a1))))
 
-  def merge2[A, B, C](getB: A => B, getC: A => C, set: (A, B, C) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], mb: Merger[B], mc: Merger[C]): Merger[A] =
+  /** A merger that successfully merges using the given mergers and lenses if the ids of the two values are equivalent, otherwise, merges with the first value. */
+  def merge2[A, B, C](getB: A => B, getC: A => C, set: (A, B, C) => A)(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, mb(getB(a1), getB(a2)).getOrElse(getB(a1)), mc(getC(a1), getC(a2)).getOrElse(getC(a1))))
 
-  def merge1n[A, B](get: A => List[B], set: (A, List[B]) => A)(implicit ka: Keyed[A], kb: Keyed[B], mb: Merger[B]): Merger[A] =
+  def merge1n[A, B](get: A => List[B], set: (A, List[B]) => A)(implicit ka: Keyed[A], mb: Merger[B]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(get(a1), get(a2))))
 
-  def merge2n[A, B, C](getB: A => List[B], getC: A => List[C], set: (A, List[B], List[C]) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], mb: Merger[B], mc: Merger[C]): Merger[A] =
+  def merge2n[A, B, C](getB: A => List[B], getC: A => List[C], set: (A, List[B], List[C]) => A)(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(getB(a1), getB(a2)), listMerge(getC(a1), getC(a2))))
 
-  def merge3n[A, B, C, D](getB: A => List[B], getC: A => List[C], getD: A => List[D], set: (A, List[B], List[C], List[D]) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], kd: Keyed[D], mb: Merger[B], mc: Merger[C], md: Merger[D]): Merger[A] =
+  def merge3n[A, B, C, D](getB: A => List[B], getC: A => List[C], getD: A => List[D], set: (A, List[B], List[C], List[D]) => A)(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C], md: Merger[D]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(getB(a1), getB(a2)), listMerge(getC(a1), getC(a2)), listMerge(getD(a1), getD(a2))))
 
-  def merge1n1[A, B, C](getB: A => List[B], getC: A => C, set: (A, List[B], C) => A)(implicit ka: Keyed[A], kb: Keyed[B], kc: Keyed[C], mb: Merger[B], mc: Merger[C]): Merger[A] =
+  def merge1n1[A, B, C](getB: A => List[B], getC: A => C, set: (A, List[B], C) => A)(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(getB(a1), getB(a2)), mc(getC(a1), getC(a2)).getOrElse(getC(a1))))
 
   def listMerge[A](x: List[A], y: List[A])(implicit merge: Merger[A]): List[A] =
