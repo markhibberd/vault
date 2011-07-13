@@ -15,6 +15,12 @@ sealed trait Key {
 
   def isSet = fold(false, _ => true)
 
+  def forall(p: Long => Boolean): Boolean =
+    fold(true, p)
+
+  def exists(p: Long => Boolean): Boolean =
+    fold(false, p)
+
   override def toString = fold(
     "Key[]",
     "Key[" + _ + "]"
@@ -24,7 +30,7 @@ sealed trait Key {
 
   override def equals(o: Any) =
     o.isInstanceOf[Key] && o.asInstanceOf[Key].fold(
-      !isSet, value => fold(false, _ == value)
+      !isSet, value => exists(_ == value)
     )
 
   def idType = fold(JDBCType.nullType(NumericType), JDBCType.longType(_))
