@@ -4,17 +4,32 @@ import scalaz._, Scalaz._
 
 /** A merger accepts two values of the same structure and either successfully merges them to a value of same structure or fails. */
 trait Merger[A] {
+  /**
+   * Merge the two values.
+   */
   val merge: (A, A) => Option[A]
 
+  /**
+   * If the merge fails use the given default.
+   */
   def mergeOr(a: => A): (A, A) => A =
     (a1, a2) => merge(a1, a2) getOrElse a
 
+  /**
+   * If the merge fails use the first value for default.
+   */
   def mergeOrFirst: (A, A) => A =
     (a1, a2) => mergeOr(a1)(a1, a2)
 
+  /**
+   * If the merge fails use the second value for default.
+   */
   def mergeOrSecond: (A, A) => A =
     (a1, a2) => mergeOr(a2)(a1, a2)
 
+  /**
+   * Merge the two values. Synonym for `merge`.
+   */
   def apply(a1: A, a2: A) = merge(a1, a2)
 }
 
