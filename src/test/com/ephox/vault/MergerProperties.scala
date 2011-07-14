@@ -21,10 +21,18 @@ object MergerProperties extends Properties("Merger") {
   implicit def PersonKeyed: Keyed[Person] =
     keyed[Person](_.id, (x, k) => x.copy(id = k))
 
-  case class Car(id: Key, make: String, driver: Person)
+  case class CarMake(id: Key, s: String)
+
+  implicit def CarMakeKeyed: Keyed[CarMake] =
+    keyed[CarMake](_.id, (x, k) => x.copy(id = k))
+
+  implicit val ArbitraryCarMake: Arbitrary[CarMake] =
+    Arbitrary(implicitly[Arbitrary[(Key, String)]].arbitrary map { case (k, m) => CarMake(k, m) })
+
+  case class Car(id: Key, make: CarMake, driver: Person)
 
   implicit val ArbitraryCar: Arbitrary[Car] =
-    Arbitrary(implicitly[Arbitrary[(Key, String, Person)]].arbitrary map { case (k, m, d) => Car(k, m, d) })
+    Arbitrary(implicitly[Arbitrary[(Key, CarMake, Person)]].arbitrary map { case (k, m, d) => Car(k, m, d) })
 
   implicit def CarKeyed: Keyed[Car] =
     keyed[Car](_.id, (x, k) => x.copy(id = k))
@@ -124,4 +132,18 @@ object MergerProperties extends Properties("Merger") {
           val q = (c.id == x.id) && (c.id == y.id)
           p && q
         }))
+
+  property("merge2 has same ids for successful merge") =
+    forAll((x: Car
+          , y: Car) =>
+      merge2[Car, Person, CarMake](_.driver, _.make, (c, d, m) => c.copy(driver = d, make = m)) merge (x, y)
+        forall (c => {
+          val m = implicitly[Merger[Person]] mergeOrSecond (x.driver, y.driver)
+          // merged drivers have the same id as the second
+          val p = m.id == y.driver.id
+          // the result has the same id as the merged cars
+          val q = (c.id == x.id) && (c.id == y.id)
+          p && q
+        }))
+
 }
