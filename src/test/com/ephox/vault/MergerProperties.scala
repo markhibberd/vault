@@ -21,7 +21,7 @@ object MergerProperties extends Properties("Merger") {
   implicit def PersonKeyed: Keyed[Person] =
     keyed[Person](_.id, (x, k) => x.copy(id = k))
 
-  case class CarMake(id: Key, s: String)
+  case class CarMake(id: Key, name: String)
 
   implicit def CarMakeKeyed: Keyed[CarMake] =
     keyed[CarMake](_.id, (x, k) => x.copy(id = k))
@@ -29,10 +29,18 @@ object MergerProperties extends Properties("Merger") {
   implicit val ArbitraryCarMake: Arbitrary[CarMake] =
     Arbitrary(implicitly[Arbitrary[(Key, String)]].arbitrary map { case (k, m) => CarMake(k, m) })
 
-  case class Car(id: Key, make: CarMake, driver: Person)
+  case class Colour(id: Key, name: String)
+
+  implicit def ColourKeyed: Keyed[Colour] =
+    keyed[Colour](_.id, (x, k) => x.copy(id = k))
+
+  implicit val ArbitraryColour: Arbitrary[Colour] =
+    Arbitrary(implicitly[Arbitrary[(Key, String)]].arbitrary map { case (k, n) => Colour(k, n) })
+
+  case class Car(id: Key, make: CarMake, driver: Person, passengers: List[Person], colours: List[Colour])
 
   implicit val ArbitraryCar: Arbitrary[Car] =
-    Arbitrary(implicitly[Arbitrary[(Key, CarMake, Person)]].arbitrary map { case (k, m, d) => Car(k, m, d) })
+    Arbitrary(implicitly[Arbitrary[(Key, CarMake, Person, List[Person], List[Colour])]].arbitrary map { case (k, m, d, p, c) => Car(k, m, d, p, c) })
 
   implicit def CarKeyed: Keyed[Car] =
     keyed[Car](_.id, (x, k) => x.copy(id = k))
@@ -40,8 +48,8 @@ object MergerProperties extends Properties("Merger") {
   // Turn it up
   override def check(p: Test.Params) {
     super.check(p.copy(
-      minSuccessfulTests = 1000
-    , maxDiscardedTests = 1000
+      minSuccessfulTests = 2000
+    , maxDiscardedTests = 2000
     ))
   }
 
@@ -146,4 +154,42 @@ object MergerProperties extends Properties("Merger") {
           p && q
         }))
 
+  property("merge1n has same ids for successful merge") =
+    forAll((x: Car
+          , y: Car) =>
+      merge1n[Car, Person](_.passengers, (c, p) => c.copy(passengers = p)) merge (x, y)
+        forall (c => {
+          val m = implicitly[Merger[Person]] mergeOrFirst (x.driver, y.driver)
+          // merged drivers have the same id as the result and the first
+          val p = m.id == c.driver.id && m.id == x.driver.id
+          // the result has the same id as the merged cars
+          val q = (c.id == x.id) && (c.id == y.id)
+          p && q
+        }))
+
+  property("merge2n has same ids for successful merge") =
+    forAll((x: Car
+          , y: Car) =>
+      merge2n[Car, Person, Colour](_.passengers, _.colours, (c, p, r) => c.copy(passengers = p, colours = r)) merge (x, y)
+        forall (c => {
+          val m = implicitly[Merger[Person]] mergeOrFirst (x.driver, y.driver)
+          // merged drivers have the same id as the result and the first
+          val p = m.id == c.driver.id && m.id == x.driver.id
+          // the result has the same id as the merged cars
+          val q = (c.id == x.id) && (c.id == y.id)
+          p && q
+        }))
+
+  property("merge1n1 has same ids for successful merge") =
+    forAll((x: Car
+          , y: Car) =>
+      merge1n1[Car, Person, Person](_.passengers, _.driver, (c, r, p) => c.copy(passengers = r, driver = p)) merge (x, y)
+        forall(c => {
+          val m = implicitly[Merger[Person]] mergeOrFirst (x.driver, y.driver)
+          // merged drivers have the same id as the result and the first
+          val p = m.id == c.driver.id && m.id == x.driver.id
+          // the result has the same id as the merged cars
+          val q = (c.id == x.id) && (c.id == y.id)
+          p && q
+        }))
 }
