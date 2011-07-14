@@ -7,11 +7,35 @@ object MergerProperties extends Properties("Merger") {
   implicit def ArbitraryMerger[A: Arbitrary]: Arbitrary[Merger[A]] =
     Arbitrary(implicitly[Arbitrary[(A, A) => Option[A]]].arbitrary map (Merger(_)))
 
-  implicit def ArbitraryKey: Arbitrary[Key] =
+  implicit val ArbitraryKey: Arbitrary[Key] =
     Arbitrary(implicitly[Arbitrary[Option[Long]]].arbitrary map {
       case None => nokey
       case Some(v) => key(v)
     })
+
+  case class Person(id: Key, name: String, age: Int)
+
+  implicit val ArbitraryPerson: Arbitrary[Person] =
+    Arbitrary(implicitly[Arbitrary[(Key, String, Int)]].arbitrary map { case (k, n, a) => Person(k, n, a) })
+
+  implicit def PersonKeyed: Keyed[Person] =
+    keyed[Person](_.id, (x, k) => x.copy(id = k))
+
+  case class Car(id: Key, make: String, driver: Person)
+
+  implicit val ArbitraryCar: Arbitrary[Car] =
+    Arbitrary(implicitly[Arbitrary[(Key, String, Person)]].arbitrary map { case (k, m, d) => Car(k, m, d) })
+
+  implicit def CarKeyed: Keyed[Car] =
+    keyed[Car](_.id, (x, k) => x.copy(id = k))
+
+  // Turn it up
+  override def check(p: Test.Params) {
+    super.check(p.copy(
+      minSuccessfulTests = 1000
+    , maxDiscardedTests = 1000
+    ))
+  }
 
   property("succeeds is not fails") =
     forAll((m: Merger[Int]
@@ -78,14 +102,19 @@ object MergerProperties extends Properties("Merger") {
       (ifelseMerger(p, m) succeeds (x, y)) == p(x, y))
 
   property("idMerger succeeds if ids equal") =
-    forAll((m: SuccMerger[Key]
-          , x: Key
-          , y: Key) =>
-      (idMerger(m) succeeds (x, y)) == (x == y))
+    forAll((m: SuccMerger[Person]
+          , x: Person
+          , y: Person) =>
+      (idMerger(m) succeeds (x, y)) == (x.id == y.id))
 
   property("merge0 succeeds with first if ids equal") =
-    forAll((x: Key
-          , y: Key) =>
-      merge0[Key].merge(x, y) == (if(x == y) Some(x) else None))
+    forAll((x: Person
+          , y: Person) =>
+      merge0[Person].merge(x, y) == (if(x.id == y.id) Some(x) else None))
 
+  property("merge1 has same ids for successful merge") =
+    forAll((x: Car
+          , y: Car) =>
+      merge1[Car, Person](_.driver, (c, p) => c.copy(driver = p)) merge (x, y)
+        forall(c => (c.id == x.id) && (c.id == y.id)))
 }

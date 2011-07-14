@@ -79,11 +79,11 @@ trait Mergers {
   /** A merger that successfully merges to the first value only if the ids of the two values are equivalent. */
   def merge0[A](implicit k: Keyed[A]) = idMerger[A]((a1, _) => a1)
 
-  /** A merger that successfully merges using the given merger and lens if the ids of the two values are equivalent, otherwise, produces the first value. */
+  /** A merger that successfully merges using the given merger and lens if the ids of the two values are equivalent, otherwise, succeeds with the first value. */
   def merge1[A, B](get: A => B, set: (A, B) => A)(implicit ka: Keyed[A], mb: Merger[B]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, mb mergeOrFirst (get(a1), get(a2))))
 
-  /** A merger that successfully merges using the given mergers and lenses if the ids of the two values are equivalent, otherwise, merges with the first value. */
+  /** A merger that successfully merges using the given mergers and lenses if the ids of the two values are equivalent, otherwise, succeeds with the first value. */
   def merge2[A, B, C](getB: A => B, getC: A => C, set: (A, B, C) => A)(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, mb mergeOrFirst (getB(a1), getB(a2)), mc mergeOrFirst (getC(a1), getC(a2))))
 
