@@ -116,5 +116,12 @@ object MergerProperties extends Properties("Merger") {
     forAll((x: Car
           , y: Car) =>
       merge1[Car, Person](_.driver, (c, p) => c.copy(driver = p)) merge (x, y)
-        forall(c => (c.id == x.id) && (c.id == y.id)))
+        forall(c => {
+          val m = implicitly[Merger[Person]] mergeOrFirst (x.driver, y.driver)
+          // merged drivers have the same id as the result and the first
+          val p = m.id == c.driver.id && m.id == x.driver.id
+          // the result has the same id as the merged cars
+          val q = (c.id == x.id) && (c.id == y.id)
+          p && q
+        }))
 }
