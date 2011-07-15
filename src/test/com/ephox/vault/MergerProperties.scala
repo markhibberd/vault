@@ -219,7 +219,7 @@ object MergerProperties extends Properties("Merger") {
         }
 
         // Remove all elements in y that have the same key as any element in x
-        val z0 = y.filter(c => !xs.map(_.id).contains(c.id))
+        val z0 = y.filterNot(c => xs.map(_.id).contains(c.id))
 
         // Remove any elements in z0 that have duplicate ids, keeping the last occurrence
         val z1 = z0.reverse.map(KeyBy[Car](_, _.id)).distinct.map(_.value).reverse
@@ -231,5 +231,13 @@ object MergerProperties extends Properties("Merger") {
       }
 
       z == r
+    })
+
+  property("valueMerge merges a key") =
+    forAll((x: List[Car]
+          , y: Car) => {
+      val r = valueMerge(x, y)
+      val xs = x.toSet // optimisation only
+      ((x == r) == (xs.map(_.id) contains y.id)) && (r.map(_.id) contains y.id)
     })
 }
