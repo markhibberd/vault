@@ -194,7 +194,7 @@ object MergerProperties extends Properties("Merger") {
         }))
 
 
-  property("listMerge...") =
+  property("listMerge merges two lists") =
     forAll((x: List[Car]
           , y: List[Car]) => {
       val r = listMerge(x, y)
@@ -218,7 +218,17 @@ object MergerProperties extends Properties("Merger") {
             by(value).toString
         }
 
-        y.filter(c => !xs.map(_.id).contains(c.id)).reverse.map(KeyBy[Car](_, _.id)).distinct.map(_.value).reverse ::: x
+        // Remove all elements in y that have the same key as any element in x
+        val z0 = y.filter(c => !xs.map(_.id).contains(c.id))
+
+	// Remove any elements in z0 that have duplicate ids, keeping the last occurrence
+	val z1 = z0.reverse.map(KeyBy[Car](_, _.id)).distinct.map(_.value).reverse
+
+	// Append x to z1
+	val z2 = z1 ::: x
+
+	z2
+        // y.filter(c => !xs.map(_.id).contains(c.id)).reverse.map(KeyBy[Car](_, _.id)).distinct.map(_.value).reverse ::: x
       }
 
       z == r
