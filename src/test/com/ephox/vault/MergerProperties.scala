@@ -48,8 +48,8 @@ object MergerProperties extends Properties("Merger") {
   // Turn it up
   override def check(p: Test.Params) {
     super.check(p.copy(
-      minSuccessfulTests = 2000
-    , maxDiscardedTests = 2000
+      minSuccessfulTests = 1000
+    , maxDiscardedTests = 1000
     ))
   }
 
@@ -192,4 +192,35 @@ object MergerProperties extends Properties("Merger") {
           val q = (c.id == x.id) && (c.id == y.id)
           p && q
         }))
+
+
+  property("listMerge...") =
+    forAll((x: List[Car]
+          , y: List[Car]) => {
+      val r = listMerge(x, y)
+      val z = {
+        val xs = x.toSet // optimisation only
+
+        // CoState[A, Key]
+        // Useful in vault library?
+        case class KeyBy[A](value: A, by: A => Key) {
+          override def equals(o: Any) =
+            o.isInstanceOf[KeyBy[_]] && {
+              val b = o.asInstanceOf[KeyBy[_]]
+              b.value.isInstanceOf[A] && b.by.isInstanceOf[A => Key] &&
+                b.by.asInstanceOf[A => Key](b.value.asInstanceOf[A]) == by(value)
+            }
+
+          override def hashCode =
+            by(value).hashCode
+
+          override def toString =
+            by(value).toString
+        }
+
+        y.filter(c => !xs.map(_.id).contains(c.id)).reverse.map(KeyBy[Car](_, _.id)).distinct.map(_.value).reverse ::: x
+      }
+
+      z == r
+    })
 }
