@@ -99,6 +99,13 @@ trait Mergers {
   def merge1n1[A, B, C](getB: A => List[B], getC: A => C, set: (A, List[B], C) => A)(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C]): Merger[A] =
     idMerger[A]((a1, a2) => set(a1, listMerge(getB(a1), getB(a2)), mc(getC(a1), getC(a2)).getOrElse(getC(a1))))
 
+  def lmerge1[A, B](k: Lens[A, B])(implicit ka: Keyed[A], mb: Merger[B]): Merger[A] =
+    idMerger[A]((a1, a2) => k.set(a1, mb mergeOrFirst (k.get(a1), k.get(a2))))
+
+  /** A merger that successfully merges using the given mergers and lenses if the ids of the two values are equivalent, otherwise, succeeds with the first value. */
+  def lmerge2[A, B, C](k0: Lens[A, B], k1: Lens[A, C])(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C]): Merger[A] =
+    idMerger[A]((a1, a2) => k1.set(k0.set(a1, mb mergeOrFirst (k0.get(a1), k0.get(a2))), mc mergeOrFirst (k1.get(a1), k1.get(a2))))
+
   def listMerge[A](x: List[A], y: List[A])(implicit merge: Merger[A]): List[A] =
     y.foldRight[List[A]](x)((a, acc) => valueMerge(acc, a))
 
