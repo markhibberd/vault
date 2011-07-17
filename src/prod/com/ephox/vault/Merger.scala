@@ -115,6 +115,9 @@ trait Mergers {
   def lmerge3n[A, B, C, D](k0: Lens[A, List[B]], k1: Lens[A, List[C]], k2: Lens[A, List[D]])(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C], md: Merger[D]): Merger[A] =
     idMerger[A]((a1, a2) => k2.set(k1.set(k0.set(a1, listMerge(k0.get(a1), k0.get(a2))), listMerge(k1.get(a1), k1.get(a2))), listMerge(k2.get(a1), k2.get(a2))))
 
+  def lmerge1n1[A, B, C](k0: Lens[A, List[B]], k1: Lens[A, C])(implicit ka: Keyed[A], mb: Merger[B], mc: Merger[C]): Merger[A] =
+    idMerger[A]((a1, a2) => k1.set(k0.set(a1, listMerge(k0.get(a1), k0.get(a2))), mc mergeOrFirst (k1.get(a1), k1.get(a2))))
+
   def listMerge[A](x: List[A], y: List[A])(implicit merge: Merger[A]): List[A] =
     y.foldRight[List[A]](x)((a, acc) => valueMerge(acc, a))
 
