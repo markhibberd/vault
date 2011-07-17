@@ -48,8 +48,8 @@ object MergerProperties extends Properties("Merger") {
   // Turn it up
   override def check(p: Test.Params) {
     super.check(p.copy(
-      minSuccessfulTests = 1000
-    , maxDiscardedTests = 1000
+      minSuccessfulTests = 10000
+    , maxDiscardedTests = 10000
     ))
   }
 
