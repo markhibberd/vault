@@ -121,7 +121,7 @@ trait Mergers {
   def listMerge[A](x: List[A], y: List[A])(implicit merge: Merger[A]): List[A] =
     y.foldRight[List[A]](x)((a, acc) => valueMerge(acc, a))
 
-  def valueMerge[A](x: List[A], y: A)(implicit merge: Merger[A]): List[A] = {
+  def valueMerge[A](x: List[A], y: A)(implicit merge: Merger[A]): List[A] =
     (x.foldRight((some(y), nil[A])) {
       case (v, (None, acc)) => (None, v :: acc)
       case (v, (Some(a), acc)) =>
@@ -132,7 +132,6 @@ trait Mergers {
     }) match {
       case (value, acc) => value.fold(_ :: acc, acc)
     }
-  }
 }
 
 trait LowPriorityMergers { 
