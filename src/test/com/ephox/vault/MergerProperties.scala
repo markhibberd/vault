@@ -207,7 +207,6 @@ object MergerProperties extends Properties("Merger") {
           override def equals(o: Any) =
             o.isInstanceOf[KeyBy[_]] && {
               val b = o.asInstanceOf[KeyBy[_]]
-              b.value.isInstanceOf[A] && b.by.isInstanceOf[A => Key] &&
                 b.by.asInstanceOf[A => Key](b.value.asInstanceOf[A]) == by(value)
             }
 
