@@ -41,7 +41,7 @@ trait Merger[A] {
   def apply(a1: A, a2: A) = merge(a1, a2)
 }
 
-object Merger extends Mergers with LowPriorityMergers {
+object Merger extends Mergers {
   def apply[A](m: (A, A) => Option[A]): Merger[A] =
     merger(m)
 }
@@ -132,9 +132,4 @@ trait Mergers {
     }) match {
       case (value, acc) => value.fold(_ :: acc, acc)
     }
-}
-
-trait LowPriorityMergers { 
-  implicit def DefaultIdMerge[A](implicit k: Keyed[A]): Merger[A] =
-    Merger.merge0
 }

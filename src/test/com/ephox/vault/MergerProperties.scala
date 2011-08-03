@@ -21,10 +21,16 @@ object MergerProperties extends Properties("Merger") {
   implicit def PersonKeyed: Keyed[Person] =
     keyed[Person](_.id, (x, k) => x.copy(id = k))
 
+  implicit def PersonMerger: Merger[Person] =
+    merge0
+
   case class CarMake(id: Key, name: String)
 
   implicit def CarMakeKeyed: Keyed[CarMake] =
     keyed[CarMake](_.id, (x, k) => x.copy(id = k))
+
+  implicit def CarMakeMerger: Merger[CarMake] =
+    merge0
 
   implicit val ArbitraryCarMake: Arbitrary[CarMake] =
     Arbitrary(implicitly[Arbitrary[(Key, String)]].arbitrary map { case (k, m) => CarMake(k, m) })
@@ -34,8 +40,12 @@ object MergerProperties extends Properties("Merger") {
   implicit def ColourKeyed: Keyed[Colour] =
     keyed[Colour](_.id, (x, k) => x.copy(id = k))
 
+  implicit def ColourMerger: Merger[Colour] =
+    merge0
+
   implicit val ArbitraryColour: Arbitrary[Colour] =
     Arbitrary(implicitly[Arbitrary[(Key, String)]].arbitrary map { case (k, n) => Colour(k, n) })
+  
 
   case class Car(id: Key, make: CarMake, driver: Person, passengers: List[Person], colours: List[Colour])
 
@@ -44,6 +54,9 @@ object MergerProperties extends Properties("Merger") {
 
   implicit def CarKeyed: Keyed[Car] =
     keyed[Car](_.id, (x, k) => x.copy(id = k))
+
+  implicit def CarMerger: Merger[Car] =
+    merge0
 
   // Turn it up
   override def check(p: Test.Params) {
