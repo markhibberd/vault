@@ -10,6 +10,9 @@ object MergerDemo {
     implicit def PersonKeyed: Keyed[Person] =
       keyed[Person](_.id, (x, k) => x.copy(id = k))
 
+    implicit def PersonMerger: Merger[Person] =
+    	merge0
+
     case class People(p: List[Person])
 
     implicit def PeopleMerger: Merger[People] =
