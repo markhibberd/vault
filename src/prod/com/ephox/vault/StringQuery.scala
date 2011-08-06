@@ -71,7 +71,7 @@ sealed trait StringQuery {
   def deleteKey(key: Key): SqlConnect[Int] =
     key.fold(
       constantSqlConnect(sqlError(sqlExceptionContext(new SQLException("Can not delete a key that is not set.")))),
-      id => executePreparedUpdate(_.set(longType(id)))
+      id => executePreparedUpdate(_.set(longType(id)), e => e.setQuery(Sql.query(query, longType(id) :: Nil)))
     )
 
   def update[A](a: A, fields: List[JDBCType])(implicit keyed: Keyed[A]): SqlConnect[A] =
