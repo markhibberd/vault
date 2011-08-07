@@ -3,7 +3,6 @@ package com.ephox.vault;
 import scalaz._, Scalaz._, IterV._
 
 trait VaultIteratees {
-  // work around for an issue in scalaz.repeat interactions with some IterV.
   def combineAll[A](implicit merge: Merger[A]): IterV[A, List[A]] = {
     def step(current: Option[A], acc: List[A])(s: Input[A]): IterV[A, List[A]] =
         s(el = a2 => current match {
