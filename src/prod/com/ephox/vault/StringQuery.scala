@@ -36,7 +36,7 @@ sealed trait StringQuery {
                            b <- {
                              val n = s.executeUpdate
                              val r = s.getGeneratedKeys
-                             if (!r.next) error("No key result set [" + n + "], columns [" + Row.resultSetRow(r).columns.mkString(",") + "]")
+                             if (!r.next) sys.error("No key result set [" + n + "], columns [" + Row.resultSetRow(r).columns.mkString(",") + "]")
                              withRow(Row.resultSetRow(r))(a)(n)
                            }
                          } yield b
@@ -56,9 +56,9 @@ sealed trait StringQuery {
       executeUpdateWithKeysSet(
         (_: PreparedStatement).setValues(fields),
         r => i => (i, keyed.set(a, r.keyIndex(1).fold(
-          e => error("Error generating id [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]" + e.detail),
+          e => sys.error("Error generating id [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]" + e.detail),
           x => x,
-          nul => error("Null id generated [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]")
+          nul => sys.error("Null id generated [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]")
         ))),
         e => e.setQuery(Sql.query(query, fields))
       ).map(_._2),

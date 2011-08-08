@@ -130,7 +130,7 @@ sealed trait RowValue[A] {
    * Transform each log value by the given function.
    */
   def withEachLog(k: LOGV => LOGV): RowValue[A] =
-    withLog(_ ∘ k)
+    withLog(_ map k)
 
   /**
    * Append the given value to the current log.
