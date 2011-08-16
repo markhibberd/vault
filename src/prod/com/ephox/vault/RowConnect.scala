@@ -94,4 +94,12 @@ trait RowConnects {
     def bind[A, B](a: RowConnect[A], f: A => RowConnect[B]) =
       rowConnect(c => a(c) >>= (a => f(a)(c)))
   }
+
+  /** WARNING: Unsafe function */
+  def rtrace[A](a: A)(implicit s: Show[A]): RowConnect[Unit] =
+    rowConnect(_ => {
+      a.println
+      ().pure[RowValue]
+    })
+
 }
