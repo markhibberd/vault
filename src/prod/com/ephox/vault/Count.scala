@@ -1,22 +1,22 @@
 package com.ephox.vault
 
 
-sealed trait Count[A] {
+sealed trait Condense[A] {
   val value: A
   val c: Int
 }
 
-object Count extends Counts
+object Count extends Condenses
 
-trait Counts {
-  def count[A](v: A, ct: Int): Count[A] = new Count[A] {
+trait Condenses {
+  def condense[A](v: A, ct: Int): Condense[A] = new Condense[A] {
     val value = v
     val c = ct
   }
 
   import collection.immutable.Map
 
-  def condense[A](n: Int, d: List[Count[A]])(implicit cmp: Ordering[A]): (List[Count[A]], Option[Int]) = {
+  def condenseWithMax[A](n: Int, d: List[Condense[A]])(implicit cmp: Ordering[A]): (List[Condense[A]], Option[Int]) = {
     def minViewWithKey[K, V](m: Map[K, V])(implicit cmp: Ordering[(K, V)]): Option[(K, V, Map[K, V])] =
       if(m.isEmpty)
         None
@@ -44,7 +44,18 @@ trait Counts {
       }
 
     (u.toList sortBy (_._2._2) map {
-      case (k, (v, _)) => count(k, v)
+      case (k, (v, _)) => condense(k, v)
     }, v)
   }
+
+  import scalaz._, Scalaz._
+
+  implicit def CondenseShow[A: Show]: Show[Condense[A]] =
+    shows(t => "condense(value = " + t.value.shows + ", c = " + t.c + ")")
+
+  implicit def CondenseEqual[A: Equal]: Equal[Condense[A]] =
+    equalBy(t => (t.value, t.c))
+
+  implicit def CondenseOrder[A: Order]: Order[Condense[A]] =
+    orderBy(t => (t.value, t.c))
 }
