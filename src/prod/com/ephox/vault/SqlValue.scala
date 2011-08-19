@@ -12,6 +12,16 @@ sealed trait SqlValue[A] {
   def fold[X](err: SqlExceptionContext => X, v: A => X) =
     value.over.fold(err, v)
 
+  @annotation.tailrec
+  final def loop[X](e: SqlExceptionContext => X, v: A => Either[X, SqlValue[A]]): X =
+    if (isError)
+      e(getError.get)
+    else
+      v(getValue.get) match {
+        case Left(x) => x
+        case Right(r) => r.loop(e, v)
+      }
+
   def isError: Boolean =
     fold(_ => true, _ => false)
 
