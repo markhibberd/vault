@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="scalaz">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/run/scalaz/scalaz-core_2.8.1-6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/run/scalaz/scalaz-core_2.8.1-6.0.2-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/lib/run/scalaz/scalaz-core_2.8.1-6.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/run/scalaz/scalaz-core_2.8.1-6.0.2-SNAPSHOT-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
