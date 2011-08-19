@@ -119,10 +119,10 @@ trait Mergers {
     idMerger[A]((a1, a2) => k1.set(k0.set(a1, listMerge(k0(a1), k0(a2))), mc mergeOrFirst (k1(a1), k1(a2))))
 
   def listMerge[A](x: List[A], y: List[A])(implicit merge: Merger[A]): List[A] =
-    y.foldRight[List[A]](x)((a, acc) => valueMerge(acc, a))
+    y.foldr[List[A]](x)((a, acc) => valueMerge(acc, a))
 
   def valueMerge[A](x: List[A], y: A)(implicit merge: Merger[A]): List[A] =
-    (x.foldRight((some(y), nil[A])) {
+    (x.foldr((some(y), nil[A])) {
       case (v, (None, acc)) => (None, v :: acc)
       case (v, (Some(a), acc)) =>
         merge(v, a) match {
