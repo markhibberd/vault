@@ -2,7 +2,7 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._
 import SqlValue._
-import java.sql.{SQLException, PreparedStatement, Statement}
+import java.sql.{Connection, SQLException, PreparedStatement, Statement}
 
 sealed trait StringQuery {
   val query: String
@@ -27,41 +27,38 @@ sealed trait StringQuery {
       s.tryExecuteUpdate
     }))
 
-  def executeUpdateWithKeys[A, B](withStatement: PreparedStatement => A, withRow: Row => A => Int => SqlConnect[B], handle: SqlExceptionContext => SqlExceptionContext = x => x): SqlConnect[B] =
+  def executeUpdateWithPrepared[A, B](mkStatement: Connection => PreparedStatement, withStatement: PreparedStatement => A, withGeneratedKeys: Row => A => Int => SqlConnect[B], noGeneratedKeys: => SqlConnect[B], handle: SqlExceptionContext => SqlExceptionContext = x => x): SqlConnect[B] =
     sqlConnect(c => withSqlResource(
-                     value = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+                     value = mkStatement(c)
                    , evaluate = (s: PreparedStatement) => {
                          val a = withStatement(s)
                          val o = for {
                            b <- {
                              val n = s.executeUpdate
                              val r = s.getGeneratedKeys
-                             if (!r.next) error("No key result set [" + n + "], columns [" + Row.resultSetRow(r).columns.mkString(",") + "]")
-                             withRow(Row.resultSetRow(r))(a)(n)
+                             if (r.next)
+                               withGeneratedKeys(Row.resultSetRow(r))(a)(n)
+                             else
+                               noGeneratedKeys
                            }
                          } yield b
                          o(c).mapError(handle)
                      }
                    ).mapError(handle))
 
-  def executeUpdateWithKeysSet[B](withStatement: PreparedStatement => Unit, withRow: Row => Int => B, handle: SqlExceptionContext => SqlExceptionContext = x => x): SqlConnect[B] =
-    executeUpdateWithKeys(
-      withStatement = withStatement(_)
-    , withRow       = (r: Row) => (_: Unit) => (n: Int) => withRow(r)(n).η[SqlConnect]
-    , handle        = handle
-    )
-
   def insert[A](a: A, fields: List[JDBCType])(implicit keyed: Keyed[A]): SqlConnect[A] =
     keyed.get(a).fold(
-      executeUpdateWithKeysSet(
-        (_: PreparedStatement).setValues(fields),
-        r => i => (i, keyed.set(a, r.keyIndex(1).fold(
-          e => error("Error generating id [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]" + e.detail),
-          x => x,
-          nul => error("Null id generated [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]")
-        ))),
-        e => e.setQuery(Sql.query(query, fields))
-      ).map(_._2),
+      executeUpdateWithPrepared(
+        mkStatement = (_: Connection).prepareStatement(query, Array(1)),
+        withStatement =  (_: PreparedStatement).setValues(fields),
+        withGeneratedKeys =  (r: Row) => (_: SqlValue[Unit]) => (i: Int) => keyed.set(a, r.keyIndex(1).fold(
+            e => error("Error generating id [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]" + e.detail),
+            x => x,
+            nul => error("Null id generated [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]")
+          )).pure[SqlConnect],
+        noGeneratedKeys = error("No generating id for query [" + query + "], bindings [" + fields.mkString(",") + "]"),
+        handle = e => e.setQuery(Sql.query(query, fields))
+      ) ,
       id => constantSqlConnect(sqlError(sqlExceptionContext(new SQLException("Can not insert. Key is already set: " + id))))
     )
 
