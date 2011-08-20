@@ -59,6 +59,9 @@ sealed trait RowConnect[A] {
    */
   def liftPossiblyNull: RowConnect[PossiblyNull[A]] =
     possiblyNull.toRowConnect
+
+  def toKleisli: Kleisli[RowValue, Connection, A] =
+    kleisli(connect)
 }
 
 object RowConnect extends RowConnects
@@ -79,6 +82,12 @@ trait RowConnects {
 
   def closeRowConnect: RowConnect[Unit] =
     tryRowConnect(_.close)
+
+  def kleisliRowConnect[A](k: Kleisli[RowValue, Connection, A]): RowConnect[A] =
+    rowConnect(k(_))
+
+  def foldTraverseRowConnect[T[_]: Foldable, A, B](w: T[A], g: A => RowConnect[B]): RowConnect[List[B]] =
+    kleisliRowConnect(w.traverseKleisli[Connection, RowValue, B](a => g(a).toKleisli))
 
   implicit val RowConnectFunctor: Functor[RowConnect] = new Functor[RowConnect] {
     def fmap[A, B](k: RowConnect[A], f: A => B) =
