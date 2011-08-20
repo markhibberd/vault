@@ -64,6 +64,9 @@ sealed trait SqlConnect[A] {
 
   def toRowConnect: RowConnect[A] =
     rowConnect(connect(_).toRowValue)
+
+  def toKleisli: Kleisli[SqlValue, Connection, A] =
+    kleisli(connect)
 }
 
 object SqlConnect extends SqlConnects
@@ -84,6 +87,12 @@ trait SqlConnects {
 
   def closeSqlConnect: SqlConnect[Unit] =
     trySqlConnect(_.close)
+
+  def kleisliSqlConnect[A](k: Kleisli[SqlValue, Connection, A]): SqlConnect[A] =
+    sqlConnect(k(_))
+
+  def foldTraverseSqlConnect[T[_]: Foldable, A, B](w: T[A], g: A => SqlConnect[B]): SqlConnect[List[B]] =
+    kleisliSqlConnect(w.traverseKleisli[Connection, SqlValue, B](a => g(a).toKleisli))
 
   implicit val SqlConnectFunctor: Functor[SqlConnect] = new Functor[SqlConnect] {
     def fmap[A, B](k: SqlConnect[A], f: A => B) =
