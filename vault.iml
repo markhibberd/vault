@@ -62,7 +62,6 @@
           <root url="jar://$MODULE_DIR$/lib/run/scalaz/scalaz-core_2.8.1-6.0.2-SNAPSHOT.jar!/" />
         </CLASSES>
         <JAVADOC />
-
         <SOURCES>
           <root url="jar://$MODULE_DIR$/lib/run/scalaz/scalaz-core_2.8.1-6.0.2-SNAPSHOT-sources.jar!/" />
         </SOURCES>

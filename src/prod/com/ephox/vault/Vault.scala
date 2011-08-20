@@ -7,6 +7,7 @@ object Vault
   with JDBCTypes
   with Keys
   with Keyeds
+  with ListWrap
   with Mergers
   with PossiblyNulls
   with PreparedStatementContexts
