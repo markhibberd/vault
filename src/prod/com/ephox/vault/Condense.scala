@@ -6,7 +6,7 @@ sealed trait Condense[A] {
   val c: Int
 }
 
-object Count extends Condenses
+object Condense extends Condenses
 
 trait Condenses {
   def condense[A](v: A, ct: Int): Condense[A] = new Condense[A] {
@@ -17,35 +17,12 @@ trait Condenses {
   import collection.immutable.Map
 
   def condenseWithMax[A](n: Int, d: List[Condense[A]])(implicit cmp: Ordering[A]): (List[Condense[A]], Option[Int]) = {
-    def minViewWithKey[K, V](m: Map[K, V])(implicit cmp: Ordering[(K, V)]): Option[(K, V, Map[K, V])] =
-      if(m.isEmpty)
-        None
-      else {
-        val (k, v) = m.min
-        Some(k, v, m - k)
-      }
+    val (x, y) = d.zipWithIndex sortWith((g, z) => g._1.c > z._1.c) splitAt (n - 1)
 
-    val (u, v) =
-      d.zipWithIndex.foldRight((Map.empty[A, (Int, Int)], None: Option[Int])){
-        case ((dd, x), (m, k)) => {
-          val s = dd.value
-          val i = dd.c
-          if(m.size == n - 1 || n < 1) {
-            val w = k map (i+) orElse (Some(i))
-            minViewWithKey(m) match {
-              case None => (m, w)
-              case Some((ss, (ii, xx), mm)) =>
-                if(ii < i) (mm + ((s, (i, x))), k map (ii+) orElse (Some(ii)))
-                else (m, w)
-            }
-          } else
-            (m + ((s, (i, x))), None)
-        }
-      }
-
-    (u.toList sortBy (_._2._2) map {
-      case (k, (v, _)) => condense(k, v)
-    }, v)
+    (x sortWith (_._2 < _._2) map (_._1), y match {
+      case Nil    => None
+      case (g::t) => Some(t.foldLeft(g._1.c)((a, h) => a + h._1.c))
+    })
   }
 
   import scalaz._, Scalaz._
