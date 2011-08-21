@@ -14,14 +14,12 @@ trait Condenses {
     val c = ct
   }
 
-  import collection.immutable.Map
-
   def condenseWithMax[A](n: Int, d: List[Condense[A]])(implicit cmp: Ordering[A]): (List[Condense[A]], Option[Int]) = {
-    val (x, y) = d.zipWithIndex sortWith((g, z) => g._1.c > z._1.c) splitAt (n - 1)
+    val (x, y) = d.zipWithIndex sortWith(_._1.c > _._1.c) splitAt (n - 1)
 
     (x sortWith (_._2 < _._2) map (_._1), y match {
       case Nil    => None
-      case (g::t) => Some(t.foldLeft(g._1.c)((a, h) => a + h._1.c))
+      case (g::t) => Some(t.foldLeft(g._1.c)(_ + _._1.c))
     })
   }
 
