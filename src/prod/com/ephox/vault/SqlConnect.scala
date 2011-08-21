@@ -67,6 +67,15 @@ sealed trait SqlConnect[A] {
 
   def toKleisli: Kleisli[SqlValue, Connection, A] =
     kleisli(connect)
+
+  // Unsafe function
+  // Prints the given argument during execution of the connection value.
+  def trace(a: A)(implicit s: Show[A]): SqlConnect[A] =
+    sqlConnect(c => {
+      a.println
+      connect(c)
+    })
+
 }
 
 object SqlConnect extends SqlConnects
@@ -108,11 +117,4 @@ trait SqlConnects {
     def bind[A, B](a: SqlConnect[A], f: A => SqlConnect[B]) =
       sqlConnect(c => a(c) >>= (a => f(a)(c)))
   }
-
-  /** WARNING: Unsafe function */
-  def strace[A](a: A)(implicit s: Show[A]): SqlConnect[Unit] =
-    sqlConnect(_ => {
-      a.println
-      ().pure[SqlValue]
-    })
 }
