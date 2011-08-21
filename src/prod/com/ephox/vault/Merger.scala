@@ -127,7 +127,7 @@ trait Mergers {
       case (v, (Some(a), acc)) =>
         merge(v, a) match {
           case None => (Some(a), v :: acc)
-          case Some(x) => (None, x :: acc)
+          case Some(u) => (None, u :: acc)
         }
     }) match {
       case (value, acc) => value.fold(_ :: acc, acc)
