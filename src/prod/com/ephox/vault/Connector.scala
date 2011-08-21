@@ -73,7 +73,7 @@ object Connectors {
     override def toString = "db2[" + username + "@" + hostname + ":" + port + "/" + dbname + "]"
   }
 
-  def mysql(hostname: String, port: Int, dbname: Int, username: String, password: String): Connector = new Connector {
+  def mysql(hostname: String, port: Int, dbname: String, username: String, password: String): Connector = new Connector {
     def nu = mkConnection(
       "com.mysql.jdbc.Driver",
       "jdbc:mysql://" + hostname + ":" + port + "/" + dbname,
@@ -83,17 +83,25 @@ object Connectors {
     override def toString = "mysql[" + username + "@" + hostname + ":" + port + "/" + dbname + "]"
   }
 
-  def sqlserver(hostname: String, port: Int, dbname: Int, username: String, password: String):  Connector = new Connector {
+  def sqlserver(hostname: String, port: Int, dbname: String, username: String, password: String):  Connector = new Connector {
     def nu = mkConnection(
-      "com.microsoft.jdbc.sqlserver.SQLServerDriver",
-      "jdbc:microsoft:sqlserver://" + hostname + ":" + port + ";databaseName=" + dbname,
+      "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+      "jdbc:sqlserver://" + hostname + ":" + port + ";databaseName=" + dbname,
       username, password
     )
 
     override def toString = "sqlserver[" + username + "@" + hostname + ":" + port + "/" + dbname + "]"
   }
 
-  def postgres(hostname: String, port: Int, dbname: Int, username: String, password: String): Connector = new Connector {
+  def jtds(hostname: String, port: Int, dbname: String, username: String, password: String): Connector = new Connector {
+    def nu = mkConnection(
+      "net.sourceforge.jtds.jdbc.Driver",
+      "jdbc:jtds:sqlserver://" + hostname + ":" + port + "/" + dbname,
+      username, password
+    )
+  }
+
+  def postgres(hostname: String, port: Int, dbname: String, username: String, password: String): Connector = new Connector {
     def nu = mkConnection(
     "org.postgresql.Driver",
     "jdbc:postgresql://" + hostname + ":" + port + "/" + dbname,
