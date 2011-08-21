@@ -87,7 +87,7 @@ trait RowConnects {
     rowConnect(k(_))
 
   def foldTraverseRowConnect[T[_]: Foldable, A, B](w: T[A], g: A => RowConnect[B]): RowConnect[List[B]] =
-    kleisliRowConnect(w.listl.reverse.traverseKleisli[Connection, RowValue, B](a => g(a).toKleisli)) map (_.reverse)
+    kleisliRowConnect(w.traverseKleisli[Connection, RowValue, B](a => g(a).toKleisli))
 
   implicit val RowConnectFunctor: Functor[RowConnect] = new Functor[RowConnect] {
     def fmap[A, B](k: RowConnect[A], f: A => B) =
