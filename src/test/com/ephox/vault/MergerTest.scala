@@ -86,11 +86,15 @@ class MergerTest extends FunSuite {
 
   test("merge 2n") {
     val result = ListEnumerator(bobs, combineAll[Bob]).run
-    println(result)
+    val z = List(
+      Bob(key(100), "bob1", List(billy1, billy2), List(jimmy0, jimmy1, jimmy2)),
+      Bob(key(101), "bob2", List(billy3, billy4), List(jimmy3, jimmy4))
+    )
+    expect(result)(z)
   }
 
   test("merge nested 1n/2n") {
-    val result = ListEnumerator(masters, combineAll[Master]).run
+    val result = ListEnumerator(masters, combine[Master]).run
     println(result)
   }
 
