@@ -35,6 +35,8 @@ class SelectTest extends FunSuite {
 
     val result = Queries.list(FredRowAccess, "SELECT * FROM FRED".toSql) executeOrDie connection
 
+    println(List(1, 2, 3).straverse(i => i.pure[RowConnect].unifyNull) executeOrDie connection)
+
     expect(freds)(result)
   }
 }

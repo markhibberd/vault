@@ -45,7 +45,7 @@ object MergerProperties extends Properties("Merger") {
 
   implicit val ArbitraryColour: Arbitrary[Colour] =
     Arbitrary(implicitly[Arbitrary[(Key, String)]].arbitrary map { case (k, n) => Colour(k, n) })
-  
+
 
   case class Car(id: Key, make: CarMake, driver: Person, passengers: List[Person], colours: List[Colour])
 
