@@ -62,6 +62,14 @@ sealed trait RowConnect[A] {
 
   def toKleisli: Kleisli[RowValue, Connection, A] =
     kleisli(connect)
+
+  // Unsafe function
+  // Prints the given argument during execution of the connection value.
+  def trace(a: A)(implicit s: Show[A]): RowConnect[A] =
+    rowConnect(c => {
+      a.println
+      connect(c)
+    })
 }
 
 object RowConnect extends RowConnects
@@ -103,12 +111,5 @@ trait RowConnects {
     def bind[A, B](a: RowConnect[A], f: A => RowConnect[B]) =
       rowConnect(c => a(c) >>= (a => f(a)(c)))
   }
-
-  /** WARNING: Unsafe function */
-  def rtrace[A](a: A)(implicit s: Show[A]): RowConnect[Unit] =
-    rowConnect(_ => {
-      a.println
-      ().pure[RowValue]
-    })
 
 }
