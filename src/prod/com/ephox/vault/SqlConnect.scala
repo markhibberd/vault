@@ -101,7 +101,7 @@ trait SqlConnects {
     sqlConnect(k(_))
 
   def foldTraverseSqlConnect[T[_]: Foldable, A, B](w: T[A], g: A => SqlConnect[B]): SqlConnect[List[B]] =
-    kleisliSqlConnect(w.traverseKleisli[Connection, SqlValue, B](a => g(a).toKleisli))
+    kleisliSqlConnect(w.listl.reverse.traverseKleisli[Connection, SqlValue, B](a => g(a).toKleisli)) map (_.reverse)
 
   implicit val SqlConnectFunctor: Functor[SqlConnect] = new Functor[SqlConnect] {
     def fmap[A, B](k: SqlConnect[A], f: A => B) =
