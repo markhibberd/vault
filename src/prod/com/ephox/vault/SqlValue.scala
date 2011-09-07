@@ -93,7 +93,7 @@ sealed trait SqlValue[A] {
    * Transform each log value by the given function.
    */
   def withEachLog(k: LOGV => LOGV): SqlValue[A] =
-    withLog(_ ∘ k)
+    withLog(_ map k)
 
   /**
    * Append the given value to the current log.
