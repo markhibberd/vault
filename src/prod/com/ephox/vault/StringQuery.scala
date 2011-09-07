@@ -52,11 +52,11 @@ sealed trait StringQuery {
         mkStatement = (_: Connection).prepareStatement(query, Array(1)),
         withStatement =  (_: PreparedStatement).setValues(fields),
         withGeneratedKeys =  (r: Row) => (_: SqlValue[Unit]) => (i: Int) => keyed.set(a, r.keyIndex(1).fold(
-            e => error("Error generating id [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]" + e.detail),
+            e => sys.error("Error generating id [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]" + e.detail),
             x => x,
-            nul => error("Null id generated [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]")
+            nul => sys.error("Null id generated [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]")
           )).pure[SqlConnect],
-        noGeneratedKeys = error("No generating id for query [" + query + "], bindings [" + fields.mkString(",") + "]"),
+        noGeneratedKeys = sys.error("No generating id for query [" + query + "], bindings [" + fields.mkString(",") + "]"),
         handle = e => e.setQuery(Sql.query(query, fields))
       ) ,
       id => constantSqlConnect(sqlError(sqlExceptionContext(new SQLException("Can not insert. Key is already set: " + id))))
