@@ -1,11 +1,19 @@
 MODULE = vault
 VERSION = 2.0.0
 
+PATH := `pwd`/lib/tools/scala/bin:${PATH}
+SCALA = PATH=${PATH} scala
+SCALAC = PATH=${PATH} scalac
+
 GEN = gen
 
 SRC_PROD = src/prod
 SRC_TEST = src/test
 SRC_DEMO = src/demo
+
+LST_PROD = ${GEN}/prod.list
+LST_TEST = ${GEN}/test.list
+LST_DEMO = ${GEN}/demo.list
 
 CLS_PROD = gen/classes/prod
 CLS_TEST = gen/classes/test
@@ -40,12 +48,15 @@ DIRECTORIES = ${GEN} ${GEN}/tmp ${CLS_DEMO} ${CLS_PROD} ${CLS_TEST} ${DIST} ${TA
 default: test dist
 
 compile: clean ${CLS_PROD} ${CLS_TEST} ${CLS_DEMO}
-	find ${SRC_PROD} -name "*.scala" | xargs -s 30000 scalac -classpath ${CP_BASE} -d ${CLS_PROD} 
-	find ${SRC_DEMO} -name "*.scala" | xargs -s 30000 scalac -classpath ${CP_PROD} -d ${CLS_DEMO} 
-	find ${SRC_TEST} -name "*.scala" | xargs -s 30000 scalac -classpath ${CP_PROD} -d ${CLS_TEST} 
+	find ${SRC_PROD} -name "*.scala" > ${LST_PROD}
+	find ${SRC_DEMO} -name "*.scala" > ${LST_DEMO}
+	find ${SRC_TEST} -name "*.scala" > ${LST_TEST}
+	${SCALAC} -classpath ${CP_BASE} -d ${CLS_PROD} @${LST_PROD}
+	${SCALAC} -classpath ${CP_PROD} -d ${CLS_DEMO} @${LST_DEMO}
+	${SCALAC} -classpath ${CP_PROD} -d ${CLS_TEST} @${LST_TEST}
 
 test: compile
-	scala -cp ${CP_TEST} org.scalatest.tools.Runner -p ${CLS_TEST} -oDFW 
+	${SCALA} -cp ${CP_TEST} org.scalatest.tools.Runner -p ${CLS_TEST} -oDFW 
 
 ${JAR}: compile ${DIST_MANIFEST} ${DIST}
 	jar cfm ${JAR} ${DIST_MANIFEST} -C ${CLS_PROD} .
@@ -75,7 +86,7 @@ ${DIST_MANIFEST}: ${GEN}
 	sed -e 's/VERSION/${VERSION}/' ${MANIFEST} > ${DIST_MANIFEST}
 
 repl: compile
-	scala -classpath ${CP_BASE}:${CLS_PROD}:${CLS_TEST}
+	${SCALA} -classpath ${CP_BASE}:${CLS_PROD}:${CLS_TEST}
 
 size: 
 	find ${SRC_PROD} -name "*.scala" | xargs wc | sort -n
