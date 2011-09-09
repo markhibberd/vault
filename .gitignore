@@ -4,3 +4,7 @@ out
 target
 .idea/workspace.xml
 .idea/ant.xml
+/lib
+/dependency
+/dist
+/tmp
