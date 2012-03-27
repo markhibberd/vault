@@ -23,7 +23,7 @@ sealed trait PreparedStatementW {
      })
 
   def foreachStatement[T[_], A](as: T[A], k: A => Unit)(implicit f: Foldable[T]): SqlConnect[Int] =
-    executeStatements(as, (a: A) => k(a).η[SqlConnect])
+    executeStatements(as, (a: A) => k(a).point[SqlConnect])
 
   def set(values: JDBCType*): SqlValue[Unit] =
     setValues(values.toList)
@@ -65,7 +65,7 @@ sealed trait PreparedStatementW {
           n + 1
         }) mapError (_.setPreparedStatementContext(preparedStatementContextPS(s, v, n)))
       }
-    } map (_ => ())
+    } void
 }
 
 object PreparedStatementW extends PreparedStatementWs

@@ -25,12 +25,28 @@ trait Condenses {
 
   import scalaz._, Scalaz._
 
-  implicit def CondenseShow[A: Show]: Show[Condense[A]] =
-    shows(t => "condense(value = " + t.value.shows + ", c = " + t.c + ")")
+  trait CondenseEqual[A] extends Equal[Condense[A]] {
+    implicit def A: Equal[A]
 
-  implicit def CondenseEqual[A: Equal]: Equal[Condense[A]] =
-    equalBy(t => (t.value, t.c))
+    override def equalIsNatural: Boolean = A.equalIsNatural
 
-  implicit def CondenseOrder[A: Order]: Order[Condense[A]] =
-    orderBy(t => (t.value, t.c))
+    override def equal(a1: Condense[A], a2: Condense[A]) =
+      a1.value == a2.value && a1.c === a2.c
+  }
+
+  trait CondenseOrder[A] extends Order[Condense[A]] {
+    implicit def A: Order[A]
+
+    override def order(a1: Condense[A], a2: Condense[A]) =
+      Order.orderBy((t: Condense[A]) => (t.value, t.c)) apply (a1, a2)
+  }
+
+  implicit def CondenseShow[A: Show]: Show[Condense[A]] = new Show[Condense[A]] {
+    def show(t: Condense[A]) =
+      ("condense(value = " + t.value.shows + ", c = " + t.c + ")").toList
+  }
+
+  implicit def CondenseOrder[A](implicit A0: Order[A]): Order[Condense[A]] = new CondenseOrder[A] {
+    implicit def A = A0
+  }
 }

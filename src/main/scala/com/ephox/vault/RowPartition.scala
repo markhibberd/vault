@@ -12,5 +12,5 @@ object RowPartition {
   }
 
   def equalityPartition[A: Equal](k: Row => A): RowPartition =
-    rowPartition(r1 => r2 => (k(r1) === k(r2)).η[RowValue])
+    rowPartition(r1 => r2 => (k(r1) === k(r2)).point[RowValue])
 }

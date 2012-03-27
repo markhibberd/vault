@@ -12,6 +12,7 @@ object Vault
   with PossiblyNulls
   with PreparedStatementContexts
   with PreparedStatementWs
+  with Resources
   with RowAccesss
   with RowConnects
   with RowQueryConnects

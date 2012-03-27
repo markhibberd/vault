@@ -61,7 +61,7 @@ sealed trait RowConnect[A] {
     possiblyNull.toRowConnect
 
   def toKleisli: Kleisli[RowValue, Connection, A] =
-    kleisli(connect)
+    Kleisli(connect)
 
   // Unsafe function
   // Prints the given argument during execution of the connection value.
@@ -83,7 +83,7 @@ trait RowConnects {
     rowConnect(_ => v)
 
   def valueRowConnect[A](f: Connection => A): RowConnect[A] =
-    rowConnect(f(_).η[RowValue])
+    rowConnect(f(_).point[RowValue])
 
   def tryRowConnect[A](f: Connection => A): RowConnect[A] =
     rowConnect(c => tryRowValue(f(c)))
@@ -94,22 +94,15 @@ trait RowConnects {
   def kleisliRowConnect[A](k: Kleisli[RowValue, Connection, A]): RowConnect[A] =
     rowConnect(k(_))
 
-  def foldTraverseRowConnect[T[_]: Foldable, A, B](w: T[A], g: A => RowConnect[B]): RowConnect[List[B]] =
-    kleisliRowConnect(w.traverseKleisli[Connection, RowValue, B](a => g(a).toKleisli))
+  def foldTraverseRowConnect[T[_]: Traverse, A, B](w: T[A], g: A => RowConnect[B]): RowConnect[T[B]] =
+    kleisliRowConnect(w.traverseKTrampoline[RowValue, Connection, B](a => g(a).toKleisli))
 
-  implicit val RowConnectFunctor: Functor[RowConnect] = new Functor[RowConnect] {
-    def fmap[A, B](k: RowConnect[A], f: A => B) =
-      k map f
-  }
+  implicit val RowConnectMonad: Monad[RowConnect] = new Monad[RowConnect] {
+    def bind[A, B](a: RowConnect[A])(f: A => RowConnect[B]) =
+      rowConnect(c => a(c) flatMap (a => f(a)(c)))
 
-  implicit val RowConnectPure: Pure[RowConnect] = new Pure[RowConnect] {
-    def pure[A](a: => A) =
-      rowConnect(_ => a.η[RowValue])
-  }
-
-  implicit val RowConnectBind: Bind[RowConnect] = new Bind[RowConnect] {
-    def bind[A, B](a: RowConnect[A], f: A => RowConnect[B]) =
-      rowConnect(c => a(c) >>= (a => f(a)(c)))
+    def point[A](a: => A) =
+      rowConnect(_ => a.point[RowValue])
   }
 
 }

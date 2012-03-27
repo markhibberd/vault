@@ -9,7 +9,7 @@ sealed trait StringQuery {
 
   import SqlConnect._
   import PreparedStatementW._
-  import CampanionKey._
+  import CompanionKey._
   import Sql._
   import JDBCType._
   import SqlExceptionContext._
@@ -55,7 +55,7 @@ sealed trait StringQuery {
             e => sys.error("Error generating id [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]" + e.detail),
             x => x,
             nul => sys.error("Null id generated [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]")
-          )).pure[SqlConnect],
+          )).point[SqlConnect],
         noGeneratedKeys = sys.error("No generating id for query [" + query + "], bindings [" + fields.mkString(",") + "]"),
         handle = e => e.setQuery(Sql.query(query, fields))
       ) ,

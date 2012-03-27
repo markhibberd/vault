@@ -1,6 +1,6 @@
 package com.ephox.vault
 
-import scalaz._, Scalaz._
+import scalaz._, iteratee._, Scalaz._
 import SqlValue._
 import RowAccess._
 
@@ -18,13 +18,13 @@ sealed trait SqlAccess[A] {
   /**
    * lifted to row-access.
    */
-  def -|>[T](iter: IterV[A, T]): RowQueryConnect[IterV[A, T]] =
+  def -|>[T](iter: Iteratee[A, T]): RowQueryConnect[Iteratee[A, T]] =
    toRowAccess -|> iter
 
   /**
    * lifted to row-access.
    */
-  def -||>[T](iter: IterV[A, T]): RowQueryConnect[T] =
+  def -||>[T](iter: Iteratee[A, T]): RowQueryConnect[T] =
     toRowAccess -||> iter
 
   def map[B](f: A => B): SqlAccess[B] =
@@ -41,18 +41,11 @@ object SqlAccess extends SqlAccesss
 trait SqlAccesss {
   def sqlAccess[A](f: Row => SqlValue[A]): SqlAccess[A] = SqlAccess_(f)
 
-  implicit val SqlAccessFunctor: Functor[SqlAccess] = new Functor[SqlAccess] {
-    def fmap[A, B](k: SqlAccess[A], f: A => B) =
-      k map f
-  }
+  implicit val SqlAccessMonad: Monad[SqlAccess] = new Monad[SqlAccess] {
+    def bind[A, B](a: SqlAccess[A])(f: A => SqlAccess[B]) =
+      sqlAccess(r => a.access(r) flatMap (a => f(a) access (r)))
 
-  implicit val SqlAccessPure: Pure[SqlAccess] = new Pure[SqlAccess] {
-    def pure[A](a: => A) =
-      sqlAccess(_ => a.η[SqlValue])
-  }
-
-  implicit val SqlAccessBind: Bind[SqlAccess] = new Bind[SqlAccess] {
-    def bind[A, B](a: SqlAccess[A], f: A => SqlAccess[B]) =
-      sqlAccess(r => a.access(r) >>= (a => f(a) access (r)))
+    def point[A](a: => A) =
+      sqlAccess(_ => a.point[SqlValue])
   }
 }

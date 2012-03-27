@@ -1,13 +1,13 @@
 package com.ephox.vault.demo
 
-import scalaz._, Scalaz._
+import scalaz._, Scalaz._,  iteratee._
 import com.ephox.vault._, Vault._
 
 object VaultNullDemo {
   case class Person(name: String, age: Int)
 
   object Person {
-    implicit val ShowPerson: Show[Person] = showA
+    implicit val ShowPerson: Show[Person] = Show.showFromToString
   }
 
   val PersonRowAccess =
@@ -33,7 +33,7 @@ object VaultNullDemo {
     setupData commitRollback connection printStackTraceOr (n => println(n + " rows affected"))
 
     // get result and close connection
-    val nuller = PersonRowAccess -||> IterV.head[Person] <|- "SELECT * FROM PERSON".toSql finalyClose
+    val nuller = PersonRowAccess -||> Iteratee.head[Person, Id] <|- "SELECT * FROM PERSON".toSql finalyClose
 
     val x = nuller connect connection
 

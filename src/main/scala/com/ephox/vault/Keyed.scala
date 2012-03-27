@@ -1,13 +1,13 @@
 package com.ephox.vault
 
-import scalaz._, Scalaz._
+import scalaz._, Scalaz._, CostateT._
 
 // ≈ Lens[A, Key]
 sealed trait Keyed[A] {
   def get(a: A): Key
   def set(a: A, key: Key): A
   def lens: Lens[A, Key] =
-    Lens(get(_), set(_, _))
+    Lens(t => costate(set(t, _), get(t)))
 }
 
 object Keyed extends Keyeds

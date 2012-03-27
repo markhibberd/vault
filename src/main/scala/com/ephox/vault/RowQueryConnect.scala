@@ -22,18 +22,11 @@ trait RowQueryConnects {
       f(sql)
   }
 
-  implicit val RowQueryConnectFunctor: Functor[RowQueryConnect] = new Functor[RowQueryConnect] {
-    def fmap[A, B](k: RowQueryConnect[A], f: A => B) =
-      k map f
-  }
-
-  implicit val RowQueryConnectPure: Pure[RowQueryConnect] = new Pure[RowQueryConnect] {
-    def pure[A](a: => A) =
-      rowQueryConnect(_ => a.η[RowConnect])
-  }
-
-  implicit val RowQueryConnectBind: Bind[RowQueryConnect] = new Bind[RowQueryConnect] {
-    def bind[A, B](a: RowQueryConnect[A], f: A => RowQueryConnect[B]) =
+  implicit val RowQueryConnectMonad: Monad[RowQueryConnect] = new Monad[RowQueryConnect] {
+    def bind[A, B](a: RowQueryConnect[A])(f: A => RowQueryConnect[B]) =
       a flatMap f
+
+    def point[A](a: => A) =
+      rowQueryConnect(_ => a.point[RowConnect])
   }
 }

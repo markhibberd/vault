@@ -2,6 +2,7 @@ package com.ephox.vault
 
 import SqlConnect._
 import RowConnect._
+import scalaz._, Scalaz._
 
 trait ListWrap {
   implicit def ListToConnectTraversable[A](l: List[A]) = new {

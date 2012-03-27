@@ -280,5 +280,7 @@ trait JDBCTypes {
    */
   def urlType: URL => JDBCType = URLJDBCType(_)
 
-  implicit val JDBCTypeShow: Show[JDBCType] = showA
+  implicit val JDBCTypeShow: Show[JDBCType] = new Show[JDBCType] {
+    def show(t: JDBCType) = t.toString.toList
+  }
 }
