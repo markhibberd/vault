@@ -2,7 +2,7 @@ package com.ephox.vault
 
 import org.scalatest.FunSuite
 import com.ephox.vault._, Vault._
-import scalaz._, Scalaz._
+import scalaz._, Scalaz._, iteratee._
 
 class MergerTest extends FunSuite {
   case class Billy(key: Key, b: String) {
@@ -84,24 +84,28 @@ class MergerTest extends FunSuite {
     Master(key(900), Bob(key(101), "bob2", List(billy4), List(jimmy4)) :: Nil)
   )
 
+
   test("merge 2n") {
-    val result = ListEnumerator(bobs, combineAll[Bob]).run
+    val e = EnumeratorT.enumList[Bob, Id](bobs)
+    val result = combineAll[Bob] >>== (e.apply[List[Bob]](_))
     val z = List(
       Bob(key(100), "bob1", List(billy1, billy2), List(jimmy0, jimmy1, jimmy2)),
       Bob(key(101), "bob2", List(billy3, billy4), List(jimmy3, jimmy4))
     )
-    expect(result)(z)
+    expect(result.run)(z)
   }
 
   test("merge nested 1n/2n") {
-    val result = ListEnumerator(masters, combine[Master]).run
-    println(result)
-  }
+    val e = EnumeratorT.enumList[Master, Id](masters)
+    val result = combine[Master] >>== (e.apply[Option[Master]](_))
+    val z = Some(
+      Master(key(900)
+        , Bob(key(100), "bob1", List(billy1, billy2), List(jimmy0, jimmy1, jimmy2))
+       :: Bob(key(101), "bob2", List(billy3, billy4), List(jimmy3, jimmy4))
+       :: Nil
+      )
+    )
 
-  implicit val ListEnumerator = new Enumerator[List] {
-    def apply[E, A](e: List[E], i: IterV[E, A]): IterV[E, A] = e match {
-      case List() => i
-      case x :: xs => i.fold(done = (_, _) => i, cont = k => apply(xs, k(IterV.El(x))))
-    }
+    expect(result.run)(z)
   }
 }

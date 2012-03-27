@@ -1,6 +1,6 @@
 package com.ephox.vault
 
-import scalaz._, Scalaz._
+import scalaz._, iteratee._, Scalaz._
 import java.io.{Reader, InputStream}
 import java.util.Calendar
 import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSet, NClob}
@@ -8,7 +8,7 @@ import java.net.URL
 import SqlExceptionContext._
 
 sealed trait Row {
-  def iterate[A, T](a: RowAccess[A]): IterV[A, T] => RowValue[IterV[A, T]]
+  def iterate[A, T](a: RowAccess[A]): Iteratee[A, T] => RowValue[Iteratee[A, T]]
 
   def columns: List[String]
   def indexFor(table: String, column: String): Option[Int]
@@ -115,7 +115,7 @@ sealed trait Row {
 
 object Row {
   import RowValue._
-  import CampanionKey._
+  import CompanionKey._
 
   type ObjectTypeMap = java.util.Map[String, Class[_]]
   type Cal = Calendar
@@ -140,26 +140,25 @@ object Row {
       try {
         // very dangerous, beware of effect on ResultSet (wasNull)
         val z = a
-        if(r.wasNull) rowNull else z.η[RowValue]
+        if(r.wasNull) rowNull else z.point[RowValue]
       } catch {
         case e: SqlException => rowError(sqlExceptionContext(e))
         case x => throw x
       }
 
-    def iterate[A, T](ra: RowAccess[A]) = iter =>
-      iter.pure[RowValue].loop(
+    def iterate[A, T](ra: RowAccess[A]): Iteratee[A, T] => RowValue[Iteratee[A, T]] = iter =>
+      iter.point[RowValue].loop(
         e => rowError(e),
-        i => i match {
-          case IterV.Done(a, ip) =>
-            Left(i.pure[RowValue])
-          case IterV.Cont(k) => {
+        i => i.foldT(
+          cont = k => {
             val hasMore = r.next
             if (!hasMore)
-              Left(i.pure[RowValue])
+              Left(i.point[RowValue])
             else
-              Right(ra.access(Row.resultSetRow(r)) map (zz => k(IterV.El(zz))))
+              Right(ra.access(Row.resultSetRow(r)) map (zz => k(Input.Element(zz))))
           }
-        },
+        , done = (_, _) => Left(i.point[RowValue])
+        ),
         n => rowNullPossibleMsg(n)
       )
 

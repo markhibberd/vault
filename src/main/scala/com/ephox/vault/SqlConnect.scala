@@ -66,7 +66,7 @@ sealed trait SqlConnect[A] {
     rowConnect(connect(_).toRowValue)
 
   def toKleisli: Kleisli[SqlValue, Connection, A] =
-    kleisli(connect)
+    Kleisli(connect)
 
   // Unsafe function
   // Prints the given argument during execution of the connection value.
@@ -89,7 +89,7 @@ trait SqlConnects {
     sqlConnect(_ => v)
 
   def valueSqlConnect[A](f: Connection => A): SqlConnect[A] =
-    sqlConnect(f(_).η[SqlValue])
+    sqlConnect(f(_).point[SqlValue])
 
   def trySqlConnect[A](f: Connection => A): SqlConnect[A] =
     sqlConnect(c => trySqlValue(f(c)))
@@ -100,21 +100,15 @@ trait SqlConnects {
   def kleisliSqlConnect[A](k: Kleisli[SqlValue, Connection, A]): SqlConnect[A] =
     sqlConnect(k(_))
 
-  def foldTraverseSqlConnect[T[_]: Foldable, A, B](w: T[A], g: A => SqlConnect[B]): SqlConnect[List[B]] =
-    kleisliSqlConnect(w.traverseKleisli[Connection, SqlValue, B](a => g(a).toKleisli))
+  def foldTraverseSqlConnect[T[_]: Traverse, A, B](w: T[A], g: A => SqlConnect[B]): SqlConnect[T[B]] =
+    kleisliSqlConnect(w.traverseKTrampoline[SqlValue, Connection, B](a => g(a).toKleisli))
 
-  implicit val SqlConnectFunctor: Functor[SqlConnect] = new Functor[SqlConnect] {
-    def fmap[A, B](k: SqlConnect[A], f: A => B) =
-      k map f
-  }
+  implicit val SqlConnectMonad: Monad[SqlConnect] =
+    new Monad[SqlConnect]{
+    def bind[A, B](a: SqlConnect[A])(f: A => SqlConnect[B]) =
+      sqlConnect(c => a(c) flatMap  (a => f(a)(c)))
 
-  implicit val SqlConnectPure: Pure[SqlConnect] = new Pure[SqlConnect] {
-    def pure[A](a: => A) =
+    def point[A](a: => A) =
       valueSqlConnect(_ => a)
-  }
-
-  implicit val SqlConnectBind: Bind[SqlConnect] = new Bind[SqlConnect]{
-    def bind[A, B](a: SqlConnect[A], f: A => SqlConnect[B]) =
-      sqlConnect(c => a(c) >>= (a => f(a)(c)))
   }
 }

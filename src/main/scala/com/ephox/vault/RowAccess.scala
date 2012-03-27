@@ -1,6 +1,6 @@
 package com.ephox.vault
 
-import scalaz._, Scalaz._
+import scalaz._, iteratee._, Scalaz._
 import SqlValue._
 import RowValue._
 import java.sql.ResultSet
@@ -19,10 +19,10 @@ sealed trait RowAccess[A] {
       case RowAccess_(v) => v
     }
 
-  def -|>[T](iter: IterV[A, T]): RowQueryConnect[IterV[A, T]] =
+  def -|>[T](iter: Iteratee[A, T]): RowQueryConnect[Iteratee[A, T]] =
     rowQueryConnect(query => rowConnect(c => {
       tryRowValue(c prepareStatement query.sql).mapError(_ setQuery query) flatMap (st =>
-        st.set(query.bindings:_*).toRowValue >>=| (
+        st.set(query.bindings:_*).toRowValue >> (
           try {
             tryRowValue(st.executeQuery) flatMap ((r: ResultSet) =>
               try {
@@ -35,7 +35,7 @@ sealed trait RowAccess[A] {
           }).mapError(e => e.setQuery(query)))
     }))
 
-  def -||>[T](iter: IterV[A, T]): RowQueryConnect[T] =
+  def -||>[T](iter: Iteratee[A, T]): RowQueryConnect[T] =
     -|>(iter) map (_.run)
 
   def map[B](f: A => B): RowAccess[B] = rowAccess((r: Row) => RowAccess.this.access(r) map f)
@@ -96,7 +96,7 @@ trait RowAccesss {
   import java.io.{Reader, InputStream}
   import java.net.URL
   import java.sql.{SQLXML, RowId, Date, Clob, Blob, Ref, Timestamp, Time, NClob}
-  import CampanionKey._
+  import CompanionKey._
 
   private def forEither[T, U](c: Class[_], z: String, k: Row => U => RowValue[T]): U => RowAccess[T] =
     (column: U) => rowAccessNiceNull(r => k(r)(column), "column type [" + c.getName + "] at " + z + " [" + column + "]")
@@ -258,19 +258,10 @@ trait RowAccesss {
 //  val sqlxmlIndex: Int => RowAccess[SQLXML] = forIndex(classOf[SQLXML], (_.sqlxmlIndex))
 //  val sqlxmlLabel: String => RowAccess[SQLXML] = forLabel(classOf[SQLXML], (_.sqlxmlLabel))
 
+  implicit val RowAccessMonad: Monad[RowAccess] = new Monad[RowAccess] {
+    def bind[A, B](a: RowAccess[A])(f: A => RowAccess[B]) =
+      rowAccess(r => a.access(r) flatMap (a => f(a) access (r)))
 
-  implicit val RowAccessFunctor: Functor[RowAccess] = new Functor[RowAccess] {
-    def fmap[A, B](k: RowAccess[A], f: A => B) =
-      k map f
-  }
-
-  implicit val RowAccessPure: Pure[RowAccess] = new Pure[RowAccess] {
-    def pure[A](a: => A) =
-      rowAccess(_ => a.η[RowValue])
-  }
-
-  implicit val RowAccessBind: Bind[RowAccess] = new Bind[RowAccess] {
-    def bind[A, B](a: RowAccess[A], f: A => RowAccess[B]) =
-      rowAccess(r => a.access(r) >>= (a => f(a) access (r)))
+    def point[A](a: => A) = rowAccess(_ => a.point[RowValue])
   }
 }

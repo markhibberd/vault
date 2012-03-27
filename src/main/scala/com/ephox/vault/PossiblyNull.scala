@@ -5,7 +5,7 @@ import scalaz._, Scalaz._
 // isomorphic to Option[A]
 sealed trait PossiblyNull[A] {
   import PossiblyNull._
-  import CampanionKey._
+  import CompanionKey._
 
   def fold[X](nn: A => X, in: => X): X = this match {
     case NotNull(a) => nn(a)
@@ -76,22 +76,8 @@ trait PossiblyNulls {
 
   implicit val PossiblyNullInjective = Injective[PossiblyNull]
 
-  implicit val PossiblyNullFunctor: Functor[PossiblyNull] = new Functor[PossiblyNull] {
-    def fmap[A, B](r: PossiblyNull[A], f: A => B) =
-      r map f
-  }
-
-  implicit val PossiblyNullBind: Bind[PossiblyNull] = new Bind[PossiblyNull] {
-    def bind[A, B](a: PossiblyNull[A], f: A => PossiblyNull[B]) =
-      a flatMap f
-  }
-
-  implicit val PossiblyNullPure: Pure[PossiblyNull] = new Pure[PossiblyNull] {
-    def pure[A](a: => A) = notNull(a)
-  }
-
   implicit val PossiblyNullEach: Each[PossiblyNull] = new Each[PossiblyNull] {
-    def each[A](e: PossiblyNull[A], f: A => Unit) =
+    def each[A](e: PossiblyNull[A])(f: A => Unit) =
       e foreach f
   }
 
@@ -101,30 +87,41 @@ trait PossiblyNulls {
   }
 
   implicit val PossiblyNullLength: Length[PossiblyNull] = new Length[PossiblyNull] {
-    def len[A](a: PossiblyNull[A]) =
+    def length[A](a: PossiblyNull[A]) =
       a ifelse(1, 0)
   }
 
-  implicit val PossiblyNullFoldable: Foldable[PossiblyNull] = new Foldable[PossiblyNull] {
-    override def foldLeft[A, B](e: PossiblyNull[A], b: B, f: (B, A) => B) =
-      e fold (f(b, _), b)
-
-    override def foldRight[A, B](e: PossiblyNull[A], b: => B, f: (A, => B) => B) =
-      e fold (f(_, b), b)
-  }
-
   implicit val PossiblyNullTraverse: Traverse[PossiblyNull] = new Traverse[PossiblyNull] {
-    def traverse[F[_] : Applicative, A, B](f: A => F[B], as: PossiblyNull[A]): F[PossiblyNull[B]] =
-      as fold (a => f(a) ∘ (notNull(_: B)), isNull[B].pure[F])
+    def traverseImpl[F[_] : Applicative, A, B](as: PossiblyNull[A])(f: A => F[B]): F[PossiblyNull[B]] =
+      as fold (a => f(a) ∘ (notNull(_: B)), isNull[B].point[F])
   }
 
-  implicit val PossiblyNullPlus: Plus[PossiblyNull] = new Plus[PossiblyNull] {
+  implicit val PossiblyNullMonadPlus: MonadPlus[PossiblyNull] = new MonadPlus[PossiblyNull] {
     def plus[A](a1: PossiblyNull[A], a2: => PossiblyNull[A]) =
       a1 orElse a2
+
+    def empty[A] = isNull
+
+    def bind[A, B](a: PossiblyNull[A])(f: A => PossiblyNull[B]) =
+      a flatMap f
+
+    def point[A](a: => A) = notNull(a)
   }
 
-  implicit val PossiblyNullEmpty: Empty[PossiblyNull] = new Empty[PossiblyNull] {
-    def empty[A] = isNull
+  trait PossiblyNullEqual[A] extends Equal[PossiblyNull[A]] {
+    implicit def A: Equal[A]
+
+    override def equalIsNatural: Boolean = A.equalIsNatural
+
+    override def equal(a1: PossiblyNull[A], a2: PossiblyNull[A]) =
+      Equal.equalBy((_: PossiblyNull[A]).toOption) equal (a1, a2)
+  }
+
+  trait PossiblyNullOrder[A] extends Order[PossiblyNull[A]] {
+    implicit def A: Order[A]
+
+    override def order(a1: PossiblyNull[A], a2: PossiblyNull[A]) =
+      Order.orderBy ((_: PossiblyNull[A]).toOption) apply (a1, a2)
   }
 
   implicit def PossiblyNullShow[A: Show]: Show[PossiblyNull[A]] = new Show[PossiblyNull[A]] {
@@ -135,12 +132,8 @@ trait PossiblyNulls {
             ) toList
   }
 
-  implicit def PossiblyNullEqual[A: Equal]: Equal[PossiblyNull[A]] =
-    Equal.OptionEqual[A] ∙ (_.toOption)
+  implicit def PossiblyNullOrder[A](implicit A0: Order[A]): Order[PossiblyNull[A]] = new PossiblyNullOrder[A] {
+    implicit def A = A0
+  }
 
-  implicit def PossiblyNullOrder[A: Order]: Order[PossiblyNull[A]] =
-    Order.OptionOrder[A] ∙ (_.toOption)
-
-  implicit def PossiblyNullZero[A: Zero]: Zero[PossiblyNull[A]] =
-    zero(notNull(∅[A]))
 }

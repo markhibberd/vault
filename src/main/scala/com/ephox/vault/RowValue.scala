@@ -136,13 +136,13 @@ sealed trait RowValue[A] {
    * Append the given value to the current log.
    */
   def :+->(e: LOGV): RowValue[A] =
-    withLog(_ |+| e.η[LOGC])
+    withLog(_ |+| e.point[LOGC])
 
   /**
    * Prepend the given value to the current log.
    */
   def <-+:(e: LOGV): RowValue[A] =
-    withLog(e.η[LOGC] |+| _)
+    withLog(e.point[LOGC] |+| _)
 
   /**
    * Append the given value to the current log.
@@ -160,7 +160,7 @@ sealed trait RowValue[A] {
    * Set the log to be empty.
    */
   def resetLog: RowValue[A] =
-    withLog(_ => ∅[LOG])
+    withLog(_ => Monoid[LOG].zero)
 }
 
 object RowValue extends RowValues
@@ -169,23 +169,23 @@ trait RowValues {
   type NullMsg = String
 
   def rowError[A](e: SqlExceptionContext): RowValue[A] = new RowValue[A] {
-    val value = (Right(Left(e)): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).η[WLOG]
+    val value = (Right(Left(e)): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).point[WLOG]
   }
 
   def rowValue[A](a: A): RowValue[A] = new RowValue[A] {
-    val value = (Right(Right(a)): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).η[WLOG]
+    val value = (Right(Right(a)): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).point[WLOG]
   }
 
   def rowNullPossibleMsg[A](note: Option[NullMsg]): RowValue[A] = new RowValue[A] {
-    val value = (Left(note): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).η[WLOG]
+    val value = (Left(note): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).point[WLOG]
   }
 
   def rowNull[A]: RowValue[A] = new RowValue[A] {
-    val value = (Left(None): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).η[WLOG]
+    val value = (Left(None): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).point[WLOG]
   }
 
   def rowNullMsg[A](note: NullMsg): RowValue[A] = new RowValue[A] {
-    val value = (Left(Some(note)): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).η[WLOG]
+    val value = (Left(Some(note)): Either[Option[NullMsg], Either[SqlExceptionContext, A]]).point[WLOG]
   }
 
   def tryRowValue[A](a: => A): RowValue[A] =
@@ -193,46 +193,24 @@ trait RowValues {
 
   implicit val RowValueInjective = Injective[RowValue]
 
-  implicit val RowValueFunctor: Functor[RowValue] = new Functor[RowValue] {
-    def fmap[A, B](r: RowValue[A], f: A => B) =
-      r map f
-  }
-
-  implicit val RowValuePure: Pure[RowValue] = new Pure[RowValue] {
-    def pure[A](a: => A) =
-      rowValue(a)
-  }
-
-  implicit val RowValueBind: Bind[RowValue] = new Bind[RowValue] {
-    def bind[A, B](a: RowValue[A], f: A => RowValue[B]) =
+  implicit val RowValueInstance: Monad[RowValue] with Traverse[RowValue] with Length[RowValue] with Index[RowValue] with Each[RowValue] = new Monad[RowValue] with Traverse[RowValue] with Length[RowValue] with Index[RowValue] with Each[RowValue] {
+    def bind[A, B](a: RowValue[A])(f: A => RowValue[B]) =
       a fold (rowError(_), f, rowNullPossibleMsg(_))
-  }
 
-  implicit val RowValueEach: Each[RowValue] = new Each[RowValue] {
-    def each[A](e: RowValue[A], f: A => Unit) =
-      e fold (_ => (), f, _ => ())
-  }
+    def point[A](a: => A) =
+      rowValue(a)
 
-  implicit val RowValueIndex: Index[RowValue] = new Index[RowValue] {
-    def index[A](a: RowValue[A], i: Int) = a.getValue filter (_ => i == 0)
-  }
+    def traverseImpl[F[_] : Applicative, A, B](as: RowValue[A])(f: A => F[B]): F[RowValue[B]] =
+      as fold ((e: SqlExceptionContext) => rowError(e).point[F], v => f(v) ∘ (rowValue(_)), _ => rowNull.point[F])
 
-  implicit val RowValueLength: Length[RowValue] = new Length[RowValue] {
-    def len[A](a: RowValue[A]) =
+    def length[A](a: RowValue[A]) =
       a fold (_ => 0, _ => 1, _ => 0)
-  }
 
-  implicit val RowValueFoldable: Foldable[RowValue] = new Foldable[RowValue] {
-    override def foldLeft[A, B](e: RowValue[A], b: B, f: (B, A) => B) =
-      e fold (_ => b, f(b, _), _ => b)
+    def index[A](a: RowValue[A], i: Int) =
+      a.getValue filter (_ => i == 0)
 
-    override def foldRight[A, B](e: RowValue[A], b: => B, f: (A, => B) => B) =
-      e fold (_ => b, f(_, b), _ => b)
-  }
-
-  implicit val RowValueTraverse: Traverse[RowValue] = new Traverse[RowValue] {
-    def traverse[F[_] : Applicative, A, B](f: A => F[B], as: RowValue[A]): F[RowValue[B]] =
-      as fold ((e: SqlExceptionContext) => rowError(e).η[F], v => f(v) ∘ (rowValue(_)), _ => rowNull.η[F])
+    def each[A](e: RowValue[A])(f: A => Unit) =
+      e fold (_ => (), f, _ => ())
   }
 
   implicit def RowValueShow[A: Show]: Show[RowValue[A]] = new Show[RowValue[A]] {
@@ -251,6 +229,4 @@ trait RowValues {
       , t => a2 fold (_ => false, t === _, _ => false)
       , _ => a2.isNull)
   }
-
-  implicit def RowValueZero[A: Zero]: Zero[RowValue[A]] = zero(rowValue(∅[A]))
 }

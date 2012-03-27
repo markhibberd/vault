@@ -45,14 +45,16 @@ trait Keys {
     def fold[X](none: => X, some: Long => X) = none
   }
 
-  implicit def EqualKey: Equal[Key] =
-    equal((a, b) => a.fold(!b.isSet, value => b.fold(false, _ == value)))
-
-  implicit def ShowKey: Show[Key] =
-    shows(_.toString)
+  implicit def EqualKey: Equal[Key] = new Equal[Key] {
+    def equal(k1: Key, k2: Key) =
+      k1.fold(!k2.isSet, value => k2.fold(false, _ == value))
+  }
+  implicit def ShowKey: Show[Key] = new Show[Key] {
+    def show(k: Key) = k.toString.toList
+  }
 }
 
 /* Do not rename me to Key, breaks java'ry things at the moment */
-object CampanionKey extends Keys
+object CompanionKey extends Keys
 
 

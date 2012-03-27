@@ -1,13 +1,13 @@
 package com.ephox.vault.demo
 
-import scalaz._, Scalaz._
+import scalaz._, Scalaz._,  iteratee._
 import com.ephox.vault._, Vault._
 
 object VaultDemo {
   case class Person(name: String, age: Int, address: PossiblyNull[String])
 
   object Person {
-    implicit val ShowPerson: Show[Person] = showA
+    implicit val ShowPerson: Show[Person] = Show.showFromToString
   }
 
   val PersonSql =
@@ -50,13 +50,13 @@ object VaultDemo {
       def connection = com.ephox.vault.Connectors.hsqlfile(args(0), args(1), args(2)).nu
 
       // get the first of the query results for a Person
-      val firstPerson = IterV.peek[Person]
+      val firstPerson = IterateeT.peek[Person, Id]
 
       // compare Person by name for equality
-      val equalByName = ((_:Person).name).equaling
+      val equalByName = Equal.equalBy((_:Person).name)
 
       // Get a List of lists of people grouped by name.
-      val groupedByName = IterV.repeat[Person, List[Person], List](IterV.groupBy(equalByName))
+      val groupedByName = Iteratee.repeatBuild[Person, List[Person], List](Iteratee.groupBy(equalByName equal (_, _)))
 
       // combine the two person accessors
       val combine = for {

@@ -1,17 +1,17 @@
 package com.ephox.vault
 
-import scalaz._, Scalaz._
+import scalaz._, Scalaz._, iteratee._
 
 object Queries {
   import StringQuery._
   import VaultIteratee._
   import JDBCType._
 
-  def list[A](access: RowAccess[A], sql: Sql) =
-    (access -||> IterV.reversed[A, List](ListReducer) <|- sql) map (_.reverse)
+  def list[A](access: RowAccess[A], sql: Sql): RowConnect[List[A]] =
+    (access -||> Iteratee.reversed[A, List] <|- sql) map (_.reverse)
 
   def first[A](access: RowAccess[A], sql: Sql) =
-    access -||> IterV.head[A] <|- sql
+    access -||> Iteratee.head[A, Id] <|- sql
 
   def byId[A](access: RowAccess[A], sql: String, id: Long) =
     first(access, sql.bindValues(longType(id)))
