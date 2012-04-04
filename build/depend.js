@@ -2,6 +2,8 @@ var cleanDirs = ['lib'];
 
 var licenses = "lib/run/licenses/";
 
+var scalazV = "2012-04-04_11-17-31";
+
 var dependencies = [
     // ==== Ephox - Production ====
     // ==== Third Party - Production - REQUIRES LICENSE ====
@@ -24,24 +26,16 @@ var dependencies = [
         ]
     },
     { name: "scalaz",
-        repository: "thirdpartyrepo",
-        version : "2.9.1-6.0.4-SNAPSHOT",
-        source: "scalaz-core_2.9.1-6.0.4-SNAPSHOT.jar",
+        repository: "buildrepo2",
+        version : "7/" + scalazV,
+        source: "./",
         targets: [
-            { name: "scalaz-core_2.9.1-6.0.4-SNAPSHOT.jar", path: "lib/run/scalaz" }
+            { name: "*.jar", path: "lib/run/scalaz/7" }
         ]
     },
     { name: "scalaz",
-        repository: "thirdpartyrepo",
-        version : "2.9.1-6.0.4-SNAPSHOT",
-        source: "scalaz-core_2.9.1-6.0.4-SNAPSHOT-sources.jar",
-        targets: [
-            { name: "scalaz-core_2.9.1-6.0.4-SNAPSHOT-sources.jar", path: "lib/run/scalaz" }
-        ]
-    },
-    { name: "scalaz",
-        repository: "thirdpartyrepo",
-        version : "2.9.1-6.0.4-SNAPSHOT",
+        repository: "buildrepo2",
+        version : "7/" + scalazV,
         source: "LICENCE",
         targets: [
             { name: "LICENCE", path: licenses + "scalaz" }
