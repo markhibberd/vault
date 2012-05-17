@@ -46,38 +46,6 @@ sealed trait StringQuery {
                      }
                    ).mapError(handle))
 
-  def insert[A](a: A, fields: List[JDBCType])(implicit keyed: Keyed[A]): SqlConnect[A] =
-    keyed.get(a).fold(
-      executeUpdateWithPrepared(
-        mkStatement = (_: Connection).prepareStatement(query, Array(1)),
-        withStatement =  (_: PreparedStatement).setValues(fields),
-        withGeneratedKeys =  (r: Row) => (_: SqlValue[Unit]) => (i: Int) =>
-          r.keyIndex(1).fold(
-            e => constantSqlConnect(sqlErrorMessage("Error generating id [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]" + e.detail)),
-            x => x.point[SqlConnect],
-            nul => constantSqlConnect(sqlErrorMessage("Null id generated [" + i + "], columns [" + r.columns.mkString(",") + "], query [" + query + "], bindings [" + fields.mkString(",") + "]"))
-          ) map (keyed.set(a, _)),
-        noGeneratedKeys = sys.error("No generating id for query [" + query + "], bindings [" + fields.mkString(",") + "]"): SqlConnect[A],
-        handle = e => e.setQuery(Sql.query(query, fields))
-      ) ,
-      id => constantSqlConnect(sqlErrorMessage("Can not insert. Key is already set: " + id))
-    )
-
-  def delete[A](a: A)(implicit keyed: Keyed[A]): SqlConnect[Int] =
-    deleteKey(keyed.get(a))
-
-  def deleteKey(key: Key): SqlConnect[Int] =
-    key.fold(
-      constantSqlConnect(sqlErrorMessage("Can not delete a key that is not set.")),
-      id => executePreparedUpdate(_.set(longType(id)), e => e.setQuery(Sql.query(query, longType(id) :: Nil)))
-    )
-
-  def update[A](a: A, fields: List[JDBCType])(implicit keyed: Keyed[A]): SqlConnect[A] =
-    keyed.get(a).fold(
-      constantSqlConnect(sqlErrorMessage("Can not update a key that is not set.")),
-      id => executePreparedUpdate((_: PreparedStatement).setValues(fields), e => e.setQuery(Sql.query(query, fields))) map (_ => a)
-    )
-
   def prepareStatement[A](k: PreparedStatement => SqlConnect[A], handle: SqlExceptionContext => SqlExceptionContext = x => x) : SqlConnect[A] =
     sqlConnect(c => withSqlResource(c prepareStatement query, (s: PreparedStatement) => k(s)(c)).mapError(handle))
 
