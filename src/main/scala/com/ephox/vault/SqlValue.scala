@@ -140,6 +140,9 @@ trait SqlValues {
     val value = (Left(e): Either[SqlExceptionContext, A]).point[WLOG]
   }
 
+  def sqlErrorMessage[A](m: String) =
+    sqlError[A](sqlExceptionMessage(m))
+
   def sqlValue[A](v: A): SqlValue[A] = new SqlValue[A] {
     val value = (Right(v): Either[SqlExceptionContext, A]).point[WLOG]
   }
