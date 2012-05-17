@@ -83,6 +83,9 @@ trait SqlExceptionContexts {
     val query = None
   }
 
+  def sqlExceptionMessage(msg: String) =
+    sqlExceptionContext(new SqlException(msg))
+
   def sqlExceptionContextPS(e: SqlException, pc: PreparedStatementContext): SqlExceptionContext = new SqlExceptionContext {
     val sqlException = e
     val prepareStatementContext = Some(pc)
