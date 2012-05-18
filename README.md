@@ -2,7 +2,7 @@
 
 #### What is Vault?
 
-**Vault** is the name for a software library written using the Scala programming language. Vault is compiled against version 2.9.1 of the Scala programming language.
+**Vault** is the name for a software library written using the Scala programming language. Vault is compiled against version 2.9.1 of the Scala programming language. Vault is licenced under BSD3 (see `etc/LICENCE`).
 
 The Vault library is used for interacting with persistence storage through the JDBC database API. Vault implements and exploits several computational concepts:
 
