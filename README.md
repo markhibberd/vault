@@ -28,7 +28,7 @@ The Scala programming language was chosen because it has certain desirable featu
 
 * First-class functions, permitting the expression of fundamental concepts without ceremony.
 
-Vault has a dependency on the Scalaz library version 6, which is compiled against Scala version 2.9.1. Scalaz is a complementary library for general application development with the Scala programming language.
+Vault has a dependency on the Scalaz library version 7, which is compiled against Scala version 2.9.1. Scalaz is a complementary library for general application development with the Scala programming language.
 
 #### The Essence of Vault
 
