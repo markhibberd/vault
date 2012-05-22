@@ -1,6 +1,6 @@
 package com.ephox.vault
 
-import scalaz._, iteratee._, Scalaz._
+import scalaz._, iteratee.Iteratee, Scalaz._
 import SqlValue._
 import RowValue._
 import java.sql.ResultSet
