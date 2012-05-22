@@ -1,6 +1,6 @@
 package com.ephox.vault
 
-import scalaz._, iteratee._, Scalaz._
+import scalaz._, iteratee.{Iteratee, Input}, Scalaz._
 import java.io.{Reader, InputStream}
 import java.util.Calendar
 import java.sql.{Timestamp, Time, SQLXML, RowId, Ref, Date, Clob, Blob, ResultSet, NClob}
@@ -155,7 +155,7 @@ object Row {
             if (!hasMore)
               Left(i.point[RowValue])
             else
-              Right(ra.access(Row.resultSetRow(r)) map (zz => k(Input.Element(zz))))
+              Right(ra.access(Row.resultSetRow(r)) map (zz => k(Input(zz))))
           }
         , done = (_, _) => Left(i.point[RowValue])
         ),

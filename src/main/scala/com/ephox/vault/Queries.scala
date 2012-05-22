@@ -1,6 +1,6 @@
 package com.ephox.vault
 
-import scalaz._, Scalaz._, iteratee._
+import scalaz._, Scalaz._, iteratee.Iteratee
 
 object Queries {
   import StringQuery._

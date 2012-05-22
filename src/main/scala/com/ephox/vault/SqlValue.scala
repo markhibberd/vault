@@ -10,7 +10,7 @@ sealed trait SqlValue[A] {
   protected val value: WLOG[Either[SqlExceptionContext, A]]
 
   def fold[X](err: SqlExceptionContext => X, v: A => X) =
-    value.over.fold(err, v)
+    value.value.fold(err, v)
 
   @annotation.tailrec
   final def loop[X](e: SqlExceptionContext => X, v: A => Either[X, SqlValue[A]]): X =
@@ -78,7 +78,7 @@ sealed trait SqlValue[A] {
    */
   def setLog(k: LOG): SqlValue[A] = new SqlValue[A] {
     val value =
-      SqlValue.this.value.over set k
+      SqlValue.this.value.value set k
   }
 
   /**
@@ -86,7 +86,7 @@ sealed trait SqlValue[A] {
    */
   def withLog(k: LOG => LOG): SqlValue[A] = new SqlValue[A] {
     val value =
-      SqlValue.this.value.over set (k(SqlValue.this.log))
+      SqlValue.this.value.value set (k(SqlValue.this.log))
   }
 
   /**
