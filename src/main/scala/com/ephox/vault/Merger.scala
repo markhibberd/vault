@@ -1,6 +1,6 @@
 package com.ephox.vault
 
-import scalaz._, Scalaz._, LensT._
+import scalaz._, Scalaz._
 
 /** A merger accepts two values of the same structure and either successfully merges them to a value of same structure or fails. */
 trait Merger[A] {
