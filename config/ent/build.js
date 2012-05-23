@@ -8,7 +8,7 @@ function getVersionString() {
 
 p.setConfig({
     command: ["./sbt", getVersionString, "clean", "update", "compile", "test", "package"],
-    dist: "target/scala-2.9.1",
+    dist: "target/scala-2.9.2",
     distInclude: "*.jar"
 });
 
