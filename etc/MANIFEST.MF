@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-Specification-Title: com.ephox.vault
-Specification-Version: VERSION
-Specification-Vendor: com.ephox
-Implementation-Title: com.ephox.vault
-Implementation-Version: VERSION
-Implementation-Vendor: com.ephox
-
