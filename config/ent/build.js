@@ -1,5 +1,5 @@
 var p = Ent.Project.create("vault", "external");
-p.setVersion(2, 0, 0);
+p.setVersion(3, 0, 0);
 
 function getVersionString() {
     var v = p.version;

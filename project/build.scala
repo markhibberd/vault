@@ -15,7 +15,7 @@ object build extends Build {
   , settings = Defaults.defaultSettings ++ Seq[Sett](
       name := "vault"
     , organization := "com.ephox"
-    , version := "1.0"
+    , version := "3.0-SNAPSHOT"
     , scalaVersion := "2.9.2"
     , scalacOptions := Seq(
         "-deprecation"

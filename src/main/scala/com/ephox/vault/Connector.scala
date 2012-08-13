@@ -117,6 +117,12 @@ object Connectors {
     override def toString = "generic[" + username + "@" + url + "]"
   }
 
+  def connector(mk: () => Connection): Connector = new Connector {
+    def nu = mk()
+
+    override def toString = "opaque-connector"
+  }
+
   def mkConnection(driver: String, url: String, username: String, password: String): Connection = {
     Class.forName(driver)
     val c = DriverManager.getConnection(url, username, password)

@@ -6,6 +6,9 @@ import RowValue._
 import java.sql.ResultSet
 import com.ephox.vault.SqlExceptionContext._
 
+// FIX Need a way for these to combine, possibly as simple as instances for tuple or hlist
+//     but one of the current pain points is:
+//           select f.*, b.* from fred f, barney b where b.fred = f.id and want List[(Fred, Barney)];
 sealed trait RowAccess[A] {
   import RowAccess._
   import SqlAccess._

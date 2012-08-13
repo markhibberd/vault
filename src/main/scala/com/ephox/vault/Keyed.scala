@@ -2,7 +2,9 @@ package com.ephox.vault
 
 import scalaz._, Scalaz._, CostateT._
 
-// ≈ Lens[A, Key]
+// FIX this needs to be updated, this really needs to be equiv of: data Keyed a = Keyed Key a
+//     This is for a couple of reasons but mainly so we can use the types to demand things that
+//     are already in database vs when we don't care
 sealed trait Keyed[A] {
   def get(a: A): Key
   def set(a: A, key: Key): A
