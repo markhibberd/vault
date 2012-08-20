@@ -22,7 +22,7 @@ object VaultNullDemo {
       p <- "INSERT INTO PERSON(name, age) VALUES (?,?)" executePreparedUpdate (
 //          _.set(stringType("name"), intType(30))
           _.set(stringType(null), intType(30))
-//          _.set(stringType("name"), nullType(IntegerType))
+//          _.set(stringType("name"), nullType(IntegerSqlType$))
         )
     } yield b + p
 

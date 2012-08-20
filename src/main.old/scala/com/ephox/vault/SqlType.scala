@@ -18,36 +18,36 @@ sealed trait SqlType {
    * Returns the corresponding value used by [[java.sql.Types]] for denoting generic SQL types.
    */
   def toType: Type = this match {
-    case ArrayType => ARRAY
-    case BigIntType => BIGINT
-    case BinaryType => BINARY
-    case BitType => BIT
-    case BlobType => BLOB
-    case BooleanType => BOOLEAN
-    case CharType => CHAR
-    case ClobType => CLOB
-    case DataLinkType => DATALINK
-    case DateType => DATE
-    case DecimalType => DECIMAL
-    case DistinctType => DISTINCT
-    case DoubleType => DOUBLE
-    case FloatType => FLOAT
-    case IntegerType => INTEGER
-    case JavaObjectType => JAVA_OBJECT
-    case LongVarBinaryType => LONGVARBINARY
-    case LongVarCharType => LONGVARCHAR
-    case NullType => NULL
-    case NumericType => NUMERIC
-    case OtherType => OTHER
-    case RealType => REAL
-    case RefType => REF
-    case SmallIntType => SMALLINT
-    case StructType => STRUCT
-    case TimeType => TIME
-    case TimestampType => TIMESTAMP
-    case TinyIntType => TINYINT
-    case VarBinaryType => VARBINARY
-    case VarCharType => VARCHAR
+    case ArraySqlType => ARRAY
+    case BigIntSqlType => BIGINT
+    case BinarySqlType => BINARY
+    case BitSqlType => BIT
+    case BlobSqlType => BLOB
+    case BooleanSqlType => BOOLEAN
+    case CharSqlType => CHAR
+    case ClobSqlType => CLOB
+    case DataLinkSqlType => DATALINK
+    case DateSqlType => DATE
+    case DecimalSqlType => DECIMAL
+    case DistinctSqlType => DISTINCT
+    case DoubleSqlType => DOUBLE
+    case FloatSqlType => FLOAT
+    case IntegerSqlType => INTEGER
+    case JavaObjectSqlType => JAVA_OBJECT
+    case LongVarBinarySqlType => LONGVARBINARY
+    case LongVarCharSqlType => LONGVARCHAR
+    case NullSqlType => NULL
+    case NumericSqlType => NUMERIC
+    case OtherSqlType => OTHER
+    case RealSqlType => REAL
+    case RefSqlType => REF
+    case SmallIntSqlType => SMALLINT
+    case StructSqlType => STRUCT
+    case TimeSqlType => TIME
+    case TimestampSqlType => TIMESTAMP
+    case TinyIntSqlType => TINYINT
+    case VarBinarySqlType => VARBINARY
+    case VarCharSqlType => VARCHAR
 
 //    -- JDBC 4.0 disabled for the time being --
 //
@@ -251,36 +251,36 @@ trait SqlTypes {
    * All possible generic SQL types.
    */
   val sqlTypes = Set(
-                      ArrayType
-                    , BigIntType
-                    , BinaryType
-                    , BitType
-                    , BlobType
-                    , BooleanType
-                    , CharType
-                    , ClobType
-                    , DataLinkType
-                    , DateType
-                    , DecimalType
-                    , DistinctType
-                    , DoubleType
-                    , FloatType
-                    , IntegerType
-                    , JavaObjectType
-                    , LongVarBinaryType
-                    , LongVarCharType
-                    , NullType
-                    , NumericType
-                    , OtherType
-                    , RealType
-                    , RefType
-                    , SmallIntType
-                    , StructType
-                    , TimeType
-                    , TimestampType
-                    , TinyIntType
-                    , VarBinaryType
-                    , VarCharType
+                      ArraySqlType
+                    , BigIntSqlType
+                    , BinarySqlType
+                    , BitSqlType
+                    , BlobSqlType
+                    , BooleanSqlType
+                    , CharSqlType
+                    , ClobSqlType
+                    , DataLinkSqlType
+                    , DateSqlType
+                    , DecimalSqlType
+                    , DistinctSqlType
+                    , DoubleSqlType
+                    , FloatSqlType
+                    , IntegerSqlType
+                    , JavaObjectSqlType
+                    , LongVarBinarySqlType
+                    , LongVarCharSqlType
+                    , NullSqlType
+                    , NumericSqlType
+                    , OtherSqlType
+                    , RealSqlType
+                    , RefSqlType
+                    , SmallIntSqlType
+                    , StructSqlType
+                    , TimeSqlType
+                    , TimestampSqlType
+                    , TinyIntSqlType
+                    , VarBinarySqlType
+                    , VarCharSqlType
 
 // -- JDBC 4.0 disabled for the time being --
 //
@@ -300,36 +300,36 @@ trait SqlTypes {
    * @param n The value used in [[java.sql.Types]].
    */
   def sqlTypeFromInt(n: Int): Option[SqlType] = n match {
-    case ARRAY => Some(ArrayType)
-    case BIGINT => Some(BigIntType)
-    case BINARY => Some(BinaryType)
-    case BIT => Some(BitType)
-    case BLOB => Some(BlobType)
-    case BOOLEAN => Some(BooleanType)
-    case CHAR => Some(CharType)
-    case CLOB => Some(ClobType)
-    case DATALINK => Some(DataLinkType)
-    case DATE => Some(DateType)
-    case DECIMAL => Some(DecimalType)
-    case DISTINCT => Some(DistinctType)
-    case DOUBLE => Some(DoubleType)
-    case FLOAT => Some(FloatType)
-    case INTEGER => Some(IntegerType)
-    case JAVA_OBJECT => Some(JavaObjectType)
-    case LONGVARBINARY => Some(LongVarBinaryType)
-    case LONGVARCHAR => Some(LongVarCharType)
-    case NULL => Some(NullType)
-    case NUMERIC => Some(NumericType)
-    case OTHER => Some(OtherType)
-    case REAL => Some(RealType)
-    case REF => Some(RefType)
-    case SMALLINT => Some(SmallIntType)
-    case STRUCT => Some(StructType)
-    case TIME => Some(TimeType)
-    case TIMESTAMP => Some(TimestampType)
-    case TINYINT => Some(TinyIntType)
-    case VARBINARY => Some(VarBinaryType)
-    case VARCHAR => Some(VarCharType)
+    case ARRAY => Some(ArraySqlType)
+    case BIGINT => Some(BigIntSqlType)
+    case BINARY => Some(BinarySqlType)
+    case BIT => Some(BitSqlType)
+    case BLOB => Some(BlobSqlType)
+    case BOOLEAN => Some(BooleanSqlType)
+    case CHAR => Some(CharSqlType)
+    case CLOB => Some(ClobSqlType)
+    case DATALINK => Some(DataLinkSqlType)
+    case DATE => Some(DateSqlType)
+    case DECIMAL => Some(DecimalSqlType)
+    case DISTINCT => Some(DistinctSqlType)
+    case DOUBLE => Some(DoubleSqlType)
+    case FLOAT => Some(FloatSqlType)
+    case INTEGER => Some(IntegerSqlType)
+    case JAVA_OBJECT => Some(JavaObjectSqlType)
+    case LONGVARBINARY => Some(LongVarBinarySqlType)
+    case LONGVARCHAR => Some(LongVarCharSqlType)
+    case NULL => Some(NullSqlType)
+    case NUMERIC => Some(NumericSqlType)
+    case OTHER => Some(OtherSqlType)
+    case REAL => Some(RealSqlType)
+    case REF => Some(RefSqlType)
+    case SMALLINT => Some(SmallIntSqlType)
+    case STRUCT => Some(StructSqlType)
+    case TIME => Some(TimeSqlType)
+    case TIMESTAMP => Some(TimestampSqlType)
+    case TINYINT => Some(TinyIntSqlType)
+    case VARBINARY => Some(VarBinarySqlType)
+    case VARCHAR => Some(VarCharSqlType)
 
 //   -- JDBC 4.0 disabled for the time being --
 //

@@ -33,7 +33,7 @@ sealed trait Key {
       !isSet, value => exists(_ == value)
     )
 
-  def idType = fold(JDBCType.nullType(NumericType), JDBCType.longType(_))
+  def idType = fold(JDBCType.nullType(NumericSqlType), JDBCType.longType(_))
 }
 
 trait Keys {

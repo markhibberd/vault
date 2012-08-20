@@ -144,142 +144,394 @@ trait JDBCTypeFunctions {
   /**
    * Construct a `null` type.
    */
-  def nullType: SqlType => JDBCType = NullJDBCType(_)
+  val nullType: SqlType => JDBCType = NullJDBCType(_)
 
   /**
    * Construct a `Boolean` type.
    */
-  def booleanType: Boolean => JDBCType = BooleanJDBCType(_)
+  val booleanType: Boolean => JDBCType = BooleanJDBCType(_)
 
   /**
    * Construct a `Byte` type.
    */
-  def byteType: Byte => JDBCType = ByteJDBCType(_)
+  val byteType: Byte => JDBCType = ByteJDBCType(_)
 
   /**
    * Construct a `Short` type.
    */
-  def shortType: Short => JDBCType = ShortJDBCType(_)
+  val shortType: Short => JDBCType = ShortJDBCType(_)
 
   /**
    * Construct a `Int` type.
    */
-  def intType: Int => JDBCType = IntJDBCType(_)
+  val intType: Int => JDBCType = IntJDBCType(_)
 
   /**
    * Construct a `Long` type.
    */
-  def longType: Long => JDBCType = LongJDBCType(_)
+  val longType: Long => JDBCType = LongJDBCType(_)
 
   /**
    * Construct a `Float` type.
    */
-  def floatType: Float => JDBCType = FloatJDBCType(_)
+  val floatType: Float => JDBCType = FloatJDBCType(_)
 
   /**
    * Construct a `Double` type.
    */
-  def doubleType: Double => JDBCType = DoubleJDBCType(_)
+  val doubleType: Double => JDBCType = DoubleJDBCType(_)
 
   /**
    * Construct a `BigDecimal` type.
    */
-  def bigDecimalType: java.math.BigDecimal => JDBCType = BigDecimalJDBCType(_)
+  val bigDecimalType: java.math.BigDecimal => JDBCType = BigDecimalJDBCType(_)
 
   /**
    * Construct a `String` type.
    */
-  def stringType: String => JDBCType = StringJDBCType(_)
+  val stringType: String => JDBCType = StringJDBCType(_)
 
   /**
    * Construct an `Array[Byte]` type.
    */
-  def bytesType: Array[Byte] => JDBCType = BytesJDBCType(_)
+  val bytesType: Array[Byte] => JDBCType = BytesJDBCType(_)
 
   /**
    * Construct a `Date` type.
    */
-  def dateType: Date => JDBCType = DateJDBCType(_)
+  val dateType: Date => JDBCType = DateJDBCType(_)
 
   /**
    * Construct a `Time` type.
    */
-  def timeType: Time => JDBCType = TimeJDBCType(_)
+  val timeType: Time => JDBCType = TimeJDBCType(_)
 
   /**
    * Construct a `Timestamp` type.
    */
-  def timestampType: Timestamp => JDBCType = TimestampJDBCType(_)
+  val timestampType: Timestamp => JDBCType = TimestampJDBCType(_)
 
   /**
    * Construct an ASCII `InputStream` type taking the given number of bytes.
    */
-  def asciiStreamType: (InputStream, Int) => JDBCType = AsciiStreamJDBCType(_, _)
+  val asciiStreamType: (InputStream, Int) => JDBCType = AsciiStreamJDBCType(_, _)
 
   /**
    * Construct a binary `InputStream` type taking the given number of bytes.
    */
-  def binaryStreamType: (InputStream, Int) => JDBCType = BinaryStreamJDBCType(_, _)
+  val binaryStreamType: (InputStream, Int) => JDBCType = BinaryStreamJDBCType(_, _)
 
   /**
    * Construct an 'Object` with a specific sql target type.
    */
-  def objectTypeType: (AnyRef, SqlType) => JDBCType = ObjectTypeJDBCType(_, _)
+  val objectTypeType: (AnyRef, SqlType) => JDBCType = ObjectTypeJDBCType(_, _)
 
   /**
    * Construct an `Object` type.
    */
-  def objectType: AnyRef => JDBCType = ObjectJDBCType(_)
+  val objectType: AnyRef => JDBCType = ObjectJDBCType(_)
 
   /**
    * Construct a `Reader` type taking the given number of characters.
    */
-  def characterStreamType: (Reader, Int) => JDBCType = CharacterStreamJDBCType(_, _)
+  val characterStreamType: (Reader, Int) => JDBCType = CharacterStreamJDBCType(_, _)
 
   /**
    * Construct a `Ref` type.
    */
-  def refType: Ref => JDBCType = RefJDBCType(_)
+  val refType: Ref => JDBCType = RefJDBCType(_)
 
   /**
    * Construct a `Blob` type.
    */
-  def blobType: Blob => JDBCType = BlobJDBCType(_)
+  val blobType: Blob => JDBCType = BlobJDBCType(_)
 
   /**
    * Construct a `Clob` type.
    */
-  def clobType: Clob => JDBCType = ClobJDBCType(_)
+  val clobType: Clob => JDBCType = ClobJDBCType(_)
 
   /**
    * Construct an sql `Array` type.
    */
-  def arrayType: java.sql.Array => JDBCType = ArrayJDBCType(_)
+  val arrayType: java.sql.Array => JDBCType = ArrayJDBCType(_)
 
   /**
    * Construct a `Date` type with a specific `Calendar`.
    */
-  def calendarDateType: (Date, Calendar) => JDBCType = CalendarDateJDBCType(_, _)
+  val calendarDateType: (Date, Calendar) => JDBCType = CalendarDateJDBCType(_, _)
 
   /**
    * Construct a `Time` type with a specific `Calendar`.
    */
-  def calendarTimeType: (Time, Calendar) => JDBCType = CalendarTimeJDBCType(_, _)
+  val calendarTimeType: (Time, Calendar) => JDBCType = CalendarTimeJDBCType(_, _)
 
   /**
    * Construct a `Timestamp` type with a specific `Calendar`.
    */
-  def calendarTimestampType: (Timestamp, Calendar) => JDBCType = CalendarTimestampJDBCType(_, _)
+  val calendarTimestampType: (Timestamp, Calendar) => JDBCType = CalendarTimestampJDBCType(_, _)
 
   /**
    * Construct a `null` type with a fully-qualified name of an SQL user-defined type.
    */
-  def userNullType: (SqlType, String) => JDBCType = UserNullJDBCType(_, _)
+  val userNullType: (SqlType, String) => JDBCType = UserNullJDBCType(_, _)
 
   /**
    * Construct a `URL` type.
    */
-  def urlType: URL => JDBCType = URLJDBCType(_)
+  val urlType: URL => JDBCType = URLJDBCType(_)
+
+  /**
+   * A `null` type partial lens.
+   */
+  val nullTypeL: JDBCType @?> SqlType =
+    PLens {
+      case NullJDBCType(a) => Some(Store(NullJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Boolean` type partial lens.
+   */
+  val booleanTypeL: JDBCType @?> Boolean =
+    PLens {
+      case BooleanJDBCType(a) => Some(Store(BooleanJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Byte` type partial lens.
+   */
+  val byteTypeL: JDBCType @?> Byte =
+    PLens {
+      case ByteJDBCType(a) => Some(Store(ByteJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Short` type partial lens.
+   */
+  val shortTypeL: JDBCType @?> Short =
+    PLens {
+      case ShortJDBCType(a) => Some(Store(ShortJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * An `Int` type partial lens.
+   */
+  val intTypeL: JDBCType @?> Int =
+    PLens {
+      case IntJDBCType(a) => Some(Store(IntJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Long` type partial lens.
+   */
+  val longTypeL: JDBCType @?> Long =
+    PLens {
+      case IntJDBCType(a) => Some(Store(LongJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Float` type partial lens.
+   */
+  val floatTypeL: JDBCType @?> Float =
+    PLens {
+      case FloatJDBCType(a) => Some(Store(FloatJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Double` type partial lens.
+   */
+  val doubleTypeL: JDBCType @?> Double =
+    PLens {
+      case DoubleJDBCType(a) => Some(Store(DoubleJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `BigDecimal` type partial lens.
+   */
+  val bigDecimalTypeL: JDBCType @?> java.math.BigDecimal =
+    PLens {
+      case BigDecimalJDBCType(a) => Some(Store(BigDecimalJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `String` type partial lens.
+   */
+  val stringTypeL: JDBCType @?> String =
+    PLens {
+      case StringJDBCType(a) => Some(Store(StringJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * An `Array[Byte]` type partial lens.
+   */
+  val bytesTypeL: JDBCType @?> Array[Byte] =
+    PLens {
+      case BytesJDBCType(a) => Some(Store(BytesJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Date` type partial lens.
+   */
+  val dateTypeL: JDBCType @?> Date =
+    PLens {
+      case DateJDBCType(a) => Some(Store(DateJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Time` type partial lens.
+   */
+  val timeTypeL: JDBCType @?> Time =
+    PLens {
+      case TimeJDBCType(a) => Some(Store(TimeJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Timestamp` type partial lens.
+   */
+  val timestampTypeL: JDBCType @?> Timestamp =
+    PLens {
+      case TimestampJDBCType(a) => Some(Store(TimestampJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * An ASCII `InputStream` type partial lens.
+   */
+  val asciiStreamTypeL: JDBCType @?> (InputStream, Int) =
+    PLens {
+      case AsciiStreamJDBCType(a, b) => Some(Store(x => AsciiStreamJDBCType(x._1, x._2), (a, b)))
+      case _ => None
+    }
+
+  /**
+   * A binary `InputStream` type partial lens.
+   */
+  val binaryStreamTypeL: JDBCType @?> (InputStream, Int) =
+    PLens {
+      case BinaryStreamJDBCType(a, b) => Some(Store(x => BinaryStreamJDBCType(x._1, x._2), (a, b)))
+      case _ => None
+    }
+
+  /**
+   * An object target type partial lens.
+   */
+  val objectTypeTypeL: JDBCType @?> (AnyRef, SqlType) =
+    PLens {
+      case ObjectTypeJDBCType(a, b) => Some(Store(x => ObjectTypeJDBCType(x._1, x._2), (a, b)))
+      case _ => None
+    }
+
+  /**
+   * An `object` type partial lens.
+   */
+  val objectTypeL: JDBCType @?> AnyRef =
+    PLens {
+      case ObjectJDBCType(a) => Some(Store(ObjectJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A character stream type partial lens.
+   */
+  val characterStreamTypeL: JDBCType @?> (Reader, Int) =
+    PLens {
+      case CharacterStreamJDBCType(a, b) => Some(Store(x => CharacterStreamJDBCType(x._1, x._2), (a, b)))
+      case _ => None
+    }
+
+  /**
+   * A `Ref` type partial lens.
+   */
+  val refTypeL: JDBCType @?> Ref =
+    PLens {
+      case RefJDBCType(a) => Some(Store(RefJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Blob` type partial lens.
+   */
+  val blobTypeL: JDBCType @?> Blob =
+    PLens {
+      case BlobJDBCType(a) => Some(Store(BlobJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Clob` type partial lens.
+   */
+  val clobTypeL: JDBCType @?> Clob =
+    PLens {
+      case ClobJDBCType(a) => Some(Store(ClobJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A sql `Array` type partial lens.
+   */
+  val arrayTypeL: JDBCType @?> java.sql.Array =
+    PLens {
+      case ArrayJDBCType(a) => Some(Store(ArrayJDBCType(_), a))
+      case _ => None
+    }
+
+  /**
+   * A `Calendar` and `Date` type partial lens.
+   */
+  val calendarDateTypeL: JDBCType @?> (Date, Calendar) =
+    PLens {
+      case CalendarDateJDBCType(a, b) => Some(Store(x => CalendarDateJDBCType(x._1, x._2), (a, b)))
+      case _ => None
+    }
+
+  /**
+   * A `Calendar` and `Time` type partial lens.
+   */
+  val calendarTimeTypeL: JDBCType @?> (Time, Calendar) =
+    PLens {
+      case CalendarTimeJDBCType(a, b) => Some(Store(x => CalendarTimeJDBCType(x._1, x._2), (a, b)))
+      case _ => None
+    }
+
+  /**
+   * A `Calendar` and `Timestamp` type partial lens.
+   */
+  val calendarTimestampTypeL: JDBCType @?> (Timestamp, Calendar) =
+    PLens {
+      case CalendarTimestampJDBCType(a, b) => Some(Store(x => CalendarTimestampJDBCType(x._1, x._2), (a, b)))
+      case _ => None
+    }
+
+  /**
+   * A `SqlType` and `String` type partial lens.
+   */
+  val userNullTypeL: JDBCType @?> (SqlType, String) =
+    PLens {
+      case UserNullJDBCType(a, b) => Some(Store(x => UserNullJDBCType(x._1, x._2), (a, b)))
+      case _ => None
+    }
+
+  /**
+   * A `URL` type partial lens.
+   */
+  val urlTypeL: JDBCType @?> URL =
+    PLens {
+      case URLJDBCType(a) => Some(Store(URLJDBCType(_), a))
+      case _ => None
+    }
 }
 
 trait JDBCTypeInstances {
