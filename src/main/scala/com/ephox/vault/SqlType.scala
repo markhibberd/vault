@@ -19,51 +19,86 @@ sealed trait SqlType {
   /**
    * Returns the corresponding value used by [[java.sql.Types]] for denoting generic SQL types.
    */
-  def toType: Type = this match {
-    case ArrayType => ARRAY
-    case BigIntType => BIGINT
-    case BinaryType => BINARY
-    case BitType => BIT
-    case BlobType => BLOB
-    case BooleanType => BOOLEAN
-    case CharType => CHAR
-    case ClobType => CLOB
-    case DataLinkType => DATALINK
-    case DateType => DATE
-    case DecimalType => DECIMAL
-    case DistinctType => DISTINCT
-    case DoubleType => DOUBLE
-    case FloatType => FLOAT
-    case IntegerType => INTEGER
-    case JavaObjectType => JAVA_OBJECT
-    case LongVarBinaryType => LONGVARBINARY
-    case LongVarCharType => LONGVARCHAR
-    case NullType => NULL
-    case NumericType => NUMERIC
-    case OtherType => OTHER
-    case RealType => REAL
-    case RefType => REF
-    case SmallIntType => SMALLINT
-    case StructType => STRUCT
-    case TimeType => TIME
-    case TimestampType => TIMESTAMP
-    case TinyIntType => TINYINT
-    case VarBinaryType => VARBINARY
-    case VarCharType => VARCHAR
+  def toType: Type =
+    this match {
+      case ArrayType => ARRAY
+      case BigIntType => BIGINT
+      case BinaryType => BINARY
+      case BitType => BIT
+      case BlobType => BLOB
+      case BooleanType => BOOLEAN
+      case CharType => CHAR
+      case ClobType => CLOB
+      case DataLinkType => DATALINK
+      case DateType => DATE
+      case DecimalType => DECIMAL
+      case DistinctType => DISTINCT
+      case DoubleType => DOUBLE
+      case FloatType => FLOAT
+      case IntegerType => INTEGER
+      case JavaObjectType => JAVA_OBJECT
+      case LongVarBinaryType => LONGVARBINARY
+      case LongVarCharType => LONGVARCHAR
+      case NullType => NULL
+      case NumericType => NUMERIC
+      case OtherType => OTHER
+      case RealType => REAL
+      case RefType => REF
+      case SmallIntType => SMALLINT
+      case StructType => STRUCT
+      case TimeType => TIME
+      case TimestampType => TIMESTAMP
+      case TinyIntType => TINYINT
+      case VarBinaryType => VARBINARY
+      case VarCharType => VARCHAR
 
-//    -- JDBC 4.0 disabled for the time being --
-//
-//    case NCharType => NCHAR
-//    case NVarCharType => NVARCHAR
-//    case NClobType => NCLOB
-//    case LongNVarCharType => LONGNVARCHAR
-//    case RowIdType => ROWID
-//    case SqlXmlType => SQLXML
+  //    -- JDBC 4.0 disabled for the time being --
+  //
+  //    case NCharType => NCHAR
+  //    case NVarCharType => NVARCHAR
+  //    case NClobType => NCLOB
+  //    case LongNVarCharType => LONGNVARCHAR
+  //    case RowIdType => ROWID
+  //    case SqlXmlType => SQLXML
 
-  }
+    }
 
   def ===(t: SqlType): Boolean =
     this == t
+
+  override def toString =
+    this match {
+      case ArrayType => "Array"
+      case BigIntType => "BigInt"
+      case BinaryType => "Binary"
+      case BitType => "Bit"
+      case BlobType => "Blob"
+      case BooleanType => "Boolean"
+      case CharType => "Char"
+      case ClobType => "Clob"
+      case DataLinkType => "DataLink"
+      case DateType => "Date"
+      case DecimalType => "Decimal"
+      case DistinctType => "Distinct"
+      case DoubleType => "Double"
+      case FloatType => "Float"
+      case IntegerType => "Integer"
+      case JavaObjectType => "JavaObject"
+      case LongVarBinaryType => "LongVarBinary"
+      case LongVarCharType => "LongVarChar"
+      case NullType => "Null"
+      case NumericType => "Numeric"
+      case OtherType => "Other"
+      case RealType => "Real"
+      case RefType => "Ref"
+      case SmallIntType => "SmallInt"
+      case StructType => "Struct"
+      case TimeType => "Time"
+      case TimestampType => "Timestamp"
+      case TinyIntType => "TinyInt"
+      case VarBinaryType => "VarBinary"
+      case VarCharType => "VarChar"
+    }
 }
 
 /**
@@ -287,17 +322,6 @@ trait SqlTypeFunctions {
                     , TinyIntType
                     , VarBinaryType
                     , VarCharType
-
-// -- JDBC 4.0 disabled for the time being --
-//
-//                  , LongNVarCharType
-//                  , NCharType
-//                  , NClobType
-//                  , NVarCharType
-//                  , RowIdType
-//                  , SqlXmlType
-//
-
                     )
 
   /**
@@ -336,16 +360,6 @@ trait SqlTypeFunctions {
     case TINYINT => Some(TinyIntType)
     case VARBINARY => Some(VarBinaryType)
     case VARCHAR => Some(VarCharType)
-
-//   -- JDBC 4.0 disabled for the time being --
-//
-//    case LONGNVARCHAR => Some(LongNVarCharType)
-//    case NCHAR => Some(NCharType)
-//    case NVARCHAR => Some(NVarCharType)
-//    case NCLOB => Some(NClobType)
-//    case SQLXML => Some(SqlXmlType)
-//    case ROWID => Some(RowIdType)
-
     case _ => None
   }
 
@@ -361,6 +375,12 @@ trait SqlTypeFunctions {
 }
 
 trait SqlTypeInstances {
-  implicit val SqlTypeInstances: Equal[SqlType] =
-    Equal.equalA
+  implicit val SqlTypeInstances: Equal[SqlType] with Show[SqlType] =
+    new Equal[SqlType] with Show[SqlType] {
+      def equal(a1: SqlType, a2: SqlType) =
+        a1 === a2
+
+      override def shows(a: SqlType) =
+        a.toString
+    }
 }

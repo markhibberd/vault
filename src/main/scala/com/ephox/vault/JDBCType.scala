@@ -284,7 +284,6 @@ trait JDBCTypeFunctions {
 
 trait JDBCTypeInstances {
 
-  implicit val JDBCTypeShow: Show[JDBCType] = new Show[JDBCType] {
-    override def show(t: JDBCType) = (error("")) // t.toString.toList
-  }
+  implicit val JDBCTypeShow: Show[JDBCType] =
+    Show.showA
 }
