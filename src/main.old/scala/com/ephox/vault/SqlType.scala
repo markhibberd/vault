@@ -1,8 +1,6 @@
-package com.ephox
-package vault
+package com.ephox.vault
 
 import java.sql.Types._
-import scalaz._, Scalaz._
 
 /**
  * All generics SQL types.
@@ -61,9 +59,6 @@ sealed trait SqlType {
 //    case SqlXmlType => SQLXML
 
   }
-
-  def ===(t: SqlType): Boolean =
-    this == t
 }
 
 /**
@@ -250,9 +245,8 @@ case object VarCharType extends SqlType
 // */
 //case object SqlXmlType extends SqlType
 
-object SqlType extends SqlTypeFunctions with SqlTypeInstances
 
-trait SqlTypeFunctions {
+trait SqlTypes {
   /**
    * All possible generic SQL types.
    */
@@ -358,9 +352,4 @@ trait SqlTypeFunctions {
   def sqlTypeFromIntOr(n: Int, t: => SqlType): SqlType =
     sqlTypeFromInt(n) getOrElse t
 
-}
-
-trait SqlTypeInstances {
-  implicit val SqlTypeInstances: Equal[SqlType] =
-    Equal.equalA
 }
