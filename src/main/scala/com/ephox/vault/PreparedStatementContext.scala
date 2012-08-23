@@ -18,7 +18,7 @@ trait PreparedStatementContextFunctions {
       val parameters = p
     }
 
-  def preparedStatementL: PreparedStatementContext @> PreparedStatement =
+  def contextPreparedStatementL: PreparedStatementContext @> PreparedStatement =
     Lens(s => Store(preparedStatementContext(_, s.parameters), s.preparedStatement))
 
   def contextParametersL: PreparedStatementContext @> Option[(JDBCType, Int)] =
