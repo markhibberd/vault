@@ -18,19 +18,19 @@ trait PreparedStatementContextFunctions {
       val parameters = p
     }
 
-  def contextPreparedStatementL: PreparedStatementContext @> PreparedStatement =
+  val contextPreparedStatementL: PreparedStatementContext @> PreparedStatement =
     Lens(s => Store(preparedStatementContext(_, s.parameters), s.preparedStatement))
 
-  def contextParametersL: PreparedStatementContext @> Option[(JDBCType, Int)] =
+  val contextParametersL: PreparedStatementContext @> Option[(JDBCType, Int)] =
     Lens(s => Store(preparedStatementContext(s.preparedStatement, _), s.parameters))
 
-  def contextParametersPL: PreparedStatementContext @?> (JDBCType, Int) =
+  val contextParametersPL: PreparedStatementContext @?> (JDBCType, Int) =
     ~contextParametersL >=> PLensT.somePLens
 
-  def contextParameterTypePL: PreparedStatementContext @?> JDBCType =
+  val contextParameterTypePL: PreparedStatementContext @?> JDBCType =
     contextParametersPL >=> ~LensT.firstLens
 
-  def contextParameterPositionPL: PreparedStatementContext @?> Int =
+  val contextParameterPositionPL: PreparedStatementContext @?> Int =
     contextParametersPL >=> ~LensT.secondLens
 
 }

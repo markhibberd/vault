@@ -16,9 +16,9 @@ trait SqlFunctions {
     val bindings = b
   }
 
-  def sqlL: Sql @> String =
+  val sqlL: Sql @> String =
     Lens(s => Store(query(_, s.bindings), s.sql))
 
-  def bindingsL: Sql @> List[JDBCType] =
+  val bindingsL: Sql @> List[JDBCType] =
     Lens(s => Store(query(s.sql, _), s.bindings))
 }
