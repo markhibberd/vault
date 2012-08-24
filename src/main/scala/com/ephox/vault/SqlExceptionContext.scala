@@ -8,6 +8,9 @@ sealed trait SqlExceptionContext {
   val sqlException: SqlException
   val preparedStatementContext: Option[PreparedStatementContext]
   val query: Option[Sql]
+
+  def show: Cord =
+    error("")
 }
 
 object SqlExceptionContext extends SqlExceptionContextFunctions {

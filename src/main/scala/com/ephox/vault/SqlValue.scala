@@ -64,7 +64,22 @@ sealed trait SqlValue[+L, +A] {
   def toOption: Option[A] =
     value.toOption
 
-  // |||, +++, show, ===, compare
+  def orElse[LL >: L, AA >: A](x: => SqlValue[LL, AA]): SqlValue[LL, AA] =
+    value.fold(
+      e => x
+    , a => SqlValue(log, a.right)
+    )
+
+  def |||[LL >: L, AA >: A](x: => SqlValue[LL, AA]): SqlValue[LL, AA] =
+    orElse(x)
+
+  def show[AA >: A](implicit S: Show[AA]): Cord =
+    value.fold(
+      e => "error(" + e.show + ")"
+    , a => "value(" + S.show(a) + ")"
+    )
+
+  //  ===, compare
 
 }
 
