@@ -9,20 +9,20 @@ sealed trait PreparedStatementContext {
   val parameters: Option[(JDBCType, Int)]
 }
 
-object PreparedStatementContext extends PreparedStatementContextFunctions
-
-trait PreparedStatementContextFunctions {
-  def preparedStatementContext(s: PreparedStatement, p: Option[(JDBCType, Int)]): PreparedStatementContext =
+object PreparedStatementContext extends PreparedStatementContextFunctions {
+  def apply(s: PreparedStatement, p: Option[(JDBCType, Int)]): PreparedStatementContext =
     new PreparedStatementContext {
       val preparedStatement = s
       val parameters = p
     }
+}
 
+trait PreparedStatementContextFunctions {
   val contextPreparedStatementL: PreparedStatementContext @> PreparedStatement =
-    Lens(s => Store(preparedStatementContext(_, s.parameters), s.preparedStatement))
+    Lens(s => Store(PreparedStatementContext(_, s.parameters), s.preparedStatement))
 
   val contextParametersL: PreparedStatementContext @> Option[(JDBCType, Int)] =
-    Lens(s => Store(preparedStatementContext(s.preparedStatement, _), s.parameters))
+    Lens(s => Store(PreparedStatementContext(s.preparedStatement, _), s.parameters))
 
   val contextParametersPL: PreparedStatementContext @?> (JDBCType, Int) =
     ~contextParametersL >=> PLensT.somePLens

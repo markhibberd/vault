@@ -7,10 +7,10 @@ sealed trait PreparedStatementWrap {
   val statement: PreparedStatement
 
   def context: PreparedStatementContext =
-    PreparedStatementContext.preparedStatementContext(statement, None)
+    PreparedStatementContext(statement, None)
 
   def contextWithParams(t: JDBCType, n: Int): PreparedStatementContext =
-    PreparedStatementContext.preparedStatementContext(statement, Some((t, n)))
+    PreparedStatementContext(statement, Some((t, n)))
 }
 
 object PreparedStatementWrap extends PreparedStatementWrapFunctions

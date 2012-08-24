@@ -10,27 +10,27 @@ sealed trait SqlExceptionContext {
   val query: Option[Sql]
 }
 
-object SqlExceptionContext extends SqlExceptionContextFunctions
-
-trait SqlExceptionContextFunctions {
-  type SqlException =
-  java.sql.SQLException
-
-  def sqlExceptionContext(e: SqlException, c: Option[PreparedStatementContext], q: Option[Sql]): SqlExceptionContext =
+object SqlExceptionContext extends SqlExceptionContextFunctions {
+  def apply(e: SqlException, c: Option[PreparedStatementContext], q: Option[Sql]): SqlExceptionContext =
     new SqlExceptionContext {
       val sqlException = e
       val preparedStatementContext = c
       val query = q
     }
+}
+
+trait SqlExceptionContextFunctions {
+  type SqlException =
+  java.sql.SQLException
 
   val contextSqlExceptionL: SqlExceptionContext @> SqlException =
-    Lens(s => Store(sqlExceptionContext(_, s.preparedStatementContext, s.query), s.sqlException))
+    Lens(s => Store(SqlExceptionContext(_, s.preparedStatementContext, s.query), s.sqlException))
 
   val statementSqlExceptionL: SqlExceptionContext @> Option[PreparedStatementContext] =
-    Lens(s => Store(sqlExceptionContext(s.sqlException, _, s.query), s.preparedStatementContext))
+    Lens(s => Store(SqlExceptionContext(s.sqlException, _, s.query), s.preparedStatementContext))
 
   val querySqlExceptionL: SqlExceptionContext @> Option[Sql] =
-    Lens(s => Store(sqlExceptionContext(s.sqlException, s.preparedStatementContext, _), s.query))
+    Lens(s => Store(SqlExceptionContext(s.sqlException, s.preparedStatementContext, _), s.query))
 
   val statementSqlExceptionPL: SqlExceptionContext @?> PreparedStatementContext =
     ~statementSqlExceptionL >=> PLensT.somePLens
