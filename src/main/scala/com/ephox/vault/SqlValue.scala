@@ -79,6 +79,53 @@ sealed trait SqlValue[+L, +A] {
   def |||[LL >: L, AA >: A](x: => SqlValue[LL, AA]): SqlValue[LL, AA] =
     orElse(x)
 
+  def logS[LL >: L, AA >: A]: SqlValue[LL, AA] |--> Log[LL] =
+    sqlValueLogL run this
+
+  def valueS[LL >: L, AA >: A]: SqlValue[LL, AA] |--> (SqlExceptionContext \/ AA) =
+    sqlValueOrL run this
+
+  def setLog[LL >: L, AA >: A](f: Log[LL]): SqlValue[LL, AA] =
+    logS put f
+
+  def withLog[LL >: L, AA >: A](f: Log[LL] => Log[LL]): SqlValue[LL, AA] =
+    logS puts f
+
+  /**
+   * Transform each log value by the given function.
+   */
+  def withEachLog[LL >: L, AA >: A](k: LL => LL): SqlValue[LL, AA] =
+    withLog[LL, AA](_ map k)
+
+  /**
+   * Append the given value to the current log.
+   */
+  def :+->[LL >: L, AA >: A](e: LL): SqlValue[LL, AA] =
+    withLog[LL, AA](_ :+ e)
+
+  /**
+   * Prepend the given value to the current log.
+   */
+  def <-+:[LL >: L, AA >: A](e: LL): SqlValue[LL, AA] =
+    withLog[LL, AA](e +: _)
+
+  /**
+   * Append the given value to the current log.
+   */
+  def :++->[LL >: L, AA >: A](e: Log[LL]): SqlValue[LL, AA] =
+    withLog[LL, AA](_ ++ e)
+
+  /**
+   * Prepend the given value to the current log.
+   */
+  def <-++:[LL >: L, AA >: A](e: Log[LL]): SqlValue[LL, AA] =
+    withLog[LL, AA](e ++ _)
+
+  /**
+   * Set the log to be empty.
+   */
+  def resetLog[LL >: L, AA >: A]: SqlValue[LL, AA] =
+    setLog[LL, AA](Vector.empty)
 }
 
 object SqlValue extends SqlValueFunctions {
