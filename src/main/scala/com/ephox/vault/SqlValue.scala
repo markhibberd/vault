@@ -8,6 +8,12 @@ sealed trait SqlValue[+L, +A] {
   val log: Log[L]
   val value: SqlExceptionContext \/ A
 
+  final def loop[LL >: L, AA >: A, X](e: SqlExceptionContext => X, v: AA => X \/ SqlValue[LL, AA]): X =
+    value.loopr(e, (a: AA) => v(a) map (_.value))
+
+  final def loope[LL >: L, AA >: A, X](e: SqlExceptionContext => X \/ SqlValue[LL, AA], v: AA => X): X =
+    value.loopl((c: SqlExceptionContext) => e(c) map (_.value), v)
+
   def isError: Boolean =
     value.isLeft
 
@@ -72,14 +78,6 @@ sealed trait SqlValue[+L, +A] {
 
   def |||[LL >: L, AA >: A](x: => SqlValue[LL, AA]): SqlValue[LL, AA] =
     orElse(x)
-
-  def show[AA >: A](implicit S: Show[AA]): Cord =
-    value.fold(
-      e => "error(" + e.show + ")"
-    , a => "value(" + S.show(a) + ")"
-    )
-
-  //  ===, compare
 
 }
 
