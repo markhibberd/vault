@@ -79,11 +79,11 @@ sealed trait SSqlT[F[+_], +A] {
   def |||[AA >: A](x: => SSqlT[F, AA])(implicit F: Bind[F]): SSqlT[F, AA] =
     orElse(x)
 
-  def -<:(e: => SqlError)(implicit F: Functor[F]): SqlT[F, A] =
-    SqlT(F.map(run)(_ getOrElse e.left))
+  def -<:(e: => SqlError)(implicit F: Functor[F]): JSqlT[F, A] =
+    JSqlT(F.map(run)(_ getOrElse e.left))
 
-  def :>-[AA >: A](a: => AA)(implicit F: Functor[F]): SqlT[F, AA] =
-    SqlT(F.map(run)(_ getOrElse a.right))
+  def :>-[AA >: A](a: => AA)(implicit F: Functor[F]): JSqlT[F, AA] =
+    JSqlT(F.map(run)(_ getOrElse a.right))
 }
 
 object SSqlT extends SSqlTFunctions {

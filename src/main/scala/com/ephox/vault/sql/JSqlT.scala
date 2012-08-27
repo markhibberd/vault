@@ -4,21 +4,21 @@ package sql
 
 import scalaz._, Scalaz._
 
-sealed trait SqlT[F[+_], +A] {
+sealed trait JSqlT[F[+_], +A] {
   val run: F[SqlError \/ A]
 
   def transformer: EitherT[F, SqlError, A] =
     EitherT(run)
 
-  sealed trait SwitchingSqlT[X] {
+  sealed trait SwitchingJSqlT[X] {
     def v: X
 
     def <<?:(err: => X)(implicit F: Functor[F]): F[X] =
-      F.map(SqlT.this.run)(_.fold(_ => err, _ => v))
+      F.map(JSqlT.this.run)(_.fold(_ => err, _ => v))
   }
 
-  def :?>>[X](value: => X): SwitchingSqlT[X] =
-    new SwitchingSqlT[X] {
+  def :?>>[X](value: => X): SwitchingJSqlT[X] =
+    new SwitchingJSqlT[X] {
       def v = value
     }
 
@@ -28,20 +28,20 @@ sealed trait SqlT[F[+_], +A] {
   def isValue(implicit F: Functor[F]): F[Boolean] =
     F.map(run)(_.isRight)
 
-  def map[B](f: A => B)(implicit F: Functor[F]): SqlT[F, B] =
-    SqlT(F.map(run)(_ map f))
+  def map[B](f: A => B)(implicit F: Functor[F]): JSqlT[F, B] =
+    JSqlT(F.map(run)(_ map f))
 
   def foreach(f: A => Unit)(implicit E: Each[F]): Unit =
     E.each(run)(_ foreach f)
 
-  def ap[B](f: SqlT[F, A => B])(implicit F: Apply[F]): SqlT[F, B] =
-    SqlT(F(run, f.run)((a, b) => a flatMap (x => b map (_(x)))))
+  def ap[B](f: JSqlT[F, A => B])(implicit F: Apply[F]): JSqlT[F, B] =
+    JSqlT(F(run, f.run)((a, b) => a flatMap (x => b map (_(x)))))
 
-  def flatMap[B](f: A => SqlT[F, B])(implicit F: Monad[F]): SqlT[F, B] =
-    SqlT(F.bind(run)(_.fold(e => F.point(e.left), f(_).run)))
+  def flatMap[B](f: A => JSqlT[F, B])(implicit F: Monad[F]): JSqlT[F, B] =
+    JSqlT(F.bind(run)(_.fold(e => F.point(e.left), f(_).run)))
 
-  def traverse[G[+_], B](f: A => G[B])(implicit F: Traverse[F], G: Applicative[G]): G[SqlT[F, B]] =
-    G.map(F.traverse(run)(_ traverse f))(SqlT(_))
+  def traverse[G[+_], B](f: A => G[B])(implicit F: Traverse[F], G: Applicative[G]): G[JSqlT[F, B]] =
+    G.map(F.traverse(run)(_ traverse f))(JSqlT(_))
 
   def foldRight[Z](z: => Z)(f: (A, => Z) => Z)(implicit F: Foldable[F]): Z =
     F.foldRight[SqlError \/ A, Z](run, z)((a, b) => a.foldRight(b)(f))
@@ -76,35 +76,35 @@ sealed trait SqlT[F[+_], +A] {
   def valueOr[AA >: A](x: SqlError => AA)(implicit F: Functor[F]): F[AA] =
       F.map(run)(_ valueOr x)
 
-  def orElse[AA >: A](x: => SqlT[F, AA])(implicit F: Bind[F]): SqlT[F, AA] =
-    SqlT(F.bind(run)(_.fold(_ => x.run, _ => run)))
+  def orElse[AA >: A](x: => JSqlT[F, AA])(implicit F: Bind[F]): JSqlT[F, AA] =
+    JSqlT(F.bind(run)(_.fold(_ => x.run, _ => run)))
 
-  def |||[AA >: A](x: => SqlT[F, AA])(implicit F: Bind[F]): SqlT[F, AA] =
+  def |||[AA >: A](x: => JSqlT[F, AA])(implicit F: Bind[F]): JSqlT[F, AA] =
     orElse(x)
 
   def unary_~(implicit F: Functor[F]): SSqlT[F, A] =
     SSqlT(F.map(run)(Some(_)))
 }
 
-object SqlT extends SqlTFunctions {
-  def apply[F[+_], A](x: F[SqlError \/ A]): SqlT[F, A] =
-    new SqlT[F, A] {
+object JSqlT extends JSqlTFunctions {
+  def apply[F[+_], A](x: F[SqlError \/ A]): JSqlT[F, A] =
+    new JSqlT[F, A] {
       val run = x
     }
 
   object Error {
-    def apply[F[+_], A](x: F[SqlError])(implicit F: Functor[F]): SqlT[F, A] =
-      SqlT(F.map(x)(_.left))
+    def apply[F[+_], A](x: F[SqlError])(implicit F: Functor[F]): JSqlT[F, A] =
+      JSqlT(F.map(x)(_.left))
   }
 
   object Value {
-    def apply[F[+_], A](x: F[A])(implicit F: Functor[F]): SqlT[F, A] =
-      SqlT(F.map(x)(_.right))
+    def apply[F[+_], A](x: F[A])(implicit F: Functor[F]): JSqlT[F, A] =
+      JSqlT(F.map(x)(_.right))
   }
 
   object Try {
-    def apply[F[+_], A](x: F[() => A])(implicit F: Functor[F]): SqlT[F, A] =
-      SqlT(F.map(x)(a => try {
+    def apply[F[+_], A](x: F[() => A])(implicit F: Functor[F]): JSqlT[F, A] =
+      JSqlT(F.map(x)(a => try {
         a().right
       } catch {
         case e: java.sql.SQLException => SqlError.sqlException(e).left
@@ -114,13 +114,13 @@ object SqlT extends SqlTFunctions {
       }))
   }
 
-  object Sql {
-    def apply[A](a: => A): Sql[A] =
+  object JSql {
+    def apply[A](a: => A): JSql[A] =
       Try[Id, A](() => a)
   }
 }
 
-trait SqlTFunctions {
-  type Sql[+A] =
-  SqlT[Id, A]
+trait JSqlTFunctions {
+  type JSql[+A] =
+  JSqlT[Id, A]
 }
