@@ -128,7 +128,7 @@ sealed trait SqlValue[+L, +A] {
     setLog[LL, AA](Vector.empty)
 }
 
-object SqlValue extends SqlValueFunctions {
+object SqlValue extends SqlValueFunctions with SqlValueInstances {
   def apply[L, A](l: Log[L], v: SqlExceptionContext \/ A): SqlValue[L, A] =
     new SqlValue[L, A] {
       val log = l
@@ -151,4 +151,12 @@ trait SqlValueFunctions {
 
   def sqlValuePL[L, A]: SqlValue[L, A] @?> A =
     ~sqlValueOrL >=> PLensT.rightPLens
+}
+
+trait SqlValueInstances extends SqlValueInstances0 {
+
+}
+
+trait SqlValueInstances0 {
+
 }
