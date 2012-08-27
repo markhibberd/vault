@@ -53,13 +53,13 @@ sealed trait SqlT[F[+_], +A] {
     F.map(run)(_ forall f)
 
   def toList(implicit F: Functor[F]): F[List[A]] =
-    F.map(run)(_.fold(_ => Nil, List(_)))
+    F.map(run)(_.toList)
 
   def toStream(implicit F: Functor[F]): F[Stream[A]] =
-    F.map(run)((_: (SqlError \/ A)).fold(_ => Stream(), Stream(_)))
+    F.map(run)(_.toStream)
 
   def toOption(implicit F: Functor[F]): OptionT[F, A] =
-    OptionT.optionT[F](F.map(run)((_: (SqlError \/ A)).toOption))
+    transformer.toOption
 
   def toEither(implicit F: Functor[F]): F[Either[SqlError, A]] =
     F.map(run)(_.toEither)
@@ -81,6 +81,9 @@ sealed trait SqlT[F[+_], +A] {
 
   def |||[AA >: A](x: => SqlT[F, AA])(implicit F: Bind[F]): SqlT[F, AA] =
     orElse(x)
+
+  def unary_~(implicit F: Functor[F]): SSqlT[F, A] =
+    SSqlT(F.map(run)(Some(_)))
 }
 
 object SqlT extends SqlTFunctions {
