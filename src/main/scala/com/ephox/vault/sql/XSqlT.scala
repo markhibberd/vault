@@ -96,6 +96,24 @@ object XSqlT extends XSqlTFunctions {
     new XSqlT[F, A] {
       val run = x
     }
+
+  object TryNullT {
+    def apply[F[+_], A](x: F[() => A])(implicit F: Functor[F]): XSqlT[F, A] =
+      XSqlT(F.map(x)(a => try {
+        val r = a()
+        if(r == null) None else Some(r.right)
+      } catch {
+        case e: java.sql.SQLException => Some(SqlError.sqlException(e).left)
+        case e: java.sql.SQLWarning => Some(SqlError.sqlWarning(e).left)
+        case e: java.sql.DataTruncation => Some(SqlError.dataTruncation(e).left)
+        case e: java.sql.BatchUpdateException => Some(SqlError.batchUpdateException(e).left)
+      }))
+  }
+
+  object TryNull {
+    def apply[A](x: => A): XSql[A] =
+      TryNullT[Id, A](() => x)
+  }
 }
 
 trait XSqlTFunctions {
