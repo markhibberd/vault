@@ -82,8 +82,9 @@ sealed trait JSqlT[F[+_], +A] {
   def |||[AA >: A](x: => JSqlT[F, AA])(implicit F: Bind[F]): JSqlT[F, AA] =
     orElse(x)
 
-  def unary_~(implicit F: Functor[F]): SSqlT[F, A] =
-    SSqlT(F.map(run)(Some(_)))
+  def unary_~(implicit F: Functor[F]): SqlT[F, A] =
+    SqlT(F.map(run)(Some(_)))
+
 }
 
 object JSqlT extends JSqlTFunctions {
