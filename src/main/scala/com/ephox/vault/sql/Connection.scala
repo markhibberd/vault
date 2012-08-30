@@ -43,7 +43,9 @@ sealed trait Connection {
       else if(c == R.CLOSE_CURSORS_AT_COMMIT)
         SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.CloseCursorsAtCommit)
       else
-        SqlT.Error[Id, ResultSetHoldability](incompatibilityUnexpectedInt(c, "Connection#holdability")))
+        SqlT.Error[Id, ResultSetHoldability](incompatibilityUnexpectedInt(c,
+          """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getHoldability()
+             Returns: the holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT""")))
 }
 
 object Connection {
