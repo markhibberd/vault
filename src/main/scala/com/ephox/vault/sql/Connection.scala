@@ -44,29 +44,35 @@ sealed trait Connection {
       else if(c == R.CLOSE_CURSORS_AT_COMMIT)
         SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.CloseCursorsAtCommit)
       else
+        error("incompatibility")
+          /*
         SqlT.Error[Id, ResultSetHoldability](incompatibilityUnexpectedInt(c,
           """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getHoldability()
-             Returns: the holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT""")))
+             Returns: the holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
+             */)
 
   def metadata: Sql[DatabaseMetaData] =
     Try(DatabaseMetaData(x.getMetaData))
 
   def transactionIsolation: Sql[TransactionIsolation] =
-    Try(x.getTransactionIsolation) flatMap (c =>
+    Try(x.getTransactionIsolation) map (c =>
       if(c == C.TRANSACTION_READ_UNCOMMITTED)
-        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.ReadUncommitted)
+        TransactionIsolation.ReadUncommitted
       else if(c == C.TRANSACTION_READ_COMMITTED)
-        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.ReadCommitted)
+        TransactionIsolation.ReadCommitted
       else if(c == C.TRANSACTION_REPEATABLE_READ)
-        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.RepeatableRead)
+        TransactionIsolation.RepeatableRead
       else if(c == C.TRANSACTION_SERIALIZABLE)
-        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.Serializable)
+        TransactionIsolation.Serializable
       else if(c == C.TRANSACTION_NONE)
-        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.None)
+        TransactionIsolation.None
       else
+        error("incompatibility")
+          /*
         SqlT.Error[Id, TransactionIsolation](incompatibilityUnexpectedInt(c,
           """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getTransactionIsolation()
-             Returns: the current transaction isolation level, which will be one of the following constants: Connection.TRANSACTION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ, Connection.TRANSACTION_SERIALIZABLE, or Connection.TRANSACTION_NONE.""")))
+             Returns: the current transaction isolation level, which will be one of the following constants: Connection.TRANSACTION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ, Connection.TRANSACTION_SERIALIZABLE, or Connection.TRANSACTION_NONE."""))
+             */)
 
   def typeMap: Sql[collection.mutable.Map[String, Class[_]]] =
     Try(mapAsScalaMap(x.getTypeMap))
