@@ -6,6 +6,8 @@ import java.sql.{Connection => C}
 import java.sql.{ResultSet => R}
 import SqlT._
 import XSqlT._
+import SqlError._
+import scalaz._, Scalaz._
 
 sealed trait Connection {
   private[sql] val x: java.sql.Connection
@@ -33,6 +35,15 @@ sealed trait Connection {
 
   def catalog: XSql[String] =
     TryNull(x.getCatalog)
+
+  def holdability: Sql[ResultSetHoldability] =
+    Try(x.getHoldability) flatMap (c =>
+      if(c == R.HOLD_CURSORS_OVER_COMMIT)
+        SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.HoldsCursorsOverCommit)
+      else if(c == R.CLOSE_CURSORS_AT_COMMIT)
+        SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.CloseCursorsAtCommit)
+      else
+        SqlT.Error[Id, ResultSetHoldability](incompatibilityUnexpectedInt(c, "Connection#holdability")))
 }
 
 object Connection {

@@ -120,6 +120,11 @@ trait SqlTFunctions {
       }))
   }
 
+  object Sql {
+    def apply[A](x: SqlError \/ A): Sql[A] =
+      SqlT[Id, A](x)
+  }
+
   object Try {
     def apply[A](x: => A): Sql[A] =
       TryT[Id, A](() => x)
