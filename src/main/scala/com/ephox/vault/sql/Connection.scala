@@ -46,6 +46,27 @@ sealed trait Connection {
         SqlT.Error[Id, ResultSetHoldability](incompatibilityUnexpectedInt(c,
           """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getHoldability()
              Returns: the holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT""")))
+
+  def metadata: Sql[DatabaseMetaData] =
+    Try(DatabaseMetaData(x.getMetaData))
+
+  def transactionIsolation: Sql[TransactionIsolation] =
+    Try(x.getTransactionIsolation) flatMap (c =>
+      if(c == C.TRANSACTION_READ_UNCOMMITTED)
+        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.ReadUncommitted)
+      else if(c == C.TRANSACTION_READ_COMMITTED)
+        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.ReadCommitted)
+      else if(c == C.TRANSACTION_REPEATABLE_READ)
+        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.RepeatableRead)
+      else if(c == C.TRANSACTION_SERIALIZABLE)
+        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.Serializable)
+      else if(c == C.TRANSACTION_NONE)
+        SqlT.Value[Id, TransactionIsolation](TransactionIsolation.None)
+      else
+        SqlT.Error[Id, TransactionIsolation](incompatibilityUnexpectedInt(c,
+          """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getTransactionIsolation()
+             Returns: the current transaction isolation level, which will be one of the following constants: Connection.TRANSACTION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ, Connection.TRANSACTION_SERIALIZABLE, or Connection.TRANSACTION_NONE.""")))
+
 }
 
 object Connection {
@@ -102,6 +123,25 @@ object Connection {
   object ResultSetHoldability {
     case object HoldsCursorsOverCommit extends ResultSetHoldability
     case object CloseCursorsAtCommit extends ResultSetHoldability
+  }
+
+  sealed trait TransactionIsolation {
+    import TransactionIsolation._
+    def int: Int =
+      this match {
+        case ReadUncommitted => C.TRANSACTION_READ_UNCOMMITTED
+        case ReadCommitted => C.TRANSACTION_READ_COMMITTED
+        case RepeatableRead => C.TRANSACTION_REPEATABLE_READ
+        case Serializable => C.TRANSACTION_SERIALIZABLE
+        case None => C.TRANSACTION_NONE
+      }
+  }
+  object TransactionIsolation {
+    case object ReadUncommitted extends TransactionIsolation
+    case object ReadCommitted extends TransactionIsolation
+    case object RepeatableRead extends TransactionIsolation
+    case object Serializable extends TransactionIsolation
+    case object None extends TransactionIsolation
   }
 
   sealed trait CreateStatement {
