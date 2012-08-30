@@ -8,6 +8,7 @@ import SqlT._
 import XSqlT._
 import SqlError._
 import scalaz._, Scalaz._
+import collection.JavaConversions._
 
 sealed trait Connection {
   private[sql] val x: java.sql.Connection
@@ -67,6 +68,20 @@ sealed trait Connection {
           """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getTransactionIsolation()
              Returns: the current transaction isolation level, which will be one of the following constants: Connection.TRANSACTION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ, Connection.TRANSACTION_SERIALIZABLE, or Connection.TRANSACTION_NONE.""")))
 
+  def typeMap: Sql[collection.mutable.Map[String, Class[_]]] =
+    Try(mapAsScalaMap(x.getTypeMap))
+
+  def warnings: XSql[java.sql.SQLWarning] =
+    TryNull(x.getWarnings)
+
+  def isClosed: Sql[Boolean] =
+    Try(x.isClosed)
+
+  def isReadOnly: Sql[Boolean] =
+    Try(x.isReadOnly)
+
+  def nativeSql(sql: String): Sql[String] =
+    Try(x.nativeSQL(sql))
 }
 
 object Connection {
