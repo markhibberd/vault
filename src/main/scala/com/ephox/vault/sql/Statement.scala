@@ -2,8 +2,9 @@ package com.ephox
 package vault
 package sql
 
-import java.sql.{ResultSet => R}
+import java.sql.{ResultSet => R, Statement => S}
 import SqlT._
+import XSqlT._
 import scalaz._, Scalaz._
 
 sealed trait Statement {
@@ -60,8 +61,70 @@ sealed trait Statement {
       else if(c == R.FETCH_UNKNOWN)
         FetchDirection.Unknown
       else
-        error("incompatibility")
+        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#setFetchDirection%28int%29""")
       )
+
+  def fetchSize: Sql[Int] =
+    Try(x.getFetchSize)
+
+  def generatedKeys: Sql[ResultSet] =
+    Try(ResultSet(x.getGeneratedKeys))
+
+  def maxFieldSize: Sql[Int] =
+    Try(x.getMaxFieldSize)
+
+  def maxRows: Sql[Int] =
+    Try(x.getMaxRows)
+
+  def moreResults(r: Option[MoreResults]): Sql[Boolean] =
+    Try(r match {
+      case None => x.getMoreResults
+      case Some(q) => x.getMoreResults(q.int)
+    })
+
+  def queryTimeout: Sql[Int] =
+    Try(x.getQueryTimeout)
+
+  def resultSet: Sql[ResultSet] =
+    Try(ResultSet(x.getResultSet))
+
+  def resultSetConcurrency: Sql[ResultSetConcurrency] =
+    Try(x.getResultSetConcurrency) map (c =>
+      if(c == R.CONCUR_READ_ONLY)
+        ResultSetConcurrency.ReadOnly
+      else if(c == R.CONCUR_UPDATABLE)
+        ResultSetConcurrency.Updatable
+      else
+        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetConcurrency%28%29""")
+      )
+
+  import Connection._
+  def resultSetHoldability: Sql[ResultSetHoldability] =
+    Try(x.getResultSetHoldability) flatMap (c =>
+      if(c == R.HOLD_CURSORS_OVER_COMMIT)
+        SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.HoldsCursorsOverCommit)
+      else if(c == R.CLOSE_CURSORS_AT_COMMIT)
+        SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.CloseCursorsAtCommit)
+      else
+        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetHoldability%28%29 Returns: either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
+
+  def resultSetType: Sql[ResultSetType] =
+    Try(x.getResultSetType) map (c =>
+      if(c == R.TYPE_FORWARD_ONLY)
+        ResultSetType.ForwardOnly
+      else if(c == R.TYPE_SCROLL_INSENSITIVE)
+        ResultSetType.ScrollInsensitive
+      else if(c == R.TYPE_SCROLL_SENSITIVE)
+        ResultSetType.ScrollSensitive
+      else
+        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetHoldability%28%29 Returns: either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
+
+  def updateCount: Sql[Int] =
+    Try(x.getUpdateCount)
+
+  def warnings: XSql[java.sql.SQLWarning] =
+    TryNull(x.getWarnings)
+
 }
 
 object Statement {
@@ -85,4 +148,35 @@ object Statement {
     case object Reverse extends FetchDirection
     case object Unknown extends FetchDirection
   }
+
+  sealed trait MoreResults {
+    import MoreResults._
+    def int: Int =
+      this match {
+        case CloseCurrentResult => S.CLOSE_ALL_RESULTS
+        case KeepCurrentResult => S.KEEP_CURRENT_RESULT
+        case CloseAllResults => S.CLOSE_ALL_RESULTS
+      }
+  }
+
+  object MoreResults {
+    case object CloseCurrentResult extends MoreResults
+    case object KeepCurrentResult extends MoreResults
+    case object CloseAllResults extends MoreResults
+  }
+
+  sealed trait ResultSetConcurrency {
+    import ResultSetConcurrency._
+    def int: Int =
+      this match {
+        case ReadOnly => R.CONCUR_READ_ONLY
+        case Updatable => R.CONCUR_UPDATABLE
+      }
+  }
+
+  object ResultSetConcurrency {
+    case object ReadOnly extends ResultSetConcurrency
+    case object Updatable extends ResultSetConcurrency
+  }
+
 }

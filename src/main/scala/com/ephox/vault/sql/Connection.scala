@@ -38,18 +38,13 @@ sealed trait Connection {
     TryNull(x.getCatalog)
 
   def holdability: Sql[ResultSetHoldability] =
-    Try(x.getHoldability) flatMap (c =>
+    Try(x.getHoldability) map (c =>
       if(c == R.HOLD_CURSORS_OVER_COMMIT)
-        SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.HoldsCursorsOverCommit)
+        ResultSetHoldability.HoldsCursorsOverCommit
       else if(c == R.CLOSE_CURSORS_AT_COMMIT)
-        SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.CloseCursorsAtCommit)
+        ResultSetHoldability.CloseCursorsAtCommit
       else
-        error("incompatibility")
-          /*
-        SqlT.Error[Id, ResultSetHoldability](incompatibilityUnexpectedInt(c,
-          """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getHoldability()
-             Returns: the holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
-             */)
+        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getHoldability() Returns: the holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
 
   def metadata: Sql[DatabaseMetaData] =
     Try(DatabaseMetaData(x.getMetaData))
@@ -67,12 +62,8 @@ sealed trait Connection {
       else if(c == C.TRANSACTION_NONE)
         TransactionIsolation.None
       else
-        error("incompatibility")
-          /*
-        SqlT.Error[Id, TransactionIsolation](incompatibilityUnexpectedInt(c,
-          """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getTransactionIsolation()
-             Returns: the current transaction isolation level, which will be one of the following constants: Connection.TRANSACTION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ, Connection.TRANSACTION_SERIALIZABLE, or Connection.TRANSACTION_NONE."""))
-             */)
+        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getTransactionIsolation()
+                     Returns: the current transaction isolation level, which will be one of the following constants: Connection.TRANSACTION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ, Connection.TRANSACTION_SERIALIZABLE, or Connection.TRANSACTION_NONE."""))
 
   def typeMap: Sql[collection.mutable.Map[String, Class[_]]] =
     Try(mapAsScalaMap(x.getTypeMap))
