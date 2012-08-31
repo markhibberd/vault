@@ -125,6 +125,27 @@ sealed trait Statement {
   def warnings: XSql[java.sql.SQLWarning] =
     TryNull(x.getWarnings)
 
+  def setCursorName(name: String): Sql[Unit] =
+    Try(x.setCursorName(name))
+
+  def setEscapeProcessing(enable: Boolean): Sql[Unit] =
+    Try(x.setEscapeProcessing(enable))
+
+  def setFetchDirection(direction: FetchDirection): Sql[Unit] =
+    Try(x.setFetchDirection(direction.int))
+
+  def setFetchSize(rows: Int): Sql[Unit] =
+    Try(x.setFetchSize(rows))
+
+  def setMaxFieldSize(max: Int): Sql[Unit] =
+    Try(x.setMaxFieldSize(max))
+
+  def setMaxRows(max: Int): Sql[Unit] =
+    Try(x.setMaxRows(max))
+
+  def setQueryTimeout(seconds: Int): Sql[Unit] =
+    Try(x.setQueryTimeout(seconds))
+
 }
 
 object Statement {
