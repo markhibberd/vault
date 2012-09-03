@@ -150,34 +150,6 @@ object Connection {
     case object Serializable extends Transaction
   }
 
-  sealed trait ResultSetType {
-    import ResultSetType._
-    def int: Int =
-      this match {
-        case ForwardOnly => R.TYPE_FORWARD_ONLY
-        case ScrollInsensitive => R.TYPE_SCROLL_INSENSITIVE
-        case ScrollSensitive => R.TYPE_SCROLL_SENSITIVE
-      }
-  }
-  object ResultSetType {
-    case object ForwardOnly extends ResultSetType
-    case object ScrollInsensitive extends ResultSetType
-    case object ScrollSensitive extends ResultSetType
-  }
-
-  sealed trait ResultSetConcurrency {
-    import ResultSetConcurrency._
-    def int: Int =
-      this match {
-        case ReadOnly => R.CONCUR_READ_ONLY
-        case ConcurUpdatable => R.CONCUR_UPDATABLE
-      }
-  }
-  object ResultSetConcurrency {
-    case object ReadOnly extends ResultSetConcurrency
-    case object ConcurUpdatable extends ResultSetConcurrency
-  }
-
   sealed trait ResultSetHoldability {
     import ResultSetHoldability._
     def int: Int =
