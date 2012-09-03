@@ -114,7 +114,6 @@ sealed trait PreparedStatement {
 
   def setURL(i: Int, a: java.net.URL): Sql[Unit] =
     Try(x.setURL(i, a))
-
 }
 
 object PreparedStatement {
@@ -122,12 +121,4 @@ object PreparedStatement {
     new PreparedStatement {
       val x = xx
     }
-
-  sealed trait SetObject
-  object SetObject {
-    case object None extends SetObject
-    case class TargetType(t: SqlType) extends SetObject
-    case class TargetTypeScale(t: SqlType, s: Int) extends SetObject
-
-  }
 }
