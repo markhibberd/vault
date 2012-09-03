@@ -240,6 +240,68 @@ sealed trait ResultSet {
     , x.getURL(_)
     ))
 
+  def warnings: XSql[java.sql.SQLWarning] =
+    TryNull(x.getWarnings)
+
+  def insertRow: Sql[Unit] =
+    Try(x.insertRow)
+
+  def isAfterLast: Sql[Boolean] =
+    Try(x.isAfterLast)
+
+  def isBeforeFirst: Sql[Boolean] =
+    Try(x.isBeforeFirst)
+
+  def isFirst: Sql[Boolean] =
+    Try(x.isFirst)
+
+  def isLast: Sql[Boolean] =
+    Try(x.isLast)
+
+  def last: Sql[Boolean] =
+    Try(x.last)
+
+  def moveToCurrentRow: Sql[Unit] =
+    Try(x.moveToCurrentRow)
+
+  def moveToInsertRow: Sql[Unit] =
+    Try(x.moveToInsertRow)
+
+  def next: Sql[Boolean] =
+    Try(x.next)
+
+  def previous: Sql[Boolean] =
+    Try(x.previous)
+
+  def refreshRow: Sql[Unit] =
+    Try(x.refreshRow)
+
+  def relative(rows: Int): Sql[Boolean] =
+    Try(x.relative(rows))
+
+  def rowDeleted: Sql[Boolean] =
+    Try(x.rowDeleted)
+
+  def rowInserted: Sql[Boolean] =
+    Try(x.rowInserted)
+
+  def rowUpdated: Sql[Boolean] =
+    Try(x.rowUpdated)
+
+  def setFetchDirection(direction: FetchDirection): Sql[Unit] =
+    Try(x.setFetchDirection(direction.int))
+
+  def setFetchSize(rows: Int): Sql[Unit] =
+    Try(x.setFetchSize(rows))
+
+  def next: Sql[Boolean] =
+    Try(x.next)
+
+
+
+
+
+
 }
 
 object ResultSet {
