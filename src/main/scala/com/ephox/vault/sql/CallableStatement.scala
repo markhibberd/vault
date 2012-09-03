@@ -3,6 +3,7 @@ package vault
 package sql
 
 import SqlT._
+import XSqlT._
 import collection.JavaConversions._
 import scalaz._, Scalaz._
 
@@ -17,23 +18,23 @@ sealed trait CallableStatement {
   def statement: Statement =
     preparedStatement.statement
 
-  def array(q: Int \/ String): Sql[Array] =
-    Try(Array(q.fold(
+  def array(q: Int \/ String): XSql[Array] =
+    TryNull(q.fold(
       x.getArray(_)
     , x.getArray(_)
-    )))
+    )) map (Array(_))
 
-  def bigDecimal(q: Int \/ String): Sql[BigDecimal] =
-    Try(q.fold(
+  def bigDecimal(q: Int \/ String): XSql[BigDecimal] =
+    TryNull(q.fold(
       x.getBigDecimal(_)
     , x.getBigDecimal(_)
     ))
 
-  def blob(q: Int \/ String): Sql[Blob] =
-    Try(Blob(q.fold(
+  def blob(q: Int \/ String): XSql[Blob] =
+    TryNull((q.fold(
       x.getBlob(_)
     , x.getBlob(_)
-    )))
+    ))) map (Blob(_))
 
   def boolean(q: Int \/ String): Sql[Boolean] =
     Try(q.fold(
@@ -47,23 +48,23 @@ sealed trait CallableStatement {
     , x.getByte(_)
     ))
 
-  def bytes(q: Int \/ String): Sql[scala.Array[Byte]] =
-    Try(q.fold(
+  def bytes(q: Int \/ String): XSql[scala.Array[Byte]] =
+    TryNull(q.fold(
       x.getBytes(_)
     , x.getBytes(_)
     ))
 
-  def clob(q: Int \/ String): Sql[Clob] =
-    Try(Clob(q.fold(
+  def clob(q: Int \/ String): XSql[Clob] =
+    TryNull(q.fold(
       x.getClob(_)
     , x.getClob(_)
-    )))
+    )) map (Clob(_))
 
-  def date(q: Int \/ String): Sql[Date] =
-    Try(Date(q.fold(
+  def date(q: Int \/ String): XSql[Date] =
+    TryNull(q.fold(
       x.getDate(_)
     , x.getDate(_)
-    )))
+    )) map (Date(_))
 
   def double(q: Int \/ String): Sql[Double] =
     Try(q.fold(
@@ -89,8 +90,8 @@ sealed trait CallableStatement {
     , x.getLong(_)
     ))
 
-  def obj(q: Int \/ String, m: Option[collection.mutable.Map[String, Class[_]]]): Sql[AnyRef] =
-    Try(q.fold(
+  def obj(q: Int \/ String, m: Option[collection.mutable.Map[String, Class[_]]]): XSql[AnyRef] =
+    TryNull(q.fold(
       i => m match {
         case None => x.getObject(i)
         case Some(r) => x.getObject(i, r)
@@ -101,11 +102,11 @@ sealed trait CallableStatement {
       }
     ))
 
-  def ref(q: Int \/ String): Sql[Ref] =
-    Try(Ref(q.fold(
+  def ref(q: Int \/ String): XSql[Ref] =
+    TryNull(q.fold(
       x.getRef(_)
     , x.getRef(_)
-    )))
+    )) map (Ref(_))
 
   def short(q: Int \/ String): Sql[Short] =
     Try(q.fold(
@@ -113,14 +114,14 @@ sealed trait CallableStatement {
     , x.getShort(_)
     ))
 
-  def string(q: Int \/ String): Sql[String] =
-    Try(q.fold(
+  def string(q: Int \/ String): XSql[String] =
+    TryNull(q.fold(
       x.getString(_)
     , x.getString(_)
     ))
 
-  def time(q: Int \/ String, m: Option[java.util.Calendar]): Sql[Time] =
-    Try(Time(q.fold(
+  def time(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Time] =
+    TryNull(q.fold(
       i => m match {
         case None => x.getTime(i)
         case Some(r) => x.getTime(i, r)
@@ -129,10 +130,10 @@ sealed trait CallableStatement {
         case None => x.getTime(n)
         case Some(r) => x.getTime(n, r)
       }
-    )))
+    )) map (Time(_))
 
-  def timestamp(q: Int \/ String, m: Option[java.util.Calendar]): Sql[Timestamp] =
-    Try(Timestamp(q.fold(
+  def timestamp(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Timestamp] =
+    TryNull(q.fold(
       i => m match {
         case None => x.getTimestamp(i)
         case Some(r) => x.getTimestamp(i, r)
@@ -141,7 +142,7 @@ sealed trait CallableStatement {
         case None => x.getTimestamp(n)
         case Some(r) => x.getTimestamp(n, r)
       }
-    )))
+    )) map (Timestamp(_))
 
   def url(q: Int \/ String): Sql[java.net.URL] =
     Try(q.fold(
