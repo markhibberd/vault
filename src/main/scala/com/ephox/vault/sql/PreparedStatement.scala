@@ -7,6 +7,8 @@ import SqlT._
 sealed trait PreparedStatement {
   private[sql] val x: java.sql.PreparedStatement
 
+  import PreparedStatement._
+
   def statement: Statement =
     Statement(x)
 
@@ -85,6 +87,34 @@ sealed trait PreparedStatement {
       case Some(d) => x.setNull(i, a.int, d)
     })
 
+  def setObject(i: Int, a: AnyRef, q: SetObject): Sql[Unit] =
+    Try(q match {
+      case SetObject.None => x.setObject(i, a)
+      case SetObject.TargetType(t) => x.setObject(i, a, t.int)
+      case SetObject.TargetTypeScale(t, s) => x.setObject(i, a, t.int, s)
+    })
+
+  def setRef(i: Int, a: Ref): Sql[Unit] =
+    Try(x.setRef(i, a.x))
+
+  def setShort(i: Int, a: Short): Sql[Unit] =
+    Try(x.setShort(i, a))
+
+  def setString(i: Int, a: String): Sql[Unit] =
+    Try(x.setString(i, a))
+
+  def setTime(i: Int, a: Time): Sql[Unit] =
+    Try(x.setTime(i, a.x))
+
+  def setTimestamp(i: Int, a: Timestamp, c: Option[java.util.Calendar]): Sql[Unit] =
+    Try(c match {
+      case None => x.setTimestamp(i, a.x)
+      case Some(d) => x.setTimestamp(i, a.x, d)
+    })
+
+  def setURL(i: Int, a: java.net.URL): Sql[Unit] =
+    Try(x.setURL(i, a))
+
 }
 
 object PreparedStatement {
@@ -92,4 +122,12 @@ object PreparedStatement {
     new PreparedStatement {
       val x = xx
     }
+
+  sealed trait SetObject
+  object SetObject {
+    case object None extends SetObject
+    case class TargetType(t: SqlType) extends SetObject
+    case class TargetTypeScale(t: SqlType, s: Int) extends SetObject
+
+  }
 }
