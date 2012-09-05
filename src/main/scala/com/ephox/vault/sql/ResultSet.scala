@@ -68,11 +68,8 @@ sealed trait ResultSet {
     , x.getBlob(_)
     )) map (Blob(_))
 
-  def boolean(q: Int \/ String): Sql[Boolean] =
-    Try(q.fold(
-      x.getBoolean(_)
-    , x.getBoolean(_)
-    ))
+  def boolean(q: Column): GetSet[Boolean] =
+    GetSet(q, q.fold(x getBoolean _, x getBoolean _), a => q.fold(i => x.updateBoolean(i, a), n => x.updateBoolean(n, a)))
 
   def byte(q: Int \/ String): Sql[Byte] =
     Try(q.fold(
@@ -80,11 +77,8 @@ sealed trait ResultSet {
     , x.getByte(_)
     ))
 
-  def bytes(q: Int \/ String): XSql[scala.Array[Byte]] =
-    TryNull(q.fold(
-      x.getBytes(_)
-    , x.getBytes(_)
-    ))
+  def bytes(q: Column): GetSet[scala.Array[Byte]] =
+    GetSet(q, q.fold(x getBytes _, x getBytes _), a => q.fold(i => x.updateBytes(i, a), n => x.updateBytes(n, a)))
 
   def characterStream(q: Int \/ String): XSql[java.io.Reader] =
     TryNull(q.fold(
