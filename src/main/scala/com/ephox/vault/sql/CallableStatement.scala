@@ -18,79 +18,79 @@ sealed trait CallableStatement {
   def statement: Statement =
     preparedStatement.statement
 
-  def array(q: Int \/ String): XSql[Array] =
+  def array(q: Column): XSql[Array] =
     XTry(q.fold(
       x.getArray(_)
     , x.getArray(_)
     )) map (Array(_))
 
-  def bigDecimal(q: Int \/ String): XSql[BigDecimal] =
+  def bigDecimal(q: Column): XSql[BigDecimal] =
     XTry(q.fold(
       x.getBigDecimal(_)
     , x.getBigDecimal(_)
     ))
 
-  def blob(q: Int \/ String): XSql[Blob] =
+  def blob(q: Column): XSql[Blob] =
     XTry((q.fold(
       x.getBlob(_)
     , x.getBlob(_)
     ))) map (Blob(_))
 
-  def boolean(q: Int \/ String): Sql[Boolean] =
+  def boolean(q: Column): Sql[Boolean] =
     Try(q.fold(
       x.getBoolean(_)
     , x.getBoolean(_)
     ))
 
-  def byte(q: Int \/ String): Sql[Byte] =
+  def byte(q: Column): Sql[Byte] =
     Try(q.fold(
       x.getByte(_)
     , x.getByte(_)
     ))
 
-  def bytes(q: Int \/ String): XSql[scala.Array[Byte]] =
+  def bytes(q: Column): XSql[scala.Array[Byte]] =
     XTry(q.fold(
       x.getBytes(_)
     , x.getBytes(_)
     ))
 
-  def clob(q: Int \/ String): XSql[Clob] =
+  def clob(q: Column): XSql[Clob] =
     XTry(q.fold(
       x.getClob(_)
     , x.getClob(_)
     )) map (Clob(_))
 
-  def date(q: Int \/ String): XSql[Date] =
+  def date(q: Column): XSql[Date] =
     XTry(q.fold(
       x.getDate(_)
     , x.getDate(_)
     )) map (Date(_))
 
-  def double(q: Int \/ String): Sql[Double] =
+  def double(q: Column): Sql[Double] =
     Try(q.fold(
       x.getDouble(_)
     , x.getDouble(_)
     ))
 
-  def float(q: Int \/ String): Sql[Float] =
+  def float(q: Column): Sql[Float] =
     Try(q.fold(
       x.getFloat(_)
     , x.getFloat(_)
     ))
 
-  def int(q: Int \/ String): Sql[Int] =
+  def int(q: Column): Sql[Int] =
     Try(q.fold(
       x.getInt(_)
     , x.getInt(_)
     ))
 
-  def long(q: Int \/ String): Sql[Long] =
+  def long(q: Column): Sql[Long] =
     Try(q.fold(
       x.getLong(_)
     , x.getLong(_)
     ))
 
-  def obj(q: Int \/ String, m: Option[collection.mutable.Map[String, Class[_]]]): XSql[AnyRef] =
+  def obj(q: Column, m: Option[collection.mutable.Map[String, Class[_]]]): XSql[AnyRef] =
     XTry(q.fold(
       i => m match {
         case None => x.getObject(i)
@@ -102,25 +102,25 @@ sealed trait CallableStatement {
       }
     ))
 
-  def ref(q: Int \/ String): XSql[Ref] =
+  def ref(q: Column): XSql[Ref] =
     XTry(q.fold(
       x.getRef(_)
     , x.getRef(_)
     )) map (Ref(_))
 
-  def short(q: Int \/ String): Sql[Short] =
+  def short(q: Column): Sql[Short] =
     Try(q.fold(
       x.getShort(_)
     , x.getShort(_)
     ))
 
-  def string(q: Int \/ String): XSql[String] =
+  def string(q: Column): XSql[String] =
     XTry(q.fold(
       x.getString(_)
     , x.getString(_)
     ))
 
-  def time(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Time] =
+  def time(q: Column, m: Option[java.util.Calendar]): XSql[Time] =
     XTry(q.fold(
       i => m match {
         case None => x.getTime(i)
@@ -132,7 +132,7 @@ sealed trait CallableStatement {
       }
     )) map (Time(_))
 
-  def timestamp(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Timestamp] =
+  def timestamp(q: Column, m: Option[java.util.Calendar]): XSql[Timestamp] =
     XTry(q.fold(
       i => m match {
         case None => x.getTimestamp(i)
@@ -144,13 +144,13 @@ sealed trait CallableStatement {
       }
     )) map (Timestamp(_))
 
-  def url(q: Int \/ String): Sql[java.net.URL] =
+  def url(q: Column): Sql[java.net.URL] =
     Try(q.fold(
       x.getURL(_)
     , x.getURL(_)
     ))
 
-  def registerOutParameter(q: Int \/ String, t: SqlType, w: RegisterOutParameter): Sql[Unit] =
+  def registerOutParameter(q: Column, t: SqlType, w: RegisterOutParameter): Sql[Unit] =
     Try(w match {
       case RegisterOutParameter.None =>
         q.fold(
