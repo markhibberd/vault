@@ -110,7 +110,7 @@ object XSqlT extends XSqlTFunctions {
       }))
   }
 
-  object TryNull {
+  object XTry {
     def apply[A](x: => A): XSql[A] =
       TryNullT[Id, A](() => x)
   }

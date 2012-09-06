@@ -35,7 +35,7 @@ sealed trait Connection {
     Try(x.getAutoCommit)
 
   def catalog: XSql[String] =
-    TryNull(x.getCatalog)
+    XTry(x.getCatalog)
 
   def holdability: Sql[ResultSetHoldability] =
     Try(x.getHoldability) map (c =>
@@ -69,7 +69,7 @@ sealed trait Connection {
     Try(mapAsScalaMap(x.getTypeMap))
 
   def warnings: XSql[java.sql.SQLWarning] =
-    TryNull(x.getWarnings)
+    XTry(x.getWarnings)
 
   def isClosed: Sql[Boolean] =
     Try(x.isClosed)

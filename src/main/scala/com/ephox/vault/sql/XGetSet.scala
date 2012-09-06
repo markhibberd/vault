@@ -6,7 +6,7 @@ import scalaz._, Scalaz._
 import XSqlT._
 import SqlT._
 
-sealed trait GetSet[A] {
+sealed trait XGetSet[A] {
   val column: Column
   val get: XSql[A]
   val set: A => Sql[Unit]
@@ -23,20 +23,20 @@ sealed trait GetSet[A] {
   def unary_! : XSql[A] =
     get
 
-  def xmap[B](f: A => B, g: B => A): GetSet[B] =
-    new GetSet[B] {
-      val column = GetSet.this.column
-      val get = GetSet.this.get map f
-      val set = (b: B) => GetSet.this.set(g(b))
+  def xmap[B](f: A => B, g: B => A): XGetSet[B] =
+    new XGetSet[B] {
+      val column = XGetSet.this.column
+      val get = XGetSet.this.get map f
+      val set = (b: B) => XGetSet.this.set(g(b))
     }
 
 }
 
-object GetSet {
-  def apply[A](c: Column, g: => A, s: A => Unit): GetSet[A] =
-    new GetSet[A] {
+object XGetSet {
+  def apply[A](c: Column, g: => A, s: A => Unit): XGetSet[A] =
+    new XGetSet[A] {
       val column = c
-      val get = TryNull(g)
+      val get = XTry(g)
       val set = (a: A) => Try(s(a))
     }
 }

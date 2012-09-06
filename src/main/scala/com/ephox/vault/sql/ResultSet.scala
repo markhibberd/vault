@@ -39,37 +39,37 @@ sealed trait ResultSet {
     Try(x.first)
 
   def array(q: Int \/ String): XSql[Array] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getArray(_)
     , x.getArray(_)
     )) map (Array(_))
 
   def asciiStream(q: Int \/ String): XSql[java.io.InputStream] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getAsciiStream(_)
     , x.getAsciiStream(_)
     ))
 
   def bigDecimal(q: Int \/ String): XSql[BigDecimal] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getBigDecimal(_)
     , x.getBigDecimal(_)
     ))
 
   def binaryStream(q: Int \/ String): XSql[java.io.InputStream] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getBinaryStream(_)
     , x.getBinaryStream(_)
     ))
 
   def blob(q: Int \/ String): XSql[Blob] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getBlob(_)
     , x.getBlob(_)
     )) map (Blob(_))
 
-  def boolean(q: Column): GetSet[Boolean] =
-    GetSet(q, q.fold(x getBoolean _, x getBoolean _), a => q.fold(i => x.updateBoolean(i, a), n => x.updateBoolean(n, a)))
+  def boolean(q: Column): XGetSet[Boolean] =
+    XGetSet(q, q.fold(x getBoolean _, x getBoolean _), a => q.fold(i => x.updateBoolean(i, a), n => x.updateBoolean(n, a)))
 
   def byte(q: Int \/ String): Sql[Byte] =
     Try(q.fold(
@@ -77,17 +77,17 @@ sealed trait ResultSet {
     , x.getByte(_)
     ))
 
-  def bytes(q: Column): GetSet[scala.Array[Byte]] =
-    GetSet(q, q.fold(x getBytes _, x getBytes _), a => q.fold(i => x.updateBytes(i, a), n => x.updateBytes(n, a)))
+  def bytes(q: Column): XGetSet[scala.Array[Byte]] =
+    XGetSet(q, q.fold(x getBytes _, x getBytes _), a => q.fold(i => x.updateBytes(i, a), n => x.updateBytes(n, a)))
 
   def characterStream(q: Int \/ String): XSql[java.io.Reader] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getCharacterStream(_)
     , x.getCharacterStream(_)
     ))
 
   def clob(q: Int \/ String): XSql[Clob] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getClob(_)
     , x.getClob(_)
     )) map (Clob(_))
@@ -106,7 +106,7 @@ sealed trait ResultSet {
     Try(x.getCursorName)
 
   def date(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Date] =
-    TryNull(q.fold(
+    XTry(q.fold(
       i => m match {
         case None => x.getDate(i)
         case Some(r) => x.getDate(i, r)
@@ -160,7 +160,7 @@ sealed trait ResultSet {
     Try(ResultSetMetaData(x.getMetaData))
 
   def obj(q: Int \/ String, m: Option[collection.mutable.Map[String, Class[_]]]): XSql[AnyRef] =
-    TryNull(q.fold(
+    XTry(q.fold(
       i => m match {
         case None => x.getObject(i)
         case Some(r) => x.getObject(i, r)
@@ -172,7 +172,7 @@ sealed trait ResultSet {
     ))
 
   def ref(q: Int \/ String): XSql[Ref] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getRef(_)
     , x.getRef(_)
     )) map (Ref(_))
@@ -187,13 +187,13 @@ sealed trait ResultSet {
     Try(Statement(x.getStatement))
 
   def string(q: Int \/ String): XSql[String] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getString(_)
     , x.getString(_)
     ))
 
   def time(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Time] =
-    TryNull(q.fold(
+    XTry(q.fold(
       i => m match {
         case None => x.getTime(i)
         case Some(r) => x.getTime(i, r)
@@ -205,7 +205,7 @@ sealed trait ResultSet {
     )) map (Time(_))
 
   def timestamp(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Timestamp] =
-    TryNull(q.fold(
+    XTry(q.fold(
       i => m match {
         case None => x.getTimestamp(i)
         case Some(r) => x.getTimestamp(i, r)
@@ -229,13 +229,13 @@ sealed trait ResultSet {
       )
 
   def url(q: Int \/ String): XSql[java.net.URL] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getURL(_)
     , x.getURL(_)
     ))
 
   def warnings: XSql[java.sql.SQLWarning] =
-    TryNull(x.getWarnings)
+    XTry(x.getWarnings)
 
   def insertRow: Sql[Unit] =
     Try(x.insertRow)

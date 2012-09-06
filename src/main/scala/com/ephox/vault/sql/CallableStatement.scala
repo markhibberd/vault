@@ -19,19 +19,19 @@ sealed trait CallableStatement {
     preparedStatement.statement
 
   def array(q: Int \/ String): XSql[Array] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getArray(_)
     , x.getArray(_)
     )) map (Array(_))
 
   def bigDecimal(q: Int \/ String): XSql[BigDecimal] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getBigDecimal(_)
     , x.getBigDecimal(_)
     ))
 
   def blob(q: Int \/ String): XSql[Blob] =
-    TryNull((q.fold(
+    XTry((q.fold(
       x.getBlob(_)
     , x.getBlob(_)
     ))) map (Blob(_))
@@ -49,19 +49,19 @@ sealed trait CallableStatement {
     ))
 
   def bytes(q: Int \/ String): XSql[scala.Array[Byte]] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getBytes(_)
     , x.getBytes(_)
     ))
 
   def clob(q: Int \/ String): XSql[Clob] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getClob(_)
     , x.getClob(_)
     )) map (Clob(_))
 
   def date(q: Int \/ String): XSql[Date] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getDate(_)
     , x.getDate(_)
     )) map (Date(_))
@@ -91,7 +91,7 @@ sealed trait CallableStatement {
     ))
 
   def obj(q: Int \/ String, m: Option[collection.mutable.Map[String, Class[_]]]): XSql[AnyRef] =
-    TryNull(q.fold(
+    XTry(q.fold(
       i => m match {
         case None => x.getObject(i)
         case Some(r) => x.getObject(i, r)
@@ -103,7 +103,7 @@ sealed trait CallableStatement {
     ))
 
   def ref(q: Int \/ String): XSql[Ref] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getRef(_)
     , x.getRef(_)
     )) map (Ref(_))
@@ -115,13 +115,13 @@ sealed trait CallableStatement {
     ))
 
   def string(q: Int \/ String): XSql[String] =
-    TryNull(q.fold(
+    XTry(q.fold(
       x.getString(_)
     , x.getString(_)
     ))
 
   def time(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Time] =
-    TryNull(q.fold(
+    XTry(q.fold(
       i => m match {
         case None => x.getTime(i)
         case Some(r) => x.getTime(i, r)
@@ -133,7 +133,7 @@ sealed trait CallableStatement {
     )) map (Time(_))
 
   def timestamp(q: Int \/ String, m: Option[java.util.Calendar]): XSql[Timestamp] =
-    TryNull(q.fold(
+    XTry(q.fold(
       i => m match {
         case None => x.getTimestamp(i)
         case Some(r) => x.getTimestamp(i, r)

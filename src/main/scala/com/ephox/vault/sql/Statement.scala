@@ -123,7 +123,7 @@ sealed trait Statement {
     Try(x.getUpdateCount)
 
   def warnings: XSql[java.sql.SQLWarning] =
-    TryNull(x.getWarnings)
+    XTry(x.getWarnings)
 
   def setCursorName(name: String): Sql[Unit] =
     Try(x.setCursorName(name))
