@@ -255,6 +255,9 @@ sealed trait ResultSet {
   def setFetchSize(rows: Int): Sql[Unit] =
     Try(x.setFetchSize(rows))
 
+  def wasNull: Sql[Boolean] =
+    Try(x.wasNull)
+
 }
 
 object ResultSet {
