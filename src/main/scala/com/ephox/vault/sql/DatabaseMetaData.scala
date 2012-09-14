@@ -3,7 +3,8 @@ package vault
 package sql
 
 import SqlT._
-import java.sql.{ DatabaseMetaData => D, Connection => C }
+import java.sql.{ DatabaseMetaData => D, Connection => C, ResultSet => R }
+import sql.Connection.ResultSetHoldability
 
 sealed trait DatabaseMetaData {
   private[sql] val x: D
@@ -174,6 +175,42 @@ sealed trait DatabaseMetaData {
 
   def maxUserNameLength: Sql[Int] =
     Try(x.getMaxUserNameLength)
+
+  def numericFunctions: Sql[String] =
+    Try(x.getNumericFunctions)
+
+  def primaryKeys(catalog: Option[String], schema: Option[String], table: String): Sql[ResultSet] =
+    Try(ResultSet(x.getPrimaryKeys(catalog.orNull, schema.orNull, table)))
+
+  def procedureColumns(catalog: Option[String], schemaPattern: Option[String], procedureNamePattern: String, columnNamePattern: String): Sql[ResultSet] =
+    Try(ResultSet(x.getProcedureColumns(catalog.orNull, schemaPattern.orNull, procedureNamePattern, columnNamePattern)))
+
+  def procedures(catalog: Option[String], schemaPattern: Option[String], procedureNamePattern: String): Sql[ResultSet] =
+    Try(ResultSet(x.getProcedures(catalog.orNull, schemaPattern.orNull, procedureNamePattern)))
+
+  def procedureTerm: Sql[String] =
+    Try(x.getProcedureTerm)
+
+  def resultSetHoldability: Sql[ResultSetHoldability] =
+    Try(x.getResultSetHoldability) map (c =>
+      if(c == R.HOLD_CURSORS_OVER_COMMIT)
+        ResultSetHoldability.HoldsCursorsOverCommit
+      else if(c == R.CLOSE_CURSORS_AT_COMMIT)
+        ResultSetHoldability.CloseCursorsAtCommit
+      else
+        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/DatabaseMetaData.html#getResultSetHoldability%28%29 Returns: the default holdability; either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
+
+  def schemas: Sql[ResultSet] =
+    Try(ResultSet(x.getSchemas))
+
+  def schemaTerm: Sql[String] =
+    Try(x.getSchemaTerm)
+
+  def searchStringEscape: Sql[String] =
+    Try(x.getSearchStringEscape)
+
+  def sqlKeywords: Sql[String] =
+    Try(x.getSQLKeywords)
 
 }
 
