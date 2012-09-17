@@ -262,6 +262,231 @@ sealed trait DatabaseMetaData {
 
   def versionColumns(catalog: Option[String], schema: Option[String], table: String): Sql[ResultSet] =
     Try(ResultSet(x.getVersionColumns(catalog.orNull, schema.orNull, table)))
+
+  def insertsAreDetected(t: ResultSetType): Sql[Boolean] =
+    Try(x.insertsAreDetected(t.int))
+
+  def isCatalogAtStart: Sql[Boolean] =
+    Try(x.isCatalogAtStart)
+
+  def isReadOnly: Sql[Boolean] =
+    Try(x.isReadOnly)
+
+  def locatorsUpdateCopy: Sql[Boolean] =
+    Try(x.locatorsUpdateCopy)
+
+  def nullPlusNonNullIsNull: Sql[Boolean] =
+    Try(x.nullPlusNonNullIsNull)
+
+  def nullsAreSortedAtEnd: Sql[Boolean] =
+    Try(x.nullsAreSortedAtEnd)
+
+  def nullsAreSortedAtStart: Sql[Boolean] =
+    Try(x.nullsAreSortedAtStart)
+
+  def nullsAreSortedHigh: Sql[Boolean] =
+    Try(x.nullsAreSortedHigh)
+
+  def nullsAreSortedLow: Sql[Boolean] =
+    Try(x.nullsAreSortedLow)
+
+  def othersDeletesAreVisible(t: ResultSetType): Sql[Boolean] =
+    Try(x.othersDeletesAreVisible(t.int))
+
+  def othersInsertsAreVisible(t: ResultSetType): Sql[Boolean] =
+    Try(x.othersInsertsAreVisible(t.int))
+
+  def othersUpdatesAreVisible(t: ResultSetType): Sql[Boolean] =
+    Try(x.othersUpdatesAreVisible(t.int))
+
+  def ownDeletesAreVisible(t: ResultSetType): Sql[Boolean] =
+    Try(x.ownDeletesAreVisible(t.int))
+
+  def ownInsertsAreVisible(t: ResultSetType): Sql[Boolean] =
+    Try(x.ownInsertsAreVisible(t.int))
+
+  def ownUpdatesAreVisible(t: ResultSetType): Sql[Boolean] =
+    Try(x.ownUpdatesAreVisible(t.int))
+
+  def storesLowerCaseIdentifiers: Sql[Boolean] =
+    Try(x.storesLowerCaseIdentifiers)
+
+  def storesLowerCaseQuotedIdentifiers: Sql[Boolean] =
+    Try(x.storesLowerCaseQuotedIdentifiers)
+
+  def storesMixedCaseIdentifiers: Sql[Boolean] =
+    Try(x.storesMixedCaseIdentifiers)
+
+  def storesMixedCaseQuotedIdentifiers: Sql[Boolean] =
+    Try(x.storesMixedCaseQuotedIdentifiers)
+
+  def storesUpperCaseIdentifiers: Sql[Boolean] =
+    Try(x.storesUpperCaseIdentifiers)
+
+  def storesUpperCaseQuotedIdentifiers: Sql[Boolean] =
+    Try(x.storesUpperCaseQuotedIdentifiers)
+
+  def supportsAlterTableWithAddColumn: Sql[Boolean] =
+    Try(x.supportsAlterTableWithAddColumn)
+
+  def supportsAlterTableWithDropColumn: Sql[Boolean] =
+    Try(x.supportsAlterTableWithDropColumn)
+
+  def supportsANSI92EntryLevelSQL: Sql[Boolean] =
+    Try(x.supportsANSI92EntryLevelSQL)
+
+  def supportsANSI92FullSQL: Sql[Boolean] =
+    Try(x.supportsANSI92FullSQL)
+
+  def supportsANSI92IntermediateSQL: Sql[Boolean] =
+    Try(x.supportsANSI92IntermediateSQL)
+
+  def supportsBatchUpdates: Sql[Boolean] =
+    Try(x.supportsBatchUpdates)
+
+  def supportsCatalogsInDataManipulation: Sql[Boolean] =
+    Try(x.supportsCatalogsInDataManipulation)
+
+  def supportsCatalogsInIndexDefinitions: Sql[Boolean] =
+    Try(x.supportsCatalogsInIndexDefinitions)
+
+  def supportsCatalogsInPrivilegeDefinitions: Sql[Boolean] =
+    Try(x.supportsCatalogsInPrivilegeDefinitions)
+
+  def supportsCatalogsInProcedureCalls: Sql[Boolean] =
+    Try(x.supportsCatalogsInProcedureCalls)
+
+  def supportsCatalogsInTableDefinitions: Sql[Boolean] =
+    Try(x.supportsCatalogsInTableDefinitions)
+
+  def supportsColumnAliasing: Sql[Boolean] =
+    Try(x.supportsColumnAliasing)
+
+  def supportsConvert(t: Option[(SqlType, SqlType)]): Sql[Boolean] =
+    Try(t match {
+      case None => x.supportsConvert
+      case Some((from, to)) => x.supportsConvert(from.int, to.int)
+    })
+
+  def supportsCoreSQLGrammar: Sql[Boolean] =
+    Try(x.supportsCoreSQLGrammar)
+
+  def supportsCorrelatedSubqueries: Sql[Boolean] =
+    Try(x.supportsCorrelatedSubqueries)
+
+  def supportsDataDefinitionAndDataManipulationTransactions: Sql[Boolean] =
+    Try(x.supportsDataDefinitionAndDataManipulationTransactions)
+
+  def supportsDataManipulationTransactionsOnly: Sql[Boolean] =
+    Try(x.supportsDataManipulationTransactionsOnly)
+
+  def supportsDifferentTableCorrelationNames: Sql[Boolean] =
+    Try(x.supportsDifferentTableCorrelationNames)
+
+  def supportsExpressionsInOrderBy: Sql[Boolean] =
+    Try(x.supportsExpressionsInOrderBy)
+
+  def supportsExtendedSQLGrammar: Sql[Boolean] =
+    Try(x.supportsExtendedSQLGrammar)
+
+  def supportsFullOuterJoins: Sql[Boolean] =
+    Try(x.supportsFullOuterJoins)
+
+  def supportsGetGeneratedKeys: Sql[Boolean] =
+    Try(x.supportsGetGeneratedKeys)
+
+  def supportsGroupBy: Sql[Boolean] =
+    Try(x.supportsGroupBy)
+
+  def supportsGroupByBeyondSelect: Sql[Boolean] =
+    Try(x.supportsGroupByBeyondSelect)
+
+  def supportsGroupByUnrelated: Sql[Boolean] =
+    Try(x.supportsGroupByUnrelated)
+
+  def supportsIntegrityEnhancementFacility: Sql[Boolean] =
+    Try(x.supportsIntegrityEnhancementFacility)
+
+  def supportsLikeEscapeClause: Sql[Boolean] =
+    Try(x.supportsLikeEscapeClause)
+
+  def supportsLimitedOuterJoins: Sql[Boolean] =
+    Try(x.supportsLimitedOuterJoins)
+
+  def supportsMinimumSQLGrammar: Sql[Boolean] =
+    Try(x.supportsMinimumSQLGrammar)
+
+  def supportsMixedCaseIdentifiers: Sql[Boolean] =
+    Try(x.supportsMixedCaseIdentifiers)
+
+  def supportsMixedCaseQuotedIdentifiers: Sql[Boolean] =
+    Try(x.supportsMixedCaseQuotedIdentifiers)
+
+  def supportsMultipleOpenResults: Sql[Boolean] =
+    Try(x.supportsMultipleOpenResults)
+
+  def supportsMultipleResultSets: Sql[Boolean] =
+    Try(x.supportsMultipleResultSets)
+
+  def supportsMultipleTransactions: Sql[Boolean] =
+    Try(x.supportsMultipleTransactions)
+
+  def supportsNamedParameters: Sql[Boolean] =
+    Try(x.supportsNamedParameters)
+
+  def supportsNonNullableColumns: Sql[Boolean] =
+    Try(x.supportsNonNullableColumns)
+
+  def supportsOpenCursorsAcrossCommit: Sql[Boolean] =
+    Try(x.supportsOpenCursorsAcrossCommit)
+
+  def supportsOpenCursorsAcrossRollback: Sql[Boolean] =
+    Try(x.supportsOpenCursorsAcrossRollback)
+
+  def supportsOpenStatementsAcrossCommit: Sql[Boolean] =
+    Try(x.supportsOpenStatementsAcrossCommit)
+
+  def supportsOpenStatementsAcrossRollback: Sql[Boolean] =
+    Try(x.supportsOpenStatementsAcrossRollback)
+
+  def supportsOrderByUnrelated: Sql[Boolean] =
+    Try(x.supportsOrderByUnrelated)
+
+  def supportsOuterJoins: Sql[Boolean] =
+    Try(x.supportsOuterJoins)
+
+  def supportsPositionedDelete: Sql[Boolean] =
+    Try(x.supportsPositionedDelete)
+
+  def supportsPositionedUpdate: Sql[Boolean] =
+    Try(x.supportsPositionedUpdate)
+
+  /*
+  def supportsResultSetConcurrency(int type, int concurrency)
+  def supportsResultSetHoldability(int holdability)
+  def supportsResultSetType(t: ResultSetType): Sql[Boolean]
+  def supportsSavepoints: Sql[Boolean] =
+  def supportsSchemasInDataManipulation: Sql[Boolean] =
+  def supportsSchemasInIndexDefinitions: Sql[Boolean] =
+  def supportsSchemasInPrivilegeDefinitions: Sql[Boolean] =
+  def supportsSchemasInProcedureCalls: Sql[Boolean] =
+  def supportsSchemasInTableDefinitions: Sql[Boolean] =
+  def supportsSelectForUpdate: Sql[Boolean] =
+  def supportsStatementPooling: Sql[Boolean] =
+  def supportsStoredProcedures: Sql[Boolean] =
+  def supportsSubqueriesInComparisons: Sql[Boolean] =
+  def supportsSubqueriesInExists: Sql[Boolean] =
+  def supportsSubqueriesInIns: Sql[Boolean] =
+  def supportsSubqueriesInQuantifieds: Sql[Boolean] =
+  def supportsTableCorrelationNames: Sql[Boolean] =
+  def supportsTransactionIsolationLevel(int level)
+  def supportsTransactions: Sql[Boolean] =
+  def supportsUnion: Sql[Boolean] =
+  def supportsUnionAll: Sql[Boolean] =
+  def updatesAreDetected(t: ResultSetType): Sql[Boolean]
+  def usesLocalFilePerTable: Sql[Boolean] =
+  def usesLocalFiles: Sql[Boolean] =
+   */
 }
 
 object DatabaseMetaData {
