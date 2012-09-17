@@ -3,8 +3,11 @@ package vault
 package sql
 
 import SqlT._
+import XSqlT._
 import java.sql.{ DatabaseMetaData => D, Connection => C, ResultSet => R }
 import sql.Connection.ResultSetHoldability
+import scalaz.Digit._0
+import sql.XSqlT.TryNullT
 
 sealed trait DatabaseMetaData {
   private[sql] val x: D
@@ -212,6 +215,53 @@ sealed trait DatabaseMetaData {
   def sqlKeywords: Sql[String] =
     Try(x.getSQLKeywords)
 
+  def sqlStateType: Sql[SqlStateType] =
+    Try(x.getSQLStateType) map (c =>
+      if(c == D.sqlStateXOpen)
+        SqlStateType.SqlXOpen
+      else if(c == D.sqlStateSQL99)
+        SqlStateType.Sql99
+      else
+        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/DatabaseMetaData.html#getSQLStateType%28%29 Returns: the type of SQLSTATE; one of: sqlStateXOpen or sqlStateSQL99"""))
+
+  def stringFunctions: Sql[String] =
+    Try(x.getStringFunctions)
+
+  def superTables(catalog: Option[String], schemaPattern: Option[String], tableNamePattern: String): Sql[ResultSet] =
+    Try(ResultSet(x.getSuperTables(catalog.orNull, schemaPattern.orNull, tableNamePattern)))
+
+  def superTypes(catalog: Option[String], schemaPattern: Option[String], typeNamePattern: String): Sql[ResultSet] =
+    Try(ResultSet(x.getSuperTypes(catalog.orNull, schemaPattern.orNull, typeNamePattern)))
+
+  def systemFunctions: Sql[String] =
+    Try(x.getSystemFunctions)
+
+  def tablePrivileges(catalog: Option[String], schemaPattern: Option[String], tableNamePattern: String): Sql[ResultSet] =
+    Try(ResultSet(x.getTablePrivileges(catalog.orNull, schemaPattern.orNull, tableNamePattern)))
+
+  def tables(catalog: Option[String], schemaPattern: Option[String], tableNamePattern: String, types: Option[List[String]]): Sql[ResultSet] =
+    Try(ResultSet(x.getTables(catalog.orNull, schemaPattern.orNull, tableNamePattern, types map (_.toArray) orNull)))
+
+  def tableTypes: Sql[ResultSet] =
+    Try(ResultSet(x.getTableTypes))
+
+  def timeDateFunctions: Sql[String] =
+    Try(x.getTimeDateFunctions)
+
+  def typeInfo: Sql[ResultSet] =
+    Try(ResultSet(x.getTypeInfo))
+
+  def udts(catalog: Option[String], schemaPattern: Option[String], typeNamePattern: String, types: Option[Set[UserDefinedType]]): Sql[ResultSet] =
+    Try(ResultSet(x.getUDTs(catalog.orNull, schemaPattern.orNull, typeNamePattern, types map (_ map (_.int) toArray) orNull)))
+
+  def url: XSql[String] =
+    XTry(x.getURL)
+
+  def userName: Sql[String] =
+    Try(x.getUserName)
+
+  def versionColumns(catalog: Option[String], schema: Option[String], table: String): Sql[ResultSet] =
+    Try(ResultSet(x.getVersionColumns(catalog.orNull, schema.orNull, table)))
 }
 
 object DatabaseMetaData {
