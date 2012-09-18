@@ -461,32 +461,78 @@ sealed trait DatabaseMetaData {
   def supportsPositionedUpdate: Sql[Boolean] =
     Try(x.supportsPositionedUpdate)
 
-  /*
-  def supportsResultSetConcurrency(int type, int concurrency)
-  def supportsResultSetHoldability(int holdability)
-  def supportsResultSetType(t: ResultSetType): Sql[Boolean]
+  def supportsResultSetConcurrency(t: ResultSetType, concurrency: ResultSetConcurrency): Sql[Boolean] =
+    Try(x.supportsResultSetConcurrency(t.int, concurrency.int))
+
+  def supportsResultSetHoldability(holdability: ResultSetHoldability): Sql[Boolean] =
+    Try(x.supportsResultSetHoldability(holdability.int))
+
+  def supportsResultSetType(t: ResultSetType): Sql[Boolean] =
+    Try(x.supportsResultSetType(t.int))
+
   def supportsSavepoints: Sql[Boolean] =
+    Try(x.supportsSavepoints)
+
   def supportsSchemasInDataManipulation: Sql[Boolean] =
+    Try(x.supportsSchemasInDataManipulation)
+
   def supportsSchemasInIndexDefinitions: Sql[Boolean] =
+    Try(x.supportsSchemasInIndexDefinitions)
+
   def supportsSchemasInPrivilegeDefinitions: Sql[Boolean] =
+    Try(x.supportsSchemasInPrivilegeDefinitions)
+
   def supportsSchemasInProcedureCalls: Sql[Boolean] =
+    Try(x.supportsSchemasInProcedureCalls)
+
   def supportsSchemasInTableDefinitions: Sql[Boolean] =
+    Try(x.supportsSchemasInTableDefinitions)
+
   def supportsSelectForUpdate: Sql[Boolean] =
+    Try(x.supportsSelectForUpdate)
+
   def supportsStatementPooling: Sql[Boolean] =
+    Try(x.supportsStatementPooling)
+
   def supportsStoredProcedures: Sql[Boolean] =
+    Try(x.supportsStoredProcedures)
+
   def supportsSubqueriesInComparisons: Sql[Boolean] =
+    Try(x.supportsSubqueriesInComparisons)
+
   def supportsSubqueriesInExists: Sql[Boolean] =
+    Try(x.supportsSubqueriesInExists)
+
   def supportsSubqueriesInIns: Sql[Boolean] =
+    Try(x.supportsSubqueriesInIns)
+
   def supportsSubqueriesInQuantifieds: Sql[Boolean] =
+    Try(x.supportsSubqueriesInQuantifieds)
+
   def supportsTableCorrelationNames: Sql[Boolean] =
-  def supportsTransactionIsolationLevel(int level)
+    Try(x.supportsTableCorrelationNames)
+
+  def supportsTransactionIsolationLevel(level: TransactionIsolation): Sql[Boolean] =
+    Try(x.supportsTransactionIsolationLevel(level.int))
+
   def supportsTransactions: Sql[Boolean] =
+    Try(x.supportsTransactions)
+
   def supportsUnion: Sql[Boolean] =
+    Try(x.supportsUnion)
+
   def supportsUnionAll: Sql[Boolean] =
-  def updatesAreDetected(t: ResultSetType): Sql[Boolean]
+    Try(x.supportsUnionAll)
+
+  def updatesAreDetected(t: ResultSetType): Sql[Boolean] =
+    Try(x.updatesAreDetected(t.int))
+
   def usesLocalFilePerTable: Sql[Boolean] =
+    Try(x.usesLocalFilePerTable)
+
   def usesLocalFiles: Sql[Boolean] =
-   */
+    Try(x.usesLocalFiles)
+
 }
 
 object DatabaseMetaData {
