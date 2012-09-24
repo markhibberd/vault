@@ -88,6 +88,8 @@ sealed trait SqlT[F[+_], +A] {
   def unary_~(implicit F: Functor[F]): XSqlT[F, A] =
     XSqlT(F.map(run)(Some(_)))
 
+  def ![B](f: A => Incompatibility \/ B)(implicit F: Functor[F]): ISqlT[F, B] =
+    ISqlT(F.map(run)(_.fold(_.right.left, f(_) ~ (_ map (_.left)))))
 }
 
 object SqlT extends SqlTFunctions {

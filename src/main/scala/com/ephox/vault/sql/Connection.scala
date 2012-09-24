@@ -6,6 +6,7 @@ import java.sql.{Connection => C}
 import java.sql.{ResultSet => R}
 import SqlT._
 import XSqlT._
+import ISqlT._
 import SqlError._
 import scalaz._, Scalaz._
 import collection.JavaConversions._
@@ -37,14 +38,14 @@ sealed trait Connection {
   def catalog: XSql[String] =
     XTry(x.getCatalog)
 
-  def holdability: Sql[ResultSetHoldability] =
-    Try(x.getHoldability) map (c =>
+  def holdability: ISql[ResultSetHoldability] =
+    Try(x.getHoldability) ! (c =>
       if(c == R.HOLD_CURSORS_OVER_COMMIT)
-        ResultSetHoldability.HoldsCursorsOverCommit
+        ResultSetHoldability.HoldsCursorsOverCommit.right
       else if(c == R.CLOSE_CURSORS_AT_COMMIT)
-        ResultSetHoldability.CloseCursorsAtCommit
+        ResultSetHoldability.CloseCursorsAtCommit.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getHoldability() Returns: the holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
+        Incompatibility(c, "http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getHoldability()", "Returns: the holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT").left)
 
   def metadata: Sql[DatabaseMetaData] =
     Try(DatabaseMetaData(x.getMetaData))
