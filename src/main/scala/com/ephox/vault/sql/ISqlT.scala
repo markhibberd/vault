@@ -91,6 +91,12 @@ sealed trait ISqlT[F[+_], +A] {
   def unary_~(implicit F: Functor[F]): XSqlT[F, A] =
     XSqlT(F.map(switch)(_.toOption))
 
+  def -<:(e: => SqlError)(implicit F: Functor[F]): SqlT[F, A] =
+    e -<: ~this
+
+  def :>-[AA >: A](a: => AA)(implicit F: Functor[F]): SqlT[F, AA] =
+    ~this :>- a
+
   def unary_-[AA >: A](implicit F: F[Incompatibility \/ (SqlError \/ AA)] =:= Id[Incompatibility \/ (SqlError \/ AA)], T: Functor[F]): SqlT[({type λ[+α] = Incompatibility \/ α})#λ, AA] =
     SqlT[({type λ[+α] = Incompatibility \/ α})#λ, AA](switch: Incompatibility \/ (SqlError \/ AA))
 
