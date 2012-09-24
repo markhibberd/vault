@@ -28,6 +28,9 @@ sealed trait SqlT[F[+_], +A] {
   def isValue(implicit F: Functor[F]): F[Boolean] =
     F.map(run)(_.isRight)
 
+  def error(implicit F: Functor[F]): OptionT[F, SqlError] =
+    OptionT(F.map(run)(_.swap.toOption))
+
   def map[B](f: A => B)(implicit F: Functor[F]): SqlT[F, B] =
     SqlT(F.map(run)(_ map f))
 

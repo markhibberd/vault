@@ -17,6 +17,9 @@ sealed trait XSqlT[F[+_], +A] {
   def isValue(implicit F: Functor[F]): F[Boolean] =
     F.map(run)(_ exists (_.isRight))
 
+  def error(implicit F: Functor[F]): OptionT[F, SqlError] =
+    OptionT(F.map(run)(_ flatMap (_.swap.toOption)))
+
   def isEmpty(implicit F: Functor[F]): F[Boolean] =
     F.map(run)(_.isEmpty)
 
