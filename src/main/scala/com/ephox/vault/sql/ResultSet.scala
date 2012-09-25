@@ -7,6 +7,7 @@ import scalaz._, Scalaz._
 import collection.JavaConversions._
 import SqlT._
 import XSqlT._
+import ISqlT._
 
 sealed trait ResultSet {
   private[sql] val x: java.sql.ResultSet
@@ -68,15 +69,14 @@ sealed trait ResultSet {
   def clob(q: Column): XGetSet[Clob] =
     XGetSet(q, Clob(q.fold(x getClob _, x getClob _)), a => q.fold(i => x.updateClob(i, a.x), n => x.updateClob(n, a.x)))
 
-  def concurrency: Sql[ResultSetConcurrency] =
-    Try(x.getConcurrency) map (c =>
+  def concurrency: ISql[ResultSetConcurrency] =
+    Try(x.getConcurrency) ! (c =>
       if(c == R.CONCUR_READ_ONLY)
-        ResultSetConcurrency.ReadOnly
+        ResultSetConcurrency.ReadOnly.right
       else if(c == R.CONCUR_UPDATABLE)
-        ResultSetConcurrency.Updatable
+        ResultSetConcurrency.Updatable.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSet.html#getConcurrency%28%29""")
-      )
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSet.html#getConcurrency%28%29""", """Returns: the concurrency type, either ResultSet.CONCUR_READ_ONLY or ResultSet.CONCUR_UPDATABLE """).left)
 
   def cursorName: Sql[String] =
     Try(x.getCursorName)
@@ -99,17 +99,16 @@ sealed trait ResultSet {
   def double(q: Column): GetSet[Double] =
     GetSet(q, q.fold(x getDouble _, x getDouble _), a => q.fold(i => x.updateDouble(i, a), n => x.updateDouble(n, a)))
 
-  def fetchDirection: Sql[FetchDirection] =
-    Try(x.getFetchDirection) map (c =>
+  def fetchDirection: ISql[FetchDirection] =
+    Try(x.getFetchDirection) ! (c =>
       if(c == R.FETCH_FORWARD)
-        FetchDirection.Forward
+        FetchDirection.Forward.right
       else if(c == R.FETCH_REVERSE)
-        FetchDirection.Reverse
+        FetchDirection.Reverse.right
       else if(c == R.FETCH_UNKNOWN)
-        FetchDirection.Unknown
+        FetchDirection.Unknown.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSet.html#setFetchDirection%28int%29""")
-      )
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSet.html#getFetchDirection%28%29""", """Returns: the current fetch direction for this ResultSet object""").left)
 
   def fetchSize: Sql[Int] =
     Try(x.getFetchSize)
@@ -183,17 +182,16 @@ sealed trait ResultSet {
     , n => x.updateTimestamp(n, t.x)
     ))
 
-  def ty: Sql[ResultSetType] =
-    Try(x.getType) map (c =>
+  def ty: ISql[ResultSetType] =
+    Try(x.getType) ! (c =>
       if(c == R.TYPE_FORWARD_ONLY)
-        ResultSetType.ForwardOnly
+        ResultSetType.ForwardOnly.right
       else if(c == R.TYPE_SCROLL_INSENSITIVE)
-        ResultSetType.ScrollInsensitive
+        ResultSetType.ScrollInsensitive.right
       else if(c == R.TYPE_SCROLL_SENSITIVE)
-        ResultSetType.ScrollSensitive
+        ResultSetType.ScrollSensitive.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSet.html#getType%28%29""")
-      )
+        Incompatibility(c, """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSet.html#getType%28%29""", """Returns: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE""").left)
 
   def url(q: Column): XSql[java.net.URL] =
     XTry(q.fold(

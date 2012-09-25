@@ -4,10 +4,10 @@ package sql
 
 import SqlT._
 import XSqlT._
+import ISqlT._
 import java.sql.{ DatabaseMetaData => D, Connection => C, ResultSet => R }
 import sql.Connection.ResultSetHoldability
-import scalaz.Digit._0
-import sql.XSqlT.TryNullT
+import scalaz._, Scalaz._
 
 sealed trait DatabaseMetaData {
   private[sql] val x: D
@@ -71,20 +71,20 @@ sealed trait DatabaseMetaData {
   def databaseProductVersion: Sql[String] =
     Try(x.getDatabaseProductVersion)
 
-  def defaultTransactionIsolation: Sql[TransactionIsolation] =
-    Try(x.getDefaultTransactionIsolation) map (c =>
+  def defaultTransactionIsolation: ISql[TransactionIsolation] =
+    Try(x.getDefaultTransactionIsolation) ! (c =>
       if(c == C.TRANSACTION_READ_UNCOMMITTED)
-        TransactionIsolation.ReadUncommitted
+        TransactionIsolation.ReadUncommitted.right
       else if(c == C.TRANSACTION_READ_COMMITTED)
-        TransactionIsolation.ReadCommitted
+        TransactionIsolation.ReadCommitted.right
       else if(c == C.TRANSACTION_REPEATABLE_READ)
-        TransactionIsolation.RepeatableRead
+        TransactionIsolation.RepeatableRead.right
       else if(c == C.TRANSACTION_SERIALIZABLE)
-        TransactionIsolation.Serializable
+        TransactionIsolation.Serializable.right
       else if(c == C.TRANSACTION_NONE)
-        TransactionIsolation.None
+        TransactionIsolation.None.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/DatabaseMetaData.html#getDefaultTransactionIsolation%28%29 Retrieves this database's default transaction isolation level. The possible values are defined in java.sql.Connection. """))
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/DatabaseMetaData.html#getDefaultTransactionIsolation%28%29""", """Retrieves this database's default transaction isolation level. The possible values are defined in java.sql.Connection.""").left)
 
   def driverMajorVersion: Sql[Int] =
     Try(x.getDriverMajorVersion)
@@ -194,14 +194,14 @@ sealed trait DatabaseMetaData {
   def procedureTerm: Sql[String] =
     Try(x.getProcedureTerm)
 
-  def resultSetHoldability: Sql[ResultSetHoldability] =
-    Try(x.getResultSetHoldability) map (c =>
+  def resultSetHoldability: ISql[ResultSetHoldability] =
+    Try(x.getResultSetHoldability) ! (c =>
       if(c == R.HOLD_CURSORS_OVER_COMMIT)
-        ResultSetHoldability.HoldsCursorsOverCommit
+        ResultSetHoldability.HoldsCursorsOverCommit.right
       else if(c == R.CLOSE_CURSORS_AT_COMMIT)
-        ResultSetHoldability.CloseCursorsAtCommit
+        ResultSetHoldability.CloseCursorsAtCommit.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/DatabaseMetaData.html#getResultSetHoldability%28%29 Returns: the default holdability; either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/DatabaseMetaData.html#getResultSetHoldability%28%29""", """Returns: the default holdability; either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT""").left)
 
   def schemas: Sql[ResultSet] =
     Try(ResultSet(x.getSchemas))
@@ -215,14 +215,14 @@ sealed trait DatabaseMetaData {
   def sqlKeywords: Sql[String] =
     Try(x.getSQLKeywords)
 
-  def sqlStateType: Sql[SqlStateType] =
-    Try(x.getSQLStateType) map (c =>
+  def sqlStateType: ISql[SqlStateType] =
+    Try(x.getSQLStateType) ! (c =>
       if(c == D.sqlStateXOpen)
-        SqlStateType.SqlXOpen
+        SqlStateType.SqlXOpen.right
       else if(c == D.sqlStateSQL99)
-        SqlStateType.Sql99
+        SqlStateType.Sql99.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/DatabaseMetaData.html#getSQLStateType%28%29 Returns: the type of SQLSTATE; one of: sqlStateXOpen or sqlStateSQL99"""))
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/DatabaseMetaData.html#getSQLStateType%28%29""", """Returns: the type of SQLSTATE; one of: sqlStateXOpen or sqlStateSQL99""").left)
 
   def stringFunctions: Sql[String] =
     Try(x.getStringFunctions)

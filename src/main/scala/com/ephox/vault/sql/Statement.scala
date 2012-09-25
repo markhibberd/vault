@@ -5,6 +5,7 @@ package sql
 import java.sql.{ResultSet => R, Statement => S}
 import SqlT._
 import XSqlT._
+import ISqlT._
 import scalaz._, Scalaz._
 
 sealed trait Statement {
@@ -52,16 +53,16 @@ sealed trait Statement {
   def connection: Sql[Connection] =
     Try(Connection(x.getConnection))
 
-  def fetchDirection: Sql[FetchDirection] =
-    Try(x.getFetchDirection) map (c =>
+  def fetchDirection: ISql[FetchDirection] =
+    Try(x.getFetchDirection) ! (c =>
       if(c == R.FETCH_FORWARD)
-        FetchDirection.Forward
+        FetchDirection.Forward.right
       else if(c == R.FETCH_REVERSE)
-        FetchDirection.Reverse
+        FetchDirection.Reverse.right
       else if(c == R.FETCH_UNKNOWN)
-        FetchDirection.Unknown
+        FetchDirection.Unknown.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#setFetchDirection%28int%29""")
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getFetchDirection%28%29""", "Returns: the default fetch direction for result sets generated from this Statement object").left
       )
 
   def fetchSize: Sql[Int] =
@@ -88,36 +89,36 @@ sealed trait Statement {
   def resultSet: Sql[ResultSet] =
     Try(ResultSet(x.getResultSet))
 
-  def resultSetConcurrency: Sql[ResultSetConcurrency] =
-    Try(x.getResultSetConcurrency) map (c =>
+  def resultSetConcurrency: ISql[ResultSetConcurrency] =
+    Try(x.getResultSetConcurrency) ! (c =>
       if(c == R.CONCUR_READ_ONLY)
-        ResultSetConcurrency.ReadOnly
+        ResultSetConcurrency.ReadOnly.right
       else if(c == R.CONCUR_UPDATABLE)
-        ResultSetConcurrency.Updatable
+        ResultSetConcurrency.Updatable.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetConcurrency%28%29""")
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetConcurrency%28%29""", "Returns: either ResultSet.CONCUR_READ_ONLY or ResultSet.CONCUR_UPDATABLE").left
       )
 
   import Connection._
-  def resultSetHoldability: Sql[ResultSetHoldability] =
-    Try(x.getResultSetHoldability) flatMap (c =>
+  def resultSetHoldability: ISql[ResultSetHoldability] =
+    Try(x.getResultSetHoldability) ! (c =>
       if(c == R.HOLD_CURSORS_OVER_COMMIT)
-        SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.HoldsCursorsOverCommit)
+        ResultSetHoldability.HoldsCursorsOverCommit.right
       else if(c == R.CLOSE_CURSORS_AT_COMMIT)
-        SqlT.Value[Id, ResultSetHoldability](ResultSetHoldability.CloseCursorsAtCommit)
+        ResultSetHoldability.CloseCursorsAtCommit.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetHoldability%28%29 Returns: either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetHoldability%28%29""", """Returns: either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT""").left)
 
-  def resultSetType: Sql[ResultSetType] =
-    Try(x.getResultSetType) map (c =>
+  def resultSetType: ISql[ResultSetType] =
+    Try(x.getResultSetType) ! (c =>
       if(c == R.TYPE_FORWARD_ONLY)
-        ResultSetType.ForwardOnly
+        ResultSetType.ForwardOnly.right
       else if(c == R.TYPE_SCROLL_INSENSITIVE)
-        ResultSetType.ScrollInsensitive
+        ResultSetType.ScrollInsensitive.right
       else if(c == R.TYPE_SCROLL_SENSITIVE)
-        ResultSetType.ScrollSensitive
+        ResultSetType.ScrollSensitive.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetHoldability%28%29 Returns: either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT"""))
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Statement.html#getResultSetHoldability%28%29""", """Returns: either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT""").left)
 
   def updateCount: Sql[Int] =
     Try(x.getUpdateCount)

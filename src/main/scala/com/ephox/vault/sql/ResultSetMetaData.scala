@@ -3,7 +3,9 @@ package vault
 package sql
 
 import SqlT._
+import ISqlT._
 import java.sql.{ResultSetMetaData => R}
+import scalaz._, Scalaz._
 
 sealed trait ResultSetMetaData {
   private[sql] val x: java.sql.ResultSetMetaData
@@ -28,11 +30,9 @@ sealed trait ResultSetMetaData {
   def columnName(column: Int): Sql[String] =
     Try(x.getColumnName(column))
 
-  def columnType(column: Int): Sql[SqlType] =
-    Try({
-      val r = x.getColumnType(column)
-      SqlType.sqlTypeFromIntOr(r, sys.error("[" + r + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSetMetaData.html#getColumnType%28int%29 Returns: SQL type from java.sql.Types"""))
-    })
+  def columnType(column: Int): ISql[SqlType] =
+    Try(x.getColumnType(column)) ! (r =>
+      SqlType.sqlTypeFromInt(r).toRightDisjunction(Incompatibility(r, "http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSetMetaData.html#getColumnType%28int%29", "Returns: SQL type from java.sql.Types")))
 
   def precision(column: Int): Sql[Int] =
     Try(x.getPrecision(column))
@@ -58,16 +58,16 @@ sealed trait ResultSetMetaData {
   def isDefinitelyWritable(column: Int): Sql[Boolean] =
     Try(x.isDefinitelyWritable(column))
 
-  def isNullable(column: Int): Sql[ColumnNullability] =
-    Try(x.isNullable(column)) map (c =>
+  def isNullable(column: Int): ISql[ColumnNullability] =
+    Try(x.isNullable(column)) ! (c =>
       if(c == R.columnNoNulls)
-        ColumnNullability.NoNulls
+        ColumnNullability.NoNulls.right
       else if(c == R.columnNullable)
-        ColumnNullability.Nullable
+        ColumnNullability.Nullable.right
       else if(c == R.columnNullableUnknown)
-        ColumnNullability.NullableUnknown
+        ColumnNullability.NullableUnknown.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSetMetaData.html#isNullable%28int%29 Returns: the nullability status of the given column; one of columnNoNulls, columnNullable or columnNullableUnknown""")
+        Incompatibility(c, """http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/ResultSetMetaData.html#isNullable%28int%29""", """Returns: the nullability status of the given column; one of columnNoNulls, columnNullable or columnNullableUnknown""").left
       )
 
   def isReadOnly(column: Int): Sql[Boolean] =

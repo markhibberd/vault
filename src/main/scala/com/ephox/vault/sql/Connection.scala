@@ -50,20 +50,20 @@ sealed trait Connection {
   def metadata: Sql[DatabaseMetaData] =
     Try(DatabaseMetaData(x.getMetaData))
 
-  def transactionIsolation: Sql[TransactionIsolation] =
-    Try(x.getTransactionIsolation) map (c =>
+  def transactionIsolation: ISql[TransactionIsolation] =
+    Try(x.getTransactionIsolation) ! (c =>
       if(c == C.TRANSACTION_READ_UNCOMMITTED)
-        TransactionIsolation.ReadUncommitted
+        TransactionIsolation.ReadUncommitted.right
       else if(c == C.TRANSACTION_READ_COMMITTED)
-        TransactionIsolation.ReadCommitted
+        TransactionIsolation.ReadCommitted.right
       else if(c == C.TRANSACTION_REPEATABLE_READ)
-        TransactionIsolation.RepeatableRead
+        TransactionIsolation.RepeatableRead.right
       else if(c == C.TRANSACTION_SERIALIZABLE)
-        TransactionIsolation.Serializable
+        TransactionIsolation.Serializable.right
       else if(c == C.TRANSACTION_NONE)
-        TransactionIsolation.None
+        TransactionIsolation.None.right
       else
-        sys.error("[" + c + """] http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getTransactionIsolation() Returns: the current transaction isolation level, which will be one of the following constants: Connection.TRANSACTION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ, Connection.TRANSACTION_SERIALIZABLE, or Connection.TRANSACTION_NONE."""))
+        Incompatibility(c, "http://docs.oracle.com/javase/1.5.0/docs/api/java/sql/Connection.html#getTransactionIsolation()", "Returns: the current transaction isolation level, which will be one of the following constants: Connection.TRANSACTION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ, Connection.TRANSACTION_SERIALIZABLE, or Connection.TRANSACTION_NONE.").left)
 
   def typeMap: Sql[collection.mutable.Map[String, Class[_]]] =
     Try(mapAsScalaMap(x.getTypeMap))
