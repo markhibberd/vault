@@ -5,22 +5,22 @@ package sql
 import scalaz._, Scalaz._
 
 sealed trait SqlError {
-  def exception: Option[java.sql.SQLException] =
+  def exception: java.sql.SQLException =
     this match {
-      case SqlException(e) => Some(e)
-      case SqlWarning(e) => Some(e)
-      case DataTruncation(e) => Some(e)
-      case BatchUpdateException(e) => Some(e)
+      case SqlException(e) => e
+      case SqlWarning(e) => e
+      case DataTruncation(e) => e
+      case BatchUpdateException(e) => e
     }
 
   def reason: Option[Cord] =
-    exception flatMap (x => Option(x.getMessage))
+    Option(exception.getMessage)
 
   def state: Option[Cord] =
-    exception flatMap (x => Option(x.getSQLState))
+    Option(exception.getSQLState)
 
   def code: Option[Int] =
-    exception flatMap (x => Option(x.getErrorCode))
+    Option(exception.getErrorCode)
 
   def isSqlException: Boolean =
     this match {
