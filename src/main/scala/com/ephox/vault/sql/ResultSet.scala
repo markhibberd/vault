@@ -256,6 +256,12 @@ sealed trait ResultSet {
   def wasNull: Sql[Boolean] =
     Try(x.wasNull)
 
+  def get: ResultSetGet =
+    ResultSetGet(this)
+
+  def unary_- : ResultSetGet =
+    get
+
 }
 
 object ResultSet {
