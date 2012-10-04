@@ -7,6 +7,9 @@ import scalaz._, Scalaz._
 sealed trait SqlT[F[+_], +A] {
   val run: F[SqlError \/ A]
 
+  def fold[X](err: SqlError => X, value: A => X)(implicit F: Functor[F]): F[X] =
+    F.map(run)(_.fold(err, value))
+
   def transformer: EitherT[F, SqlError, A] =
     EitherT(run)
 
@@ -38,7 +41,7 @@ sealed trait SqlT[F[+_], +A] {
     E.each(run)(_ foreach f)
 
   def ap[B](f: SqlT[F, A => B])(implicit F: Apply[F]): SqlT[F, B] =
-    SqlT(F(run, f.run)((a, b) => a flatMap (x => b map (_(x)))))
+    SqlT(F(f.run, run)((b, a) => a flatMap (x => b map (_(x)))))
 
   def flatMap[B](f: A => SqlT[F, B])(implicit F: Monad[F]): SqlT[F, B] =
     SqlT(F.bind(run)(_.fold(e => F.point(e.left), f(_).run)))
@@ -92,7 +95,7 @@ sealed trait SqlT[F[+_], +A] {
     ISqlT(F.map(run)(_.fold(_.right.left, f(_) ~ (_ map (_.left)))))
 }
 
-object SqlT extends SqlTFunctions {
+object SqlT extends SqlTFunctions with SqlTInstances {
   def apply[F[+_], A](x: F[SqlError \/ A]): SqlT[F, A] =
     new SqlT[F, A] {
       val run = x
@@ -139,4 +142,102 @@ trait SqlTFunctions {
     def apply[A](a: SqlError \/ A): Sql[A] =
       SqlT[Id, A](a)
   }
+}
+
+trait SqlTInstances0 {
+  implicit def sqlTFunctor[F[+_]](implicit F0: Functor[F]): Functor[({type f[a] = SqlT[F, a]})#f] = new SqlTFunctor[F] {
+    implicit def F: Functor[F] = F0
+  }
+
+  implicit val sqlTMonadTrans: MonadTrans[SqlT] = new SqlTMonadTrans {
+
+  }
+}
+
+trait SqlTInstances1 extends SqlTInstances0 {
+  implicit def sqlTPointed[F[+_]](implicit F0: Pointed[F]): Pointed[({type f[a] = SqlT[F, a]})#f] = new SqlTPointed[F] {
+    implicit def F: Pointed[F] = F0
+  }
+
+  implicit val sqlTHoist: Hoist[SqlT] = new SqlTHoist {
+
+  }
+}
+
+trait SqlTInstances2 extends SqlTInstances1 {
+  implicit def sqlTApply[F[+_]](implicit F0: Apply[F]): Apply[({type f[a] = SqlT[F, a]})#f] = new SqlTApply[F] {
+    implicit def F: Apply[F] = F0
+  }
+}
+
+trait SqlTInstances3 extends SqlTInstances2 {
+  implicit def sqlTApplicative[F[+_]](implicit F0: Applicative[F]): Applicative[({type f[a] = SqlT[F, a]})#f] = new SqlTApplicative[F] {
+    implicit def F: Applicative[F] = F0
+  }
+}
+
+trait SqlTInstances4 extends SqlTInstances3 {
+  implicit def sqlTBind[F[+_]](implicit F0: Monad[F]): Bind[({type f[a] = SqlT[F, a]})#f] = new SqlTBind[F] {
+    implicit def F: Monad[F] = F0
+  }
+}
+
+trait SqlTInstances5 extends SqlTInstances4 {
+  implicit def sqlTMonad[F[+_]](implicit F0: Monad[F]): Monad[({type f[a] = SqlT[F, a]})#f] = new SqlTMonad[F] {
+    implicit def F: Monad[F] = F0
+  }
+}
+
+trait SqlTInstances extends SqlTInstances5
+
+private[sql] trait SqlTFunctor[F[+_]] extends Functor[({type f[+a] = SqlT[F, a]})#f] {
+  implicit def F: Functor[F]
+
+  override def map[A, B](a: SqlT[F, A])(f: A => B) = a map f
+}
+
+private[sql] trait SqlTPointed[F[+_]] extends Pointed[({type f[+a] = SqlT[F, a]})#f] with SqlTFunctor[F] {
+  implicit def F: Pointed[F]
+
+  override def point[A](a: => A) = SqlT(F.point(a.right))
+}
+
+private[sql] trait SqlTApply[F[+_]] extends Apply[({type f[+a] = SqlT[F, a]})#f] with SqlTFunctor[F] {
+  implicit def F: Apply[F]
+
+  override def ap[A, B](a: => SqlT[F, A])(f: => SqlT[F, A => B]) =
+    a ap f
+}
+
+private[sql] trait SqlTApplicative[F[+_]] extends Applicative[({type f[+a] = SqlT[F, a]})#f] with SqlTApply[F] with SqlTPointed[F] {
+  implicit def F: Applicative[F]
+}
+
+private[sql] trait SqlTBind[F[+_]] extends Bind[({type f[+a] = SqlT[F, a]})#f] with SqlTApply[F] {
+  implicit def F: Monad[F]
+
+  override def bind[A, B](a: SqlT[F, A])(f: A => SqlT[F, B]) = a flatMap f
+
+}
+
+private[sql] trait SqlTMonad[F[+_]] extends Monad[({type f[+a] = SqlT[F, a]})#f] with SqlTApplicative[F] with SqlTBind[F] {
+  implicit def F: Monad[F]
+}
+
+private[sql] trait SqlTMonadTrans extends MonadTrans[SqlT] {
+  override def liftM[G[+_] : Monad, A](a: G[A]): SqlT[G, A] =
+    SqlT(implicitly[Functor[G]].map(a)(_.right))
+
+  implicit def apply[G[+_]](implicit M: Monad[G]) = new SqlTMonad[G] {
+    implicit def F = M
+  }
+
+}
+
+private[sql] trait SqlTHoist extends Hoist[SqlT] with SqlTMonadTrans {
+  override def hoist[M[+_]: Monad, N[+_]](f: M ~> N): ({type f[x] = SqlT[M, x]})#f ~> ({type f[x] = SqlT[N, x]})#f =
+    new (({type f[x] = SqlT[M, x]})#f ~> ({type f[x] = SqlT[N, x]})#f) {
+      def apply[A](x: SqlT[M, A]) =
+        SqlT(f(x.run))
+    }
 }

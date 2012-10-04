@@ -8,6 +8,12 @@ import SqlT._
 sealed trait XSqlT[F[+_], +A] {
   val run: F[Option[SqlError \/ A]]
 
+  def fold[X](empty: => X, err: SqlError => X, value: A => X)(implicit F: Functor[F]): F[X] =
+    F.map(run) {
+      case None => empty
+      case Some(e) => e.fold(err, value)
+    }
+
   def transformer: OptionT[F, SqlError \/ A] =
     OptionT(run)
 
@@ -30,7 +36,7 @@ sealed trait XSqlT[F[+_], +A] {
     E.each(run)(_ foreach (_ foreach f))
 
   def ap[B](f: XSqlT[F, A => B])(implicit F: Apply[F]): XSqlT[F, B] =
-    XSqlT(F(run, f.run)((a, b) => a flatMap (x => b map (y => x flatMap (z => y map (_(z)))))))
+    XSqlT(F(f.run, run)((b, a) => a flatMap (x => b map (y => x flatMap (z => y map (_(z)))))))
 
   def flatMap[B](f: A => XSqlT[F, B])(implicit F: Monad[F]): XSqlT[F, B] =
     XSqlT(F.bind(run) {

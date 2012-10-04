@@ -7,6 +7,9 @@ import scalaz._, Scalaz._
 sealed trait ISqlT[F[+_], +A] {
   val run: F[Incompatibility \/ SqlError \/ A]
 
+  def fold[X](incompatibility: Incompatibility => X, err: SqlError => X, value: A => X)(implicit F: Functor[F]): F[X] =
+    F.map(run)(_.fold(_.fold(incompatibility, err), value))
+
   def transformer: EitherT[F, Incompatibility \/ SqlError, A] =
     EitherT(run)
 
@@ -38,7 +41,7 @@ sealed trait ISqlT[F[+_], +A] {
     E.each(run)(_ foreach f)
 
   def ap[B](f: ISqlT[F, A => B])(implicit F: Apply[F]): ISqlT[F, B] =
-    ISqlT(F(run, f.run)((a, b) => a flatMap (x => b map (_(x)))))
+    ISqlT(F(f.run, run)((b, a) => a flatMap (x => b map (_(x)))))
 
   def flatMap[B](f: A => ISqlT[F, B])(implicit F: Monad[F]): ISqlT[F, B] =
     ISqlT(F.bind(run)(a => a.fold(
