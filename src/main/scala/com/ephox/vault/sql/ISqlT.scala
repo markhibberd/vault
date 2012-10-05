@@ -112,7 +112,106 @@ object ISqlT extends ISqlTFunctions {
     }
 }
 
-trait ISqlTFunctions {
+trait ISqlTFunctions extends ISqlTInstances {
   type ISql[+A] =
   ISqlT[Id, A]
 }
+
+trait ISqlTInstances0 {
+   implicit def isqlTFunctor[F[+_]](implicit F0: Functor[F]): Functor[({type f[a] = ISqlT[F, a]})#f] = new ISqlTFunctor[F] {
+     implicit def F: Functor[F] = F0
+   }
+
+   implicit val isqlTMonadTrans: MonadTrans[ISqlT] = new ISqlTMonadTrans {
+
+   }
+ }
+
+ trait ISqlTInstances1 extends ISqlTInstances0 {
+   implicit def isqlTPointed[F[+_]](implicit F0: Pointed[F]): Pointed[({type f[a] = ISqlT[F, a]})#f] = new ISqlTPointed[F] {
+     implicit def F: Pointed[F] = F0
+   }
+
+   implicit val isqlTHoist: Hoist[SqlT] = new SqlTHoist {
+
+   }
+ }
+
+ trait ISqlTInstances2 extends ISqlTInstances1 {
+   implicit def isqlTApply[F[+_]](implicit F0: Apply[F]): Apply[({type f[a] = ISqlT[F, a]})#f] = new ISqlTApply[F] {
+     implicit def F: Apply[F] = F0
+   }
+ }
+
+ trait ISqlTInstances3 extends ISqlTInstances2 {
+   implicit def isqlTApplicative[F[+_]](implicit F0: Applicative[F]): Applicative[({type f[a] = ISqlT[F, a]})#f] = new ISqlTApplicative[F] {
+     implicit def F: Applicative[F] = F0
+   }
+ }
+
+ trait ISqlTInstances4 extends ISqlTInstances3 {
+   implicit def isqlTBind[F[+_]](implicit F0: Monad[F]): Bind[({type f[a] = ISqlT[F, a]})#f] = new ISqlTBind[F] {
+     implicit def F: Monad[F] = F0
+   }
+ }
+
+ trait ISqlTInstances5 extends ISqlTInstances4 {
+   implicit def isqlTMonad[F[+_]](implicit F0: Monad[F]): Monad[({type f[a] = ISqlT[F, a]})#f] = new ISqlTMonad[F] {
+     implicit def F: Monad[F] = F0
+   }
+ }
+
+ trait ISqlTInstances extends ISqlTInstances5
+
+ private[sql] trait ISqlTFunctor[F[+_]] extends Functor[({type f[+a] = ISqlT[F, a]})#f] {
+   implicit def F: Functor[F]
+
+   override def map[A, B](a: ISqlT[F, A])(f: A => B) = a map f
+ }
+
+ private[sql] trait ISqlTPointed[F[+_]] extends Pointed[({type f[+a] = ISqlT[F, a]})#f] with ISqlTFunctor[F] {
+   implicit def F: Pointed[F]
+
+   override def point[A](a: => A) = ISqlT(F.point(a.right))
+ }
+
+ private[sql] trait ISqlTApply[F[+_]] extends Apply[({type f[+a] = ISqlT[F, a]})#f] with ISqlTFunctor[F] {
+   implicit def F: Apply[F]
+
+   override def ap[A, B](a: => ISqlT[F, A])(f: => ISqlT[F, A => B]) =
+     a ap f
+ }
+
+ private[sql] trait ISqlTApplicative[F[+_]] extends Applicative[({type f[+a] = ISqlT[F, a]})#f] with ISqlTApply[F] with ISqlTPointed[F] {
+   implicit def F: Applicative[F]
+ }
+
+ private[sql] trait ISqlTBind[F[+_]] extends Bind[({type f[+a] = ISqlT[F, a]})#f] with ISqlTApply[F] {
+   implicit def F: Monad[F]
+
+   override def bind[A, B](a: ISqlT[F, A])(f: A => ISqlT[F, B]) = a flatMap f
+
+ }
+
+ private[sql] trait ISqlTMonad[F[+_]] extends Monad[({type f[+a] = ISqlT[F, a]})#f] with ISqlTApplicative[F] with ISqlTBind[F] {
+   implicit def F: Monad[F]
+ }
+
+ private[sql] trait ISqlTMonadTrans extends MonadTrans[ISqlT] {
+   override def liftM[G[+_] : Monad, A](a: G[A]): ISqlT[G, A] =
+     ISqlT(implicitly[Functor[G]].map(a)(_.right))
+
+
+   implicit def apply[G[+_]](implicit M: Monad[G]) = new ISqlTMonad[G] {
+     implicit def F = M
+   }
+
+ }
+
+ private[sql] trait ISqlTHoist extends Hoist[ISqlT] with ISqlTMonadTrans {
+   override def hoist[M[+_]: Monad, N[+_]](f: M ~> N): ({type f[x] = ISqlT[M, x]})#f ~> ({type f[x] = ISqlT[N, x]})#f =
+     new (({type f[x] = ISqlT[M, x]})#f ~> ({type f[x] = ISqlT[N, x]})#f) {
+       def apply[A](x: ISqlT[M, A]) =
+         ISqlT(f(x.run))
+     }
+ }

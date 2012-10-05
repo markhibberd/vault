@@ -28,6 +28,7 @@ object build extends Build {
         "org.scalacheck" %% "scalacheck" % "1.9" % "test" withSources
       , "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT" withSources
       , "org.scalaz" %% "scalaz-iteratee" % "7.0-SNAPSHOT" withSources
+      , "postgresql" % "postgresql" % "9.1-901.jdbc4" withSources
       )
     )
   )
