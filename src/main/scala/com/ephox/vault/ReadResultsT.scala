@@ -78,7 +78,11 @@ object ReadResultsT {
 
   private def read[A](f: (ResultSet, Int) => XSql[A]): ReadResults[A] =
     ReadResultsTImpl[Id, A]((r, i) => {
-      (i + 1, f(r, i) flatMap (y => ~r.wasNull flatMap (z => if(z) XSqlT.empty else XSqlT.value(y))))
+      val q = f(r, i)
+      q.fold(
+        (i + 1, XSqlT.empty[Id, A])
+      , e => (i, XSqlT.err[Id, A](e))
+      , a => (i + 1, ~r.wasNull flatMap (z => if(z) XSqlT.empty else XSqlT.value(a))))
     })
 
   implicit def UnitReadResults: ReadResults[Unit] =
@@ -165,4 +169,55 @@ object ReadResultsT {
   implicit def OptionReadResults[A](implicit v: ReadResults[A]): ReadResults[Option[A]] =
     ReadResultsTImpl[Id, Option[A]]((r, n) =>
       v.impl(r, n) :-> (r => (r.map(Some(_)) ?? XSqlT.value(None))))
+
+  implicit def Tuple2ReadResults[A, B](implicit va: ReadResults[A], vb: ReadResults[B]): ReadResults[(A, B)] =
+    for {
+      a <- va
+      b <- vb
+    } yield (a, b)
+
+  implicit def Tuple3ReadResults[A, B, C](implicit va: ReadResults[A], vb: ReadResults[B], vc: ReadResults[C]): ReadResults[(A, B, C)] =
+    for {
+      a <- va
+      b <- vb
+      c <- vc
+    } yield (a, b, c)
+
+  implicit def Tuple4ReadResults[A, B, C, D](implicit va: ReadResults[A], vb: ReadResults[B], vc: ReadResults[C], vd: ReadResults[D]): ReadResults[(A, B, C, D)] =
+    for {
+      a <- va
+      b <- vb
+      c <- vc
+      d <- vd
+    } yield (a, b, c, d)
+
+  implicit def Tuple5ReadResults[A, B, C, D, E](implicit va: ReadResults[A], vb: ReadResults[B], vc: ReadResults[C], vd: ReadResults[D], ve: ReadResults[E]): ReadResults[(A, B, C, D, E)] =
+    for {
+      a <- va
+      b <- vb
+      c <- vc
+      d <- vd
+      e <- ve
+    } yield (a, b, c, d, e)
+
+  implicit def Tuple6ReadResults[A, B, C, D, E, F](implicit va: ReadResults[A], vb: ReadResults[B], vc: ReadResults[C], vd: ReadResults[D], ve: ReadResults[E], vf: ReadResults[F]): ReadResults[(A, B, C, D, E, F)] =
+    for {
+      a <- va
+      b <- vb
+      c <- vc
+      d <- vd
+      e <- ve
+      f <- vf
+    } yield (a, b, c, d, e, f)
+
+  implicit def Tuple7ReadResults[A, B, C, D, E, F, G](implicit va: ReadResults[A], vb: ReadResults[B], vc: ReadResults[C], vd: ReadResults[D], ve: ReadResults[E], vf: ReadResults[F], vg: ReadResults[G]): ReadResults[(A, B, C, D, E, F, G)] =
+    for {
+      a <- va
+      b <- vb
+      c <- vc
+      d <- vd
+      e <- ve
+      f <- vf
+      g <- vg
+    } yield (a, b, c, d, e, f, g)
 }
