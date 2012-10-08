@@ -8,6 +8,7 @@ import collection.JavaConversions._
 import SqlT._
 import XSqlT._
 import ISqlT._
+import Connection.ResultSetHoldability
 
 sealed trait ResultSet {
   private[sql] val x: java.sql.ResultSet
@@ -116,6 +117,15 @@ sealed trait ResultSet {
   def float(q: Column): GetSet[Float] =
     GetSet(q, q.fold(x getFloat _, x getFloat _), a => q.fold(i => x.updateFloat(i, a), n => x.updateFloat(n, a)))
 
+  def holdability: ISql[ResultSetHoldability] =
+    Try(x.getHoldability) ! (c =>
+      if(c == R.HOLD_CURSORS_OVER_COMMIT)
+        ResultSetHoldability.HoldsCursorsOverCommit.right
+      else if(c == R.CLOSE_CURSORS_AT_COMMIT)
+        ResultSetHoldability.CloseCursorsAtCommit.right
+      else
+        Incompatibility(c, "http://docs.oracle.com/javase/6/docs/api/java/sql/ResultSet.html#getHoldability%28%29", "Returns: either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT").left)
+
   def int(q: Column): GetSet[Int] =
     GetSet(q, q.fold(x getInt _, x getInt _), a => q.fold(i => x.updateInt(i, a), n => x.updateInt(n, a)))
 
@@ -124,6 +134,15 @@ sealed trait ResultSet {
 
   def metaData: Sql[ResultSetMetaData] =
     Try(ResultSetMetaData(x.getMetaData))
+
+  def ncharacterStream(q: Column): XGetSet[java.io.Reader] =
+    XGetSet(q, q.fold(x getNCharacterStream _, x getNCharacterStream _), a => q.fold(i => x.updateNCharacterStream(i, a), n => x.updateNCharacterStream(n, a)))
+
+  def nclob(q: Column): XGetSet[NClob] =
+    XGetSet(q, NClob(q.fold(x getNClob _, x getNClob _)), a => q.fold(i => x.updateNClob(i, a.x), n => x.updateNClob(n, a.x)))
+
+  def nstring(q: Column): XGetSet[String] =
+    XGetSet(q, q.fold(x getNString _, x getNString _), a => q.fold(i => x.updateNString(i, a), n => x.updateNString(n, a)))
 
   def obj(q: Column, m: Option[collection.mutable.Map[String, Class[_]]]): XGetSet[AnyRef] =
     XGetSet(q, q.fold(
@@ -143,8 +162,17 @@ sealed trait ResultSet {
   def ref(q: Column): XGetSet[Ref] =
     XGetSet(q, Ref(q.fold(x getRef _, x getRef _)), a => q.fold(i => x.updateRef(i, a.x), n => x.updateRef(n, a.x)))
 
+  def row: Sql[Int] =
+    Try(x.getRow)
+
+  def rowId(q: Column): XGetSet[RowId] =
+    XGetSet(q, RowId(q.fold(x getRowId _, x getRowId _)), a => q.fold(i => x.updateRowId(i, a.x), n => x.updateRowId(n, a.x)))
+
   def short(q: Column): GetSet[Short] =
     GetSet(q, q.fold(x getShort _, x getShort _), a => q.fold(i => x.updateShort(i, a), n => x.updateShort(n, a)))
+
+  def sqlxml(q: Column): XGetSet[SQLXML] =
+    XGetSet(q, SQLXML(q.fold(x getSQLXML _, x getSQLXML _)), a => q.fold(i => x.updateSQLXML(i, a.x), n => x.updateSQLXML(n, a.x)))
 
   def statement: Sql[Statement] =
     Try(Statement(x.getStatement))
@@ -211,6 +239,9 @@ sealed trait ResultSet {
   def isBeforeFirst: Sql[Boolean] =
     Try(x.isBeforeFirst)
 
+  def isClosed: Sql[Boolean] =
+    Try(x.isClosed)
+
   def isFirst: Sql[Boolean] =
     Try(x.isFirst)
 
@@ -255,6 +286,9 @@ sealed trait ResultSet {
 
   def wasNull: Sql[Boolean] =
     Try(x.wasNull)
+
+  def updateRow: Sql[Unit] =
+    Try(x.updateRow)
 
   def get: ResultSetGet =
     ResultSetGet(this)
