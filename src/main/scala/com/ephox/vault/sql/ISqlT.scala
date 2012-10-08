@@ -41,7 +41,7 @@ sealed trait ISqlT[F[+_], +A] {
     E.each(run)(_ foreach f)
 
   def ap[B](f: ISqlT[F, A => B])(implicit F: Apply[F]): ISqlT[F, B] =
-    ISqlT(F(f.run, run)((b, a) => a flatMap (x => b map (_(x)))))
+    ISqlT(F.apply2(f.run, run)((b, a) => a flatMap (x => b map (_(x)))))
 
   def flatMap[B](f: A => ISqlT[F, B])(implicit F: Monad[F]): ISqlT[F, B] =
     ISqlT(F.bind(run)(a => a.fold(
@@ -90,6 +90,17 @@ sealed trait ISqlT[F[+_], +A] {
 
   def |||[AA >: A](x: => ISqlT[F, AA])(implicit F: Bind[F]): ISqlT[F, AA] =
     orElse(x)
+
+  def product[B](x: ISqlT[F, B])(implicit F: Apply[F]): ISqlT[F, (A, B)] =
+    ISqlT(F.apply2(run, x.run)((a, b) =>
+      for {
+          aa <- a
+          bb <- b
+      } yield (aa, bb))
+    )
+
+  def ***[B](x: ISqlT[F, B])(implicit F: Apply[F]): ISqlT[F, (A, B)] =
+    product(x)
 
   def unary_~(implicit F: Functor[F]): XSqlT[F, A] =
     XSqlT(F.map(switch)(_.toOption))
