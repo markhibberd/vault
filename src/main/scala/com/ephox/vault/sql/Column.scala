@@ -39,6 +39,9 @@ object Column extends ColumnFunctions {
   private[sql] case class Index(n: Int) extends Column
   private[sql] case class Name(s: String) extends Column
 
+  def apply(n: Int): Column =
+    index(n)
+
   def index(n: Int): Column =
     Index(n)
 

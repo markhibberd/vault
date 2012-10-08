@@ -32,6 +32,9 @@ sealed trait XSqlT[F[+_], +A] {
   def map[B](f: A => B)(implicit F: Functor[F]): XSqlT[F, B] =
     XSqlT(F.map(run)(_ map (_ map f)))
 
+  def filter(f: A => Boolean)(implicit F: Functor[F]): XSqlT[F, A] =
+    XSqlT(F.map(run)(_ flatMap (_ fold (e => Some(e.left), a => if(f(a)) Some(a.right) else None))))
+
   def foreach(f: A => Unit)(implicit E: Each[F]): Unit =
     E.each(run)(_ foreach (_ foreach f))
 
@@ -80,13 +83,13 @@ sealed trait XSqlT[F[+_], +A] {
   def |[AA >: A](default: => AA)(implicit F: Functor[F]): F[AA] =
     getOrElse(default)
 
-  def orElse[AA >: A](x: => XSqlT[F, AA])(implicit F: Bind[F]): XSqlT[F, AA] =
+  def orElse[AA >: A](x: => XSqlT[F, AA])(implicit F: Monad[F]): XSqlT[F, AA] =
     XSqlT(F.bind(run) {
       case None => x.run
-      case Some(r) => r.fold(_ => x.run, _ => run)
+      case Some(r) => r.fold(_ => x.run, _ => F.point(Some(r)))
     })
 
-  def |||[AA >: A](x: => XSqlT[F, AA])(implicit F: Bind[F]): XSqlT[F, AA] =
+  def |||[AA >: A](x: => XSqlT[F, AA])(implicit F: Monad[F]): XSqlT[F, AA] =
     orElse(x)
 
   def product[B](x: XSqlT[F, B])(implicit F: Apply[F]): XSqlT[F, (A, B)] =
@@ -100,6 +103,15 @@ sealed trait XSqlT[F[+_], +A] {
 
   def ***[B](x: XSqlT[F, B])(implicit F: Apply[F]): XSqlT[F, (A, B)] =
     product(x)
+
+  def emptySwitch[AA >: A](x: => XSqlT[F, AA])(implicit F: Monad[F]): XSqlT[F, AA] =
+    XSqlT(F.bind(run) {
+      case None => x.run
+      case Some(r) => F.point(Some(r))
+    })
+
+  def ??[AA >: A](x: => XSqlT[F, AA])(implicit F: Monad[F]): XSqlT[F, AA] =
+    emptySwitch(x)
 
   def -<:(e: => SqlError)(implicit F: Functor[F]): SqlT[F, A] =
     SqlT(F.map(run)(_ getOrElse e.left))
