@@ -1,8 +1,10 @@
 ## Vault
 
+[![Build Status](https://travis-ci.org/markhibberd/vault.png)](https://travis-ci.org/markhibberd/vault)
+
 #### What is Vault?
 
-**Vault** is the name for a software library written using the Scala programming language. Vault is compiled against version 2.9.1 of the Scala programming language. Vault is licenced under BSD3 (see `etc/LICENCE`).
+**Vault** is the name for a software library written using the Scala programming language. Vault is compiled against version 2.9.1 of the Scala programming language. Vault is licenced under BSD3 (see `LICENCE`).
 
 The Vault library is used for interacting with persistence storage through the JDBC database API. Vault implements and exploits several computational concepts:
 
@@ -185,6 +187,14 @@ Scalaz version 6 includes support for using types for effect-tracking, however, 
 
 Scalaz implements the concept of iteratees, which were [recently introduced as a useful abstraction](http://okmij.org/ftp/papers/LL3-collections-enumerators.txt). At this time, it is generally accepted that this iteratee interface is useful, however, the details of the interface have not been generally agreed upon by the computer science community. Scalaz implements one such representation of the iteratee concept, which is known to have limitations with respect to the general case. Therefore, there are presumably use-cases for which the Vault API may become untenable.
 
-***
 
-**Copyright 2012 Ephox Pty Ltd**
+### Provenance
+
+Vault was initially developed to support products at [Ephox](http://ephox.com).
+
+The library was open-sourced under a [BSD License](https://github.com/markhibberd/vault/blob/master/LICENSE), drawing users, support and improvements from a number of contributors.
+
+The initial developers have since left the employment of Ephox and now maintain this fork `markhibberd/vault`.
+
+It is expected that major releases will now come from this repository.
+

@@ -1,31 +1,62 @@
 import sbt._
 import Keys._
+import com.typesafe.sbt.pgp.PgpKeys._
 
 object build extends Build {
   type Sett = Project.Setting[_]
 
-  override lazy val settings = super.settings ++
-        Seq(resolvers := Seq(
-          "sonatype-releases" at "https://oss.sonatype.org/content/repositories/snapshots/"
-        ))
+  lazy val publishSetting =
+    publishTo <<= version.apply(v => {
+      val nexus = "https://oss.sonatype.org/"
+      if (v.trim.endsWith("SNAPSHOT"))
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+      })
 
   val vault = Project(
     id = "vault"
   , base = file(".")
   , settings = Defaults.defaultSettings ++ Seq[Sett](
       name := "vault"
-    , organization := "com.ephox"
-    , version := "3.0-SNAPSHOT"
+    , organization := "vault"
+    , version := "4.0-SNAPSHOT"
     , scalaVersion := "2.9.2"
-    , scalacOptions := Seq(
-        "-deprecation"
-      , "-unchecked"
-      )
+    , crossScalaVersions := Seq("2.9.2", "2.10.0-RC5")
+    , publishSetting
+    , publishMavenStyle := true
+    , publishArtifact in Test := false
+    , pomIncludeRepository := { _ => false }
+    , licenses := Seq("BSD-3-Clause" -> url("http://www.opensource.org/licenses/BSD-3-Clause"))
+    , homepage := Some(url("http://vaultdb.io"))
+    , useGpg := true
+    , pomExtra := (
+      <scm>
+        <url>git@github.com:markhibberd/vault.git</url>
+        <connection>scm:git:git@github.com:markhibberd/vault.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>tonymorris</id>
+          <name>Tony Morris</name>
+          <url>http://tmorris.net</url>
+        </developer>
+        <developer>
+          <id>mth</id>
+          <name>Mark Hibberd</name>
+          <url>http://mth.io</url>
+        </developer>
+      </developers>)
+    , scalacOptions <++= scalaVersion map { v =>
+        Seq("-deprecation", "-unchecked") ++ (if (v.contains("2.10"))
+          Seq("-feature", "-language:implicitConversions", "-language:higherKinds", "-language:postfixOps")
+        else
+          Seq())
+      }
     , libraryDependencies ++= Seq(
-        "org.scalacheck" %% "scalacheck" % "1.9" % "test" withSources
-      , "org.scalatest" %% "scalatest" % "1.6.1" % "test" withSources
-      , "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT"
-      , "org.scalaz" %% "scalaz-iteratee" % "7.0-SNAPSHOT"
+        ("org.scalaz" %% "scalaz-core" % "7.0.0-M6").cross(CrossVersion.full).changing
+      , ("org.scalaz" %% "scalaz-iteratee" % "7.0.0-M6").cross(CrossVersion.full).changing
+      , ("org.scalacheck" %% "scalacheck" % "1.10.0" % "test").cross(CrossVersion.full)
       , "org.hsqldb" % "hsqldb" % "2.0.0"
       )
     )
@@ -37,7 +68,6 @@ object build extends Build {
   , dependencies = Seq(vault)
   , settings = Defaults.defaultSettings ++ Seq[Sett](
       name := "example"
-    , organization := "com.ephox"
     , version := "1.0"
     , scalaVersion := "2.9.2"
     , scalacOptions := Seq(
