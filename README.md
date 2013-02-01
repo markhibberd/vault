@@ -187,7 +187,6 @@ Scalaz version 6 includes support for using types for effect-tracking, however, 
 
 Scalaz implements the concept of iteratees, which were [recently introduced as a useful abstraction](http://okmij.org/ftp/papers/LL3-collections-enumerators.txt). At this time, it is generally accepted that this iteratee interface is useful, however, the details of the interface have not been generally agreed upon by the computer science community. Scalaz implements one such representation of the iteratee concept, which is known to have limitations with respect to the general case. Therefore, there are presumably use-cases for which the Vault API may become untenable.
 
-
 ### Provenance
 
 Vault was initially developed to support products at [Ephox](http://ephox.com).
@@ -197,5 +196,4 @@ The library was open-sourced under a [BSD License](https://github.com/markhibber
 The initial developers have since left the employment of Ephox and now maintain this fork `markhibberd/vault`.
 
 It is expected that major releases will now come from this repository.
-
 

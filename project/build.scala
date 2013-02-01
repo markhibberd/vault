@@ -76,6 +76,8 @@ object build extends Build {
       )
     , libraryDependencies ++= Seq(
         "org.hsqldb" % "hsqldb" % "2.0.0"
+      , "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT" withSources
+      , "org.scalaz" %% "scalaz-iteratee" % "7.0-SNAPSHOT" withSources
       )
     )
   )
