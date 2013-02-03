@@ -32,6 +32,8 @@ The Scala programming language was chosen because it has certain desirable featu
 
 Vault has a dependency on the Scalaz library version 7, which is compiled against Scala version 2.9.1. Scalaz is a complementary library for general application development with the Scala programming language.
 
+
+
 #### The Essence of Vault
 
 At the centre of Vault are two data types:
