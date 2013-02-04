@@ -1,0 +1,40 @@
+package vault
+
+import java.sql.SQLException
+import scalaz._, Scalaz._
+
+trait DbFailure
+case class DbNull() extends DbFailure
+case class DbException(e: SQLException) extends DbFailure
+
+case class DbValue[+A](toEither: DbFailure \/ A) {
+  def fold[X](
+    fail: DbFailure => X,
+    ok: A => X
+  ): X = toEither.fold(fail, ok)
+
+  def map[B](f: A => B) =
+    DbValue(toEither.map(f))
+
+  def flatMap[B](f: A => DbValue[B]) =
+    DbValue(toEither.flatMap(a => f(a).toEither))
+}
+
+object DbValue {
+  def ok[A](v: A): DbValue[A] =
+    DbValue(v.right)
+
+  def fail[A](f: DbFailure): DbValue[A] =
+    DbValue(f.left)
+
+  def exception[A](e: SQLException): DbValue[A] =
+    fail(DbException(e))
+
+  def dbnull[A]: DbValue[A] =
+    fail(DbNull())
+
+  implicit def DbValueMonad: Monad[DbValue] = new Monad[DbValue] {
+    def point[A](a: => A) = ok(a)
+    def bind[A, B](m: DbValue[A])(f: A => DbValue[B]) = m flatMap f
+  }
+}
