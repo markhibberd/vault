@@ -22,7 +22,7 @@ object build extends Build {
     , organization := "vault"
     , version := "4.0-SNAPSHOT"
     , scalaVersion := "2.9.2"
-    , crossScalaVersions := Seq("2.9.2", "2.10.0-RC5")
+    , crossScalaVersions := Seq("2.9.2", "2.10.0")
     , publishSetting
     , publishMavenStyle := true
     , publishArtifact in Test := false
@@ -55,6 +55,7 @@ object build extends Build {
       }
     , libraryDependencies ++= Seq(
         "org.scalaz" %% "scalaz-core" % "7.0.0-M7"
+      , "machines" %% "machines" % "0.1-SNAPSHOT"
       , "org.scalacheck" %% "scalacheck" % "1.10.0" % "test" cross(CrossVersion.full)
       , "org.hsqldb" % "hsqldb" % "2.0.0"
       )

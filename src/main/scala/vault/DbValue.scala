@@ -33,6 +33,12 @@ object DbValue {
   def dbnull[A]: DbValue[A] =
     fail(DbNull())
 
+  def db[A](thunk: => A): DbValue[A] = try {
+    thunk.pure[DbValue]
+  } catch {
+    case (e: SQLException) => DbValue.exception(e)
+  }
+
   implicit def DbValueMonad: Monad[DbValue] = new Monad[DbValue] {
     def point[A](a: => A) = ok(a)
     def bind[A, B](m: DbValue[A])(f: A => DbValue[B]) = m flatMap f

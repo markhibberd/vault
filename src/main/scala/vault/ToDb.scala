@@ -9,6 +9,9 @@ case class ToDb[A](private val run: (Int, Sql, A) => DbValue[Int]) {
 
   def comap[B](f: B => A): ToDb[B] =
     ToDb((n, s, b) => run(n, s, f(b)))
+
+  def execute(s: Sql, a: A): DbValue[Unit] =
+    run(1, s, a) map (_ => ())
 }
 
 object ToDb {
@@ -20,6 +23,9 @@ object ToDb {
 
   private def toDbBind[A](run: (BindParam, A) => DbValue[Unit]) =
     toDb[A]((n, s, a) => run(s.toBind(n), a))
+
+  implicit def ToDbUnit: ToDb[Unit] =
+    ToDb[Unit]((_, _, _) => DbValue.ok(0))
 
   implicit def ToDbInt: ToDb[Int] =
     toDbBind(_.int(_))

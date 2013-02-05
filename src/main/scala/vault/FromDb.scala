@@ -45,11 +45,16 @@ object FromDb {
   implicit def FromDbBoolean: FromDb[Boolean] =
     fromDbCell(_.boolean)
 
-  implicit def FromDbTuple2[A: FromDb, B: FromDb]: FromDb[(A, B)] =
-    (get[A] |@| get[B])((_, _))
+  implicit def FromDbTuple2[A: FromDb, B: FromDb]: FromDb[(A, B)] = for {
+    a <- get[A]
+    b <- get[B]
+  } yield (a, b)
 
-  implicit def FromDbTuple3[A: FromDb, B: FromDb, C: FromDb]: FromDb[(A, B, C)] =
-    (get[A] |@| get[B] |@| get[C])((_, _, _))
+  implicit def FromDbTuple3[A: FromDb, B: FromDb, C: FromDb]: FromDb[(A, B, C)] = for {
+    a <- get[A]
+    b <- get[B]
+    c <- get[C]
+  } yield (a, b, c)
 
   implicit def FromDbMonad: Monad[FromDb] = new Monad[FromDb] {
     def point[A](a: => A) = value(a)
