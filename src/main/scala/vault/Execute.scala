@@ -7,14 +7,12 @@ import scalaz._, Scalaz._
 import DbValue.db
 
 object Execute {
-  def one[A]: Process[A, Option[A]] =
+
+  def head[A]: Process[A, Option[A]] =
     (Plan.await[A] flatMap(a => Plan.emit(a.some))).orElse(Plan.emit(none[A]) >> Stop).compile
 
   def get[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): DbValue[Option[B]] =
-    query(conn, sql, a, one[B]).foldLeftM(none[B])((_, b) => b)
-
-  def list[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): DbValue[Vector[B]] =
-    query(conn, sql, a, Process.wrapping[B]).execute
+    query(conn, sql, a, head[B]).foldLeftM(none[B])((_, b) => b)
 
   def query[A: ToDb, B: FromDb, C](conn: Connection, sql: String, a: A, m: Process[B, C]): Procedure[DbValue, C] =
     new Procedure[DbValue, C] {
@@ -38,4 +36,48 @@ object Execute {
         })
       } yield r
     }
+
+  def list[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): DbValue[List[B]] = {
+    val f = freedomlist(conn, sql, a)
+
+    var buffer = scala.collection.mutable.ListBuffer[B]()
+    @scala.annotation.tailrec
+    def go(next: FreeDb[Vector[B]]): DbFailure \/ scala.collection.mutable.ListBuffer[B] = next.resume match {
+      case -\/(x) => x.toEither match {
+        case -\/(xx) => xx.left
+        case \/-(xx) => go(xx)
+      }
+      case \/-(x) => { buffer ++= x; buffer.right }
+    }
+
+    DbValue(go(f).map(_.toList))
+  }
+
+  def freedomlist[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): FreeDb[Vector[B]] =
+    freedom(conn, sql, a, Process.wrapping[B]).execute
+
+  def freedom[A: ToDb, B: FromDb, C](conn: Connection, sql: String, a: A, m: Process[B, C]): Procedure[FreeDb, C] =
+    new Procedure[FreeDb, C] {
+      type K = B => Any
+      val machine = m
+      def withDriver[R](k: Driver[FreeDb, K] => FreeDb[R]): FreeDb[R] = for {
+        s <- (db { conn.prepareStatement(sql) }).lift
+        _ <- (ToDb.set[A].execute(Sql.jdbc(s), a)).lift
+        rs <- (db { s.executeQuery }).lift
+        r <- k(new Driver [FreeDb, K] {
+          val M = Monad[FreeDb]
+          def apply(k: K) = for {
+            row_ <- (db { if (rs.next) Row.jdbc(rs).some else none }).lift
+            b <- (row_ match {
+              case Some(row) =>
+                FromDb.get[B].perform(row).map(_.some)
+              case None =>
+                none.pure[DbValue]
+            }).lift
+          } yield b
+        })
+      } yield r
+    }
+
+
 }

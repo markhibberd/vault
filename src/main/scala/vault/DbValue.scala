@@ -1,7 +1,7 @@
 package vault
 
 import java.sql.SQLException
-import scalaz._, Scalaz._
+import scalaz._, Scalaz._, Free._
 
 trait DbFailure
 case class DbNull() extends DbFailure
@@ -18,6 +18,9 @@ case class DbValue[+A](toEither: DbFailure \/ A) {
 
   def flatMap[B](f: A => DbValue[B]) =
     DbValue(toEither.flatMap(a => f(a).toEither))
+
+  def lift: FreeDb[A] =
+    Suspend(map(Return(_)))
 }
 
 object DbValue {
