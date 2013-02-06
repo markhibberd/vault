@@ -6,10 +6,31 @@ import java.sql.{Connection, SQLException}
 import scalaz._, Scalaz._
 import DbValue.{db, freedb}
 import DbProcess._
+import Db._
 
 object Execute {
-  def get[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): DbValue[Option[B]] =
-    query(conn, sql, a, head[B]).foldLeftM(none[B])((_, b) => b)
+  def get[A: ToDb, B: FromDb](sql: String, a: A): Db[Option[B]] = Db(conn => {
+    val r = query(conn, sql, a, head[B]).foldLeftM(none[B])((_, b) => b)
+    WriterT.put(r)(Vector[String]())
+  })
+
+  def list[A: ToDb, B: FromDb](sql: String, a: A): Db[List[B]] = Db(conn => {
+    val f = freedomlist(conn, sql, a)
+
+    var buffer = scala.collection.mutable.ListBuffer[B]()
+    @scala.annotation.tailrec
+    def go(next: FreeDb[Vector[B]]): DbFailure \/ scala.collection.mutable.ListBuffer[B] = next.resume match {
+      case -\/(x) => x.toEither match {
+        case -\/(xx) => xx.left
+        case \/-(xx) => go(xx)
+      }
+      case \/-(x) => { buffer ++= x; buffer.right }
+    }
+
+    val r = DbValue(go(f).map(_.toList))
+    WriterT.put(r)(Vector[String]())
+  })
+
 
   def query[A: ToDb, B: FromDb, C](conn: Connection, sql: String, a: A, m: Process[B, C]): Procedure[DbValue, C] =
     new Procedure[DbValue, C] {

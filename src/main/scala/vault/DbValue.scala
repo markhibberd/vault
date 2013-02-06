@@ -13,6 +13,9 @@ case class DbValue[+A](toEither: DbFailure \/ A) {
     ok: A => X
   ): X = toEither.fold(fail, ok)
 
+  def toOption =
+    toEither.toOption
+
   def map[B](f: A => B) =
     DbValue(toEither.map(f))
 
