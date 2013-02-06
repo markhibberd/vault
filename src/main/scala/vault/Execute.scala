@@ -4,7 +4,7 @@ package vault
 import com.clarifi.machines._
 import java.sql.{Connection, SQLException}
 import scalaz._, Scalaz._
-import DbValue.db
+import DbValue.{db, freedb}
 
 object Execute {
 
@@ -61,19 +61,19 @@ object Execute {
       type K = B => Any
       val machine = m
       def withDriver[R](k: Driver[FreeDb, K] => FreeDb[R]): FreeDb[R] = for {
-        s <- (db { conn.prepareStatement(sql) }).lift
-        _ <- (ToDb.set[A].execute(Sql.jdbc(s), a)).lift
-        rs <- (db { s.executeQuery }).lift
+        s <- freedb { conn.prepareStatement(sql) }
+        _ <- ToDb.set[A].execute(Sql.jdbc(s), a).free
+        rs <- freedb { s.executeQuery }
         r <- k(new Driver [FreeDb, K] {
           val M = Monad[FreeDb]
           def apply(k: K) = for {
-            row_ <- (db { if (rs.next) Row.jdbc(rs).some else none }).lift
+            row_ <- freedb { if (rs.next) Row.jdbc(rs).some else none }
             b <- (row_ match {
               case Some(row) =>
                 FromDb.get[B].perform(row).map(_.some)
               case None =>
                 none.pure[DbValue]
-            }).lift
+            }).free
           } yield b
         })
       } yield r
