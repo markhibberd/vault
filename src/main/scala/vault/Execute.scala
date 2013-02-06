@@ -5,12 +5,9 @@ import com.clarifi.machines._
 import java.sql.{Connection, SQLException}
 import scalaz._, Scalaz._
 import DbValue.{db, freedb}
+import DbProcess._
 
 object Execute {
-
-  def head[A]: Process[A, Option[A]] =
-    (Plan.await[A] flatMap(a => Plan.emit(a.some))).orElse(Plan.emit(none[A]) >> Stop).compile
-
   def get[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): DbValue[Option[B]] =
     query(conn, sql, a, head[B]).foldLeftM(none[B])((_, b) => b)
 
