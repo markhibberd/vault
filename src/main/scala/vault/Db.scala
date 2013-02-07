@@ -8,7 +8,4 @@ case class Db[+A](run: ReaderWriterDbValue[A])
 object Db {
   def apply[A](run: Connection => WriterDbValue[A]): Db[A] =
     Db(Kleisli(run))
-
-  def getConnection: Db[Connection] =
-    Db((conn: Connection) => conn.pure[WriterDbValue])
 }
