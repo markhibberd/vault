@@ -2,6 +2,11 @@
 
 [![Build Status](https://travis-ci.org/markhibberd/vault.png)](https://travis-ci.org/markhibberd/vault)
 
+
+#### Warning!!!
+
+Vault is in the middle of a re-write. The core is moving from scalaz 6 and scalaz iteratee's, to scalaz 7 and scala-machines. The code is very much a work in progress.
+
 #### What is Vault?
 
 **Vault** is the name for a software library written using the Scala programming language. Vault is compiled against version 2.9.1 of the Scala programming language. Vault is licenced under BSD3 (see `LICENCE`).
