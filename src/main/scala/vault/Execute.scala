@@ -55,22 +55,6 @@ object Execute {
       } yield r
     }
 
-  def list[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): DbValue[List[B]] = {
-    val f = freedomlist(conn, sql, a)
-
-    var buffer = scala.collection.mutable.ListBuffer[B]()
-    @scala.annotation.tailrec
-    def go(next: FreeDb[Vector[B]]): DbFailure \/ scala.collection.mutable.ListBuffer[B] = next.resume match {
-      case -\/(x) => x.toEither match {
-        case -\/(xx) => xx.left
-        case \/-(xx) => go(xx)
-      }
-      case \/-(x) => { buffer ++= x; buffer.right }
-    }
-
-    DbValue(go(f).map(_.toList))
-  }
-
   def freedomlist[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): FreeDb[Vector[B]] =
     freedom(conn, sql, a, Process.wrapping[B]).execute
 

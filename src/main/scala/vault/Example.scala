@@ -6,12 +6,9 @@ object Example {
   def run {
     val c = Connector.hsqltest.create()
     fake(c)
-    val x = Execute.list[Unit, (String, Int, String)](c,
-      "SELECT name, age, address FROM PERSON"
-    , ())
+    val x = Execute.list[Unit, (String, Int, String)]("SELECT name, age, address FROM PERSON", ())
 
-
-    val r = x.fold(
+    val r = x.run(c).run.fold(
       fail => "bomb: " + fail,
       ok => ok.toString
     )
