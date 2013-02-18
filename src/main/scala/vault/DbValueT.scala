@@ -22,6 +22,8 @@ case class DbValueT[F[+_], +A](run: F[DbFailure \/ A]) {
   def free(implicit M: Monad[F]): FreeDbT[A] =
     Suspend[DbValueTF, A](map(Return(_)))
 
+// Compile error because there is a diverging implicit (No Monad for F for DbValueTMonad).
+// This results in a SOE against 2.9.2. The correct code is above.
 
 //  def freeScalaFailedImplicitResolutionResultsInStackOverflow(implicit M: Functor[F]): FreeDbT[A] =
 //    Suspend[DbValueTF, A](map(Return(_)))
@@ -50,10 +52,13 @@ object DbValueT {
   def freedb[F[+_]: Monad, A](thunk: => A) =
     db[F, A](thunk).free
 
+// Compile error because F can not be inferenced on call to db.
+// This results in a SOE against 2.9.2. The correct code is above.
+
 //  def freedbScalaInferenceFailResultsInStackOverflow[F[+_]: Monad, A](thunk: => A) =
 //    db(thunk).free
 
-  implicit def DbValueMonadT[F[+_]: Monad]: Monad[({type f[+a] = DbValueT[F, a]})#f] = new Monad[({type f[+a] = DbValueT[F, a]})#f] {
+  implicit def DbValueTMonad[F[+_]: Monad]: Monad[({type f[+a] = DbValueT[F, a]})#f] = new Monad[({type f[+a] = DbValueT[F, a]})#f] {
     def point[A](a: => A) = ok(a)
     def bind[A, B](m: DbValueT[F, A])(f: A => DbValueT[F, B]) = m flatMap f
   }
