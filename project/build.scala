@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import com.typesafe.sbt.pgp.PgpKeys._
+//import com.typesafe.sbt.pgp.PgpKeys._
 
 object build extends Build {
   type Sett = Project.Setting[_]
@@ -29,7 +29,7 @@ object build extends Build {
     , pomIncludeRepository := { _ => false }
     , licenses := Seq("BSD-3-Clause" -> url("http://www.opensource.org/licenses/BSD-3-Clause"))
     , homepage := Some(url("http://vaultdb.io"))
-    , useGpg := true
+//    , useGpg := true
     , pomExtra := (
       <scm>
         <url>git@github.com:markhibberd/vault.git</url>
