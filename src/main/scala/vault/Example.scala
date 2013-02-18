@@ -8,9 +8,9 @@ object Example {
     fake(c)
     val x = Execute.list[Unit, (String, Int, String)]("SELECT name, age, address FROM PERSON", ())
 
-    val r = x.run(c).run.fold(
+    val r = x(c).fold(
       fail => "bomb: " + fail,
-      ok => ok.toString
+      { case (log, ok) => ok.toString }
     )
 
     println(r)
