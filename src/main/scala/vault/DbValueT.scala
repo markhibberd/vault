@@ -4,7 +4,7 @@ import java.sql.SQLException
 import scalaz._, Scalaz._, Free._
 
 case class DbValueT[F[+_], +A](run: F[DbFailure \/ A]) {
-  type DbValueTF[+Z] = DbValueT[F, Z]
+  type DbValueTF[+A] = DbValueT[F, A]
   type FreeDbT[+A] = Free[DbValueTF, A]
 
   def fold[X](fail: DbFailure => X, ok: A => X)(implicit F: Functor[F]): F[X] =
@@ -18,8 +18,14 @@ case class DbValueT[F[+_], +A](run: F[DbFailure \/ A]) {
 
   def flatMap[B](f: A => DbValueT[F, B])(implicit F: Monad[F]): DbValueT[F, B] =
     DbValueT(run.flatMap(_.fold(e => F.point(e.left), f(_).run)))
-  def free(implicit F: Functor[F]): FreeDbT[A] =
-    Suspend(map(Return(_)))
+
+  def free(implicit M: Monad[F]): FreeDbT[A] =
+    Suspend[DbValueTF, A](map(Return(_)))
+
+
+//  def freeScalaFailedImplicitResolutionResultsInStackOverflow(implicit M: Functor[F]): FreeDbT[A] =
+//    Suspend[DbValueTF, A](map(Return(_)))
+
 }
 
 object DbValueT {
@@ -36,16 +42,15 @@ object DbValueT {
     fail(DbNull())
 
   def db[F[+_]: Monad, A](thunk: => A): DbValueT[F, A] = try {
-    val a: A = thunk
-    val e: DbFailure \/ A = a.right
-    val f: F[DbFailure \/ A] = e.pure[F]
-    val d: DbValueT[F, A] = DbValueT[F, A](f)
-    d
+    DbValueT[F, A](thunk.right.pure[F])
   } catch {
     case (e: SQLException) => exception[F, A](e)
   }
 
-//  def freedb[A](thunk: => A): Free[DbValue, A] =
+  def freedb[F[+_]: Monad, A](thunk: => A) =
+    db[F, A](thunk).free
+
+//  def freedbScalaInferenceFailResultsInStackOverflow[F[+_]: Monad, A](thunk: => A) =
 //    db(thunk).free
 
   implicit def DbValueMonadT[F[+_]: Monad]: Monad[({type f[+a] = DbValueT[F, a]})#f] = new Monad[({type f[+a] = DbValueT[F, a]})#f] {
