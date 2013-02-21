@@ -9,6 +9,12 @@ import DbProcess._
 import Db._
 
 object Execute {
+  def get_[A: FromDb](sql: String): Db[Option[A]] =
+    get[Unit, A](sql, ())
+
+  def list_[A: FromDb](sql: String): Db[List[A]] =
+    list[Unit, A](sql, ())
+
   def get[A: ToDb, B: FromDb](sql: String, a: A): Db[Option[B]] = Db(conn => {
     val r = query(conn, sql, a, head[B]).foldLeftM(none[B])((_, b) => b)
     WriterT.put(r)(Vector[String]())

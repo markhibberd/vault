@@ -26,10 +26,10 @@ object Example {
     }
     run("DROP TABLE IF EXISTS PERSON")
     run("CREATE TABLE PERSON (id IDENTITY, name VARCHAR(255), age INTEGER, address VARCHAR(255))")
-    (1 to 1000000).foreach(i =>
+    (1 to 10).foreach(i =>
       run("INSERT INTO PERSON(name, age, address) VALUES (?,?,?)", stmt => {
         stmt.setString(1, "bob" + i)
-        stmt.setInt(2, i % 100)
+        stmt.setInt(2, 42)
         stmt.setString(3, "71 BigHouse Street")
       })
 

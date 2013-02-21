@@ -40,8 +40,8 @@ object DbValueT {
   def exception[F[+_]: Monad, A](e: SQLException): DbValueT[F, A] =
     fail(DbException(e))
 
-  def dbnull[F[+_]: Monad, A]: DbValueT[F, A] =
-    fail(DbNull())
+  def dbnull[F[+_]: Monad, A](column: Int): DbValueT[F, A] =
+    fail(DbNull(column))
 
   def db[F[+_]: Monad, A](thunk: => A): DbValueT[F, A] = try {
     DbValueT[F, A](thunk.right.pure[F])

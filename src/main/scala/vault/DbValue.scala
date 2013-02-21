@@ -3,9 +3,21 @@ package vault
 import java.sql.SQLException
 import scalaz._, Scalaz._, Free._
 
-trait DbFailure
-case class DbNull() extends DbFailure
+sealed trait DbFailure
+case class DbNull(column: Int) extends DbFailure
 case class DbException(e: SQLException) extends DbFailure
+
+object DbFailure {
+  implicit def DbFailureShow: Show[DbFailure] = new Show[DbFailure] {
+    override def shows(f: DbFailure) = f match {
+      case DbNull(i) =>
+        "Unexpected database null value encountered, column(" + i + ")."
+      case DbException(e) =>
+        "Unexpected database exception encountered: " + e.getMessage
+    }
+  }
+}
+
 
 case class DbValue[+A](toEither: DbFailure \/ A) {
   def fold[X](
@@ -36,8 +48,8 @@ object DbValue {
   def exception[A](e: SQLException): DbValue[A] =
     fail(DbException(e))
 
-  def dbnull[A]: DbValue[A] =
-    fail(DbNull())
+  def dbnull[A](column: Int): DbValue[A] =
+    fail(DbNull(column))
 
   def db[A](thunk: => A): DbValue[A] = try {
     thunk.pure[DbValue]

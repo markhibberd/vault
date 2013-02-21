@@ -9,13 +9,13 @@ case class FromDb[+A](private val run: (Int, Row) => DbValue[(Int, Option[A])]) 
 
   def flatMap[B](f: A => FromDb[B]): FromDb[B] =
     FromDb((n, r) => run(n, r).fold(DbValue.fail, {
-      case (inc, None) => DbValue.ok((n + inc, none))
-      case (inc, Some(a)) => f(a).run(n + inc, r)
+      case (nn, None) => DbValue.ok((nn, none))
+      case (nn, Some(a)) => f(a).run(nn, r)
     }))
 
   def perform(r: Row): DbValue[A] =
     run(1, r).fold(DbValue.fail, {
-      case (_, None) => DbValue.dbnull[A]
+      case (n, None) => DbValue.dbnull[A](n - 1)
       case (_, Some(a)) => DbValue.ok(a)
     })
 }
@@ -28,7 +28,7 @@ object FromDb {
     FromDb((_, _) => DbValue.ok[(Int, Option[A])]((0, Some(a))))
 
   private def fromDb[A](run: (Int, Row) => DbValue[Option[A]]) =
-    FromDb((n, r) => run(n, r).map(v => (1, v)))
+    FromDb((n, r) => run(n, r).map(v => (n + 1, v)))
 
   private def fromDbCell[A](run: Cell => DbValue[Option[A]]) =
     fromDb((n, r) => run(r.toCell(n)))
