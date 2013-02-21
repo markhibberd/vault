@@ -35,7 +35,7 @@ object FromDb {
 
   implicit def FromDbOption[A: FromDb]: FromDb[Option[A]] =
     FromDb((n, r) => get[A].run(n, r) map {
-      case (nn, None) => (nn, None)
+      case (nn, None) => (nn, Some(None))
       case (nn, Some(a)) => (nn, Some(Some(a)))
     })
 
