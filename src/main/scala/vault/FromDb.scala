@@ -33,6 +33,12 @@ object FromDb {
   private def fromDbCell[A](run: Cell => DbValue[Option[A]]) =
     fromDb((n, r) => run(r.toCell(n)))
 
+  implicit def FromDbOption[A: FromDb]: FromDb[Option[A]] =
+    FromDb((n, r) => get[A].run(n, r) map {
+      case (nn, None) => (nn, None)
+      case (nn, Some(a)) => (nn, Some(Some(a)))
+    })
+
   implicit def FromDbInt: FromDb[Int] =
     fromDbCell(_.int)
 
