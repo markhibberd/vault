@@ -25,7 +25,7 @@ object FromDb {
     implicitly[FromDb[A]]
 
   def value[A](a: A): FromDb[A] =
-    FromDb((_, _) => DbValue.ok[(Int, Option[A])]((0, Some(a))))
+    FromDb((n, _) => DbValue.ok[(Int, Option[A])]((n, Some(a))))
 
   private def fromDb[A](run: (Int, Row) => DbValue[Option[A]]) =
     FromDb((n, r) => run(n, r).map(v => (n + 1, v)))

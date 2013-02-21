@@ -3,8 +3,8 @@ package vault
 case class ToDb[A](private val run: (Int, Sql, A) => DbValue[Int]) {
   def |+|[B](o: ToDb[B]): ToDb[(A, B)] =
     ToDb((n, s, ab) => ab match{
-      case (a, b) => run(n, s, a).fold(DbValue.fail, inc =>
-        o.run(n, s, b))
+      case (a, b) => run(n, s, a).fold(DbValue.fail, nn =>
+        o.run(nn, s, b))
     })
 
   def comap[B](f: B => A): ToDb[B] =
@@ -19,7 +19,7 @@ object ToDb {
     implicitly[ToDb[A]]
 
   private def toDb[A](run: (Int, Sql, A) => DbValue[Unit]) =
-    ToDb[A]((n, s, a) => run(n, s, a).map(_ => 1))
+    ToDb[A]((n, s, a) => run(n, s, a).map(_ => n + 1))
 
   private def toDbBind[A](run: (BindParam, A) => DbValue[Unit]) =
     toDb[A]((n, s, a) => run(s.toBind(n), a))
