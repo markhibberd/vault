@@ -54,7 +54,7 @@ object build extends Build {
           Seq())
       }
     , libraryDependencies ++= Seq(
-        "org.scalaz" %% "scalaz-core" % "7.0.0-M7"
+        "org.scalaz" %% "scalaz-core" % "7.0.0-M8"
       , "machines" %% "machines" % "0.1-SNAPSHOT"
       , "org.scalacheck" %% "scalacheck" % "1.10.0" % "test" cross(CrossVersion.full)
       , "org.hsqldb" % "hsqldb" % "2.0.0"
@@ -76,7 +76,7 @@ object build extends Build {
       )
     , libraryDependencies ++= Seq(
         "org.hsqldb" % "hsqldb" % "2.0.0"
-      , "org.scalaz" %% "scalaz-core" % "7.0.0-M7"
+      , "org.scalaz" %% "scalaz-core" % "7.0.0-M8"
       )
     )
   )
