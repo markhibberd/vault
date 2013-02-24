@@ -55,7 +55,7 @@ object build extends Build {
       }
     , libraryDependencies ++= Seq(
         "org.scalaz" %% "scalaz-core" % "7.0.0-M8"
-      , "machines" %% "machines" % "0.1-SNAPSHOT" changine()
+      , "machines" %% "machines" % "0.1-SNAPSHOT" changing()
       , "org.scalacheck" %% "scalacheck" % "1.10.0" % "test" cross(CrossVersion.full)
       , "org.hsqldb" % "hsqldb" % "2.0.0"
       )
