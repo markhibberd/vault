@@ -16,8 +16,6 @@ help <https://github.com/markhibberd/vault/blob/master/src/test/scala/vault/Exam
 
 ### SBT Settings
 
-Just add vaultas a dependency.
-
 Experimental:
 
     "io.mth" %% "vault" % "0.2"
