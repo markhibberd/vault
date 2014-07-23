@@ -1,5 +1,9 @@
 package vault
 
+import scala.language.experimental.macros
+import scalaz._, Scalaz._
+import shapeless._
+
 case class ToDb[A](private val run: (Int, Sql, A) => DbValue[Int]) {
   def |+|[B](o: ToDb[B]): ToDb[(A, B)] =
     ToDb((n, s, ab) => ab match{
@@ -45,4 +49,27 @@ object ToDb extends GeneratedToDb {
   implicit def ToDbBoolean: ToDb[Boolean] =
     toDbBind(_.boolean(_))
 
+  import shapeless._
+
+  def derive[A](implicit ev: ProductTypeClass[ToDb]): ToDb[A] =
+    macro GenericMacros.deriveProductInstance[ToDb, A]
+
+  object auto {
+    implicit def AutoToDb[A](implicit ev: ProductTypeClass[ToDb]): ToDb[A] =
+      macro GenericMacros.deriveProductInstance[ToDb, A]
+  }
+
+  implicit def ToDbTypeClass: ProductTypeClass[ToDb] =
+    new ProductTypeClass[ToDb] {
+      def product[H, T <: HList](h: ToDb[H], t: ToDb[T]): ToDb[H :: T] =
+        (h |+| t).contramap({
+          case hh :: tt => (hh, tt)
+        })
+
+      def emptyProduct: ToDb[HNil] =
+        ToDbUnit.contramap(_ => ())
+
+      def project[F, G](instance: => ToDb[G], to: F => G, from: G => F): ToDb[F] =
+        instance.contramap(to)
+    }
 }

@@ -1,7 +1,8 @@
 package vault
 
-import java.sql.ResultSet
+import scala.language.experimental.macros
 import scalaz._, Scalaz._
+import shapeless._
 
 case class FromDb[+A](private val run: (Int, Row) => DbValue[(Int, Option[A])]) {
   def map[B](f: A => B): FromDb[B] =
@@ -61,4 +62,26 @@ object FromDb extends GeneratedFromDb {
     def point[A](a: => A) = value(a)
     def bind[A, B](m: FromDb[A])(f: A => FromDb[B]) = m flatMap f
   }
+
+  import shapeless._
+
+  def derive[A](implicit ev: ProductTypeClass[FromDb]): FromDb[A] =
+    macro GenericMacros.deriveProductInstance[FromDb, A]
+
+  object auto {
+    implicit def AutoFromDb[A](implicit ev: ProductTypeClass[FromDb]): FromDb[A] =
+      macro GenericMacros.deriveProductInstance[FromDb, A]
+  }
+
+  implicit def FromDbTypeClass: ProductTypeClass[FromDb] =
+    new ProductTypeClass[FromDb] {
+      def product[H, T <: HList](h: FromDb[H], t: FromDb[T]): FromDb[H :: T] =
+        (h |@| t)(_ :: _)
+
+      def emptyProduct: FromDb[HNil] =
+        HNil.point[FromDb]
+
+      def project[F, G](instance: => FromDb[G], to: F => G, from: G => F): FromDb[F] =
+        instance.map(from)
+    }
 }

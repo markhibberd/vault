@@ -51,10 +51,11 @@ object build extends Build {
           Seq())
       }
     , libraryDependencies ++= Seq(
-        "org.scalaz" %% "scalaz-core" % "7.0.6"
-      , "org.scalaz.stream" %% "scalaz-stream"% "0.4.1"
-      , "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
-      , "org.hsqldb" % "hsqldb" % "2.3.0" % "test"
+        "org.scalaz"        %% "scalaz-core"         % "7.0.6"
+      , "org.scalaz.stream" %% "scalaz-stream"       % "0.4.1"
+      , "com.chuusai"       %% "shapeless"           % "2.0.0"            cross CrossVersion.full
+      , "org.scalacheck"    %% "scalacheck"          % "1.10.1"  % "test"
+      , "org.hsqldb"        %  "hsqldb"              % "2.3.0"   % "test"
       )
     , resolvers ++= Seq(
         Resolver.sonatypeRepo("releases")

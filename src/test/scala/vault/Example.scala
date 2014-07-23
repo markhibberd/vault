@@ -5,11 +5,13 @@ import scalaz._, Scalaz._, effect.IO
 object Example {
   case class Person(name: String, age: Int, address: String)
 
+  /* could be elided by importing vault.FromDb.auto._ */
   implicit def PersonFromDb: FromDb[Person] =
-    (FromDb.of[String] |@| FromDb.of[Int] |@| FromDb.of[String])(Person.apply)
+    FromDb.derive[Person]
 
+  /* could be elided by importing vault.ToDb.auto._ */
   implicit def PersonToDb: ToDb[Person] =
-    ToDb.of[(String, Int, String)].contramap((Person.unapply _) andThen (_.get))
+    ToDb.derive[Person]
 
   /* A 'Db' represents a series of computations against a data base.
      they are generally run together as a single transaction */
