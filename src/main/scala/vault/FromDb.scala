@@ -46,17 +46,44 @@ object FromDb extends GeneratedFromDb {
       case (nn, Some(a)) => (nn, Some(Some(a)))
     })
 
+  implicit def FromDbByte: FromDb[Byte] =
+    fromDbCell(_.byte)
+
+  implicit def FromDbShort: FromDb[Short] =
+    fromDbCell(_.short)
+
   implicit def FromDbInt: FromDb[Int] =
     fromDbCell(_.int)
 
   implicit def FromDbLong: FromDb[Long] =
     fromDbCell(_.long)
 
+  implicit def FromDbFloat: FromDb[Float] =
+    fromDbCell(_.float)
+
+  implicit def FromDbDouble: FromDb[Double] =
+    fromDbCell(_.double)
+
   implicit def FromDbString: FromDb[String] =
     fromDbCell(_.string)
 
   implicit def FromDbBoolean: FromDb[Boolean] =
     fromDbCell(_.boolean)
+
+  implicit def FromDbBigDecimal: FromDb[BigDecimal] =
+    fromDbCell(_.bigdecimal)
+
+  implicit def FromDbDate: FromDb[java.util.Date] =
+    fromDbCell(_.date)
+
+  implicit def FromDbTime: FromDb[java.sql.Time] =
+    fromDbCell(_.time)
+
+  implicit def FromDbTimestamp: FromDb[java.sql.Timestamp] =
+    fromDbCell(_.timestamp)
+
+  implicit def FromDbUrl: FromDb[java.net.URL] =
+    fromDbCell(_.url)
 
   implicit def FromDbMonad: Monad[FromDb] = new Monad[FromDb] {
     def point[A](a: => A) = value(a)

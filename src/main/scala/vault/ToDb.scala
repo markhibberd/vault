@@ -34,8 +34,11 @@ object ToDb extends GeneratedToDb {
   private def toDbBind[A](run: (BindParam, A) => DbValue[Unit]) =
     toDb[A]((n, s, a) => run(s.toBind(n), a))
 
-  implicit def ToDbUnit: ToDb[Unit] =
-    ToDb[Unit]((_, _, _) => DbValue.ok(0))
+  implicit def ToDbByte: ToDb[Byte] =
+    toDbBind(_.byte(_))
+
+  implicit def ToDbShort: ToDb[Short] =
+    toDbBind(_.short(_))
 
   implicit def ToDbInt: ToDb[Int] =
     toDbBind(_.int(_))
@@ -43,11 +46,35 @@ object ToDb extends GeneratedToDb {
   implicit def ToDbLong: ToDb[Long] =
     toDbBind(_.long(_))
 
+  implicit def ToDbFloat: ToDb[Float] =
+    toDbBind(_.float(_))
+
+  implicit def ToDbDouble: ToDb[Double] =
+    toDbBind(_.double(_))
+
   implicit def ToDbString: ToDb[String] =
     toDbBind(_.string(_))
 
   implicit def ToDbBoolean: ToDb[Boolean] =
     toDbBind(_.boolean(_))
+
+  implicit def ToDbBigDecimal: ToDb[BigDecimal] =
+    toDbBind(_.bigdecimal(_))
+
+  implicit def ToDbDate: ToDb[java.util.Date] =
+    toDbBind((s, v) => s.date(new java.sql.Date(v.getTime)))
+
+  implicit def ToDbTime: ToDb[java.sql.Time] =
+    toDbBind(_.time(_))
+
+  implicit def ToDbTimestamp: ToDb[java.sql.Timestamp] =
+    toDbBind(_.timestamp(_))
+
+  implicit def ToDbUrl: ToDb[java.net.URL] =
+    toDbBind(_.url(_))
+
+  implicit def ToDbUnit: ToDb[Unit] =
+    ToDb[Unit]((_, _, _) => DbValue.ok(0))
 
   import shapeless._
 
