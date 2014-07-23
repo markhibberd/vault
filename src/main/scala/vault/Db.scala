@@ -4,19 +4,19 @@ import scalaz._, Scalaz._, concurrent._, effect._
 import java.sql.Connection
 
 case class Db[+A](run: Context[A]) {
-  def runLogDb(connection: Connection): IO[(DbHistory, DbValue[A])] = for {
+  def runLogDb(c: Connector): IO[(DbHistory, DbValue[A])] = c.create() |> { connection => for {
     r <- IO { run(connection).run.run.run }  onException (IO { connection.rollback })
     _ <- IO { connection.commit }
-  } yield r
+  } yield r }
 
-  def runDb(connection: Connection): IO[DbValue[A]] =
-    runLogDb(connection).map(_._2)
+  def runDb(c: Connector): IO[DbValue[A]] =
+    runLogDb(c).map(_._2)
 
-  def testLogDb(connection: Connection): IO[(DbHistory, DbValue[A])] =
-    IO { run(connection).run.run.run } ensuring (IO { connection.rollback })
+  def testLogDb(c: Connector): IO[(DbHistory, DbValue[A])] =
+    c.create() |> { connection => IO { run(connection).run.run.run } ensuring (IO { connection.rollback }) }
 
-  def testDb(connection: Connection): IO[DbValue[A]] =
-    testLogDb(connection).map(_._2)
+  def testDb(c: Connector): IO[DbValue[A]] =
+    testLogDb(c).map(_._2)
 
   def map[B](f: A => B): Db[B] =
     flatMap(a => Db.value(f(a)))

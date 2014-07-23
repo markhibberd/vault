@@ -2,6 +2,7 @@ package vault
 
 import java.sql._
 
+// FIX wrap in striped resource pool
 case class Connector(create: () => Connection)
 
 object Connector {

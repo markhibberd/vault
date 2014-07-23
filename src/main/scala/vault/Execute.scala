@@ -37,16 +37,16 @@ object Execute {
     Db.safeWithLog(conn =>
       DbHistory.execute(sql, a) -> DbValue.db({
         val stmt = conn.prepareStatement(sql);
-        ToDb.set[A].execute(Sql.jdbc(stmt), a);
+        ToDb.execute[A](Sql.jdbc(stmt), a);
         stmt.execute
       }))
 
   def query[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): Process[Task, DbValue[B]] =
     io.resource(Task.delay(conn.prepareStatement(sql)))(stmt => Task.delay(stmt.close)) { stmt =>
       Task.now({
-        ToDb.set[A].execute(Sql.jdbc(stmt), a)
+        ToDb.execute[A](Sql.jdbc(stmt), a)
         stmt.executeQuery
 
       }).flatMap(rs => Task.delay { if (rs.next) Row.jdbc(rs) else throw Process.End })
-    }.map(row => FromDb.get[B].perform(row))
+    }.map(row => FromDb.perform[B](row))
 }

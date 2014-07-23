@@ -19,7 +19,7 @@ object build extends Build {
   , settings = Defaults.defaultSettings ++ Seq[Sett](
       name := "vault"
     , organization := "io.mth"
-    , version := "0.1"
+    , version := "0.2"
     , scalaVersion := "2.10.4"
     , publishSetting
     , publishMavenStyle := true
@@ -53,27 +53,8 @@ object build extends Build {
     , libraryDependencies ++= Seq(
         "org.scalaz" %% "scalaz-core" % "7.0.6"
       , "org.scalaz.stream" %% "scalaz-stream"% "0.4.1"
-      , "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
-      , "org.hsqldb" % "hsqldb" % "2.3.0"
-      )
-    )
-  )
-
-  val example = Project(
-    id = "example"
-  , base = file("example")
-  , dependencies = Seq(vault)
-  , settings = Defaults.defaultSettings ++ Seq[Sett](
-      name := "example"
-    , version := "1.0"
-    , scalaVersion := "2.9.2"
-    , scalacOptions := Seq(
-        "-deprecation"
-      , "-unchecked"
-      )
-    , libraryDependencies ++= Seq(
-        "org.hsqldb" % "hsqldb" % "2.0.0"
-      , "org.scalaz" %% "scalaz-core" % "7.0.6"
+      , "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
+      , "org.hsqldb" % "hsqldb" % "2.3.0" % "test"
       )
     )
   )

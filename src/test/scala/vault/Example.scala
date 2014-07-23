@@ -19,7 +19,7 @@ object Example {
   } yield ()
 
   def main(args: Array[String]) = {
-    val (log, v) = run.testLogDb(Connector.hsqltest.create()).unsafePerformIO
+    val (log, v) = run.testLogDb(Connector.hsqltest).unsafePerformIO
     v.toEither match {
       case -\/(e) => println("oops: " + e); log.history.foreach(println)
       case \/-(v) => ()

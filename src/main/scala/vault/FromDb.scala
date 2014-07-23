@@ -20,9 +20,15 @@ case class FromDb[+A](private val run: (Int, Row) => DbValue[(Int, Option[A])]) 
     })
 }
 
-object FromDb {
-  def get[A: FromDb] =
+object FromDb extends GeneratedFromDb {
+  def of[A: FromDb] =
     implicitly[FromDb[A]]
+
+  def perform[A: FromDb](r: Row): DbValue[A] =
+    of[A].perform(r)
+
+  private def run[A: FromDb](n: Int, r: Row): DbValue[(Int, Option[A])] =
+    of[A].run(n, r)
 
   def value[A](a: A): FromDb[A] =
     FromDb((n, _) => DbValue.ok[(Int, Option[A])]((n, Some(a))))
@@ -34,7 +40,7 @@ object FromDb {
     fromDb((n, r) => run(r.toCell(n)))
 
   implicit def FromDbOption[A: FromDb]: FromDb[Option[A]] =
-    FromDb((n, r) => get[A].run(n, r) map {
+    FromDb((n, r) => run[A](n, r) map {
       case (nn, None) => (nn, Some(None))
       case (nn, Some(a)) => (nn, Some(Some(a)))
     })
@@ -50,17 +56,6 @@ object FromDb {
 
   implicit def FromDbBoolean: FromDb[Boolean] =
     fromDbCell(_.boolean)
-
-  implicit def FromDbTuple2[A: FromDb, B: FromDb]: FromDb[(A, B)] = for {
-    a <- get[A]
-    b <- get[B]
-  } yield (a, b)
-
-  implicit def FromDbTuple3[A: FromDb, B: FromDb, C: FromDb]: FromDb[(A, B, C)] = for {
-    a <- get[A]
-    b <- get[B]
-    c <- get[C]
-  } yield (a, b, c)
 
   implicit def FromDbMonad: Monad[FromDb] = new Monad[FromDb] {
     def point[A](a: => A) = value(a)

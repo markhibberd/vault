@@ -15,8 +15,14 @@ case class ToDb[A](private val run: (Int, Sql, A) => DbValue[Int]) {
 }
 
 object ToDb {
-  def set[A: ToDb] =
+  def of[A: ToDb] =
     implicitly[ToDb[A]]
+
+  def execute[A: ToDb](s: Sql, a: A): DbValue[Unit] =
+    of[A].execute(s, a)
+
+  private def run[A: ToDb](n: Int, s: Sql, a: A): DbValue[Int] =
+    of[A].run(n, s, a)
 
   private def toDb[A](run: (Int, Sql, A) => DbValue[Unit]) =
     ToDb[A]((n, s, a) => run(n, s, a).map(_ => n + 1))
@@ -40,15 +46,17 @@ object ToDb {
     toDbBind(_.boolean(_))
 
   implicit def ToDbTuple2[A: ToDb, B: ToDb]: ToDb[(A, B)] =
-    set[A] |+| set[B]
+    of[A] |+| of[B]
 
   implicit def ToDbTuple3[A: ToDb, B: ToDb, C: ToDb]: ToDb[(A, B, C)] =
-    (set[A] |+| set[B] |+| set[C]).comap({
+    (of[A] |+| of[B] |+| of[C]).comap({
       case (a, b, c) => ((a, b), c)
     })
 
   implicit def ToDbTuple4[A: ToDb, B: ToDb, C: ToDb, D: ToDb]: ToDb[(A, B, C, D)] =
-    (set[A] |+| set[B] |+| set[C] |+| set[D]).comap({
+    (of[A] |+| of[B] |+| of[C] |+| of[D]).comap({
       case (a, b, c, d) => (((a, b), c), d)
     })
+
+
 }
