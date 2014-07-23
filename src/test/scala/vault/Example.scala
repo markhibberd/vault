@@ -49,10 +49,17 @@ object Example {
     _ <- Db.liftIO { IO.putStrLn(y.shows) }
 
     /*
-     * Also works with data types with ToDb/FromDb.
+     * Also works with data types with FromDb.
      */
-    z <- Execute.get[String, Person]("SELECT name, age, address FROM person WHERE name = ?", "bob3")
-    _ <- Db.liftIO { IO.putStrLn(y.toString) }
+    z <- Execute.get[String, Person]("SELECT name, age, address FROM person WHERE name = ?", "bob4")
+    _ <- Db.liftIO { IO.putStrLn(z.toString) }
+
+    /*
+     * And for inserting with ToDb.
+     */
+    _ <- Execute.execute[Person]("INSERT INTO person(name, age, address) VALUES (?,?,?)", Person("fred", 123, "street"))
+    z <- Execute.get[String, Person]("SELECT name, age, address FROM person WHERE name = ?", "fred")
+    _ <- Db.liftIO { IO.putStrLn(z.toString) }
 
   } yield ()
 

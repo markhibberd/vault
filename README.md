@@ -18,7 +18,7 @@ help <https://github.com/markhibberd/vault/blob/master/src/test/scala/vault/Exam
 
 Experimental:
 
-    "io.mth" %% "vault" % "0.3"
+    "io.mth" %% "vault" % "0.4"
 
 ### Provenance
 
