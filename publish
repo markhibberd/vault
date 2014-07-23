@@ -1,3 +1,0 @@
-#!/bin/sh
-
-./sbt ';set publishTo := Some(Resolver.sftp("repo.mth.io", "repo.mth.io", "repo.mth.io/data/releases") as ("web", new java.io.File(System.getProperty("user.home") + "/.ssh/id_dsa_publish"))); +publish'
