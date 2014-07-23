@@ -46,7 +46,6 @@ object Execute {
       Task.now({
         ToDb.execute[A](Sql.jdbc(stmt), a)
         stmt.executeQuery
-
       }).flatMap(rs => Task.delay { if (rs.next) Row.jdbc(rs) else throw Process.End })
     }.map(row => FromDb.perform[B](row))
 }

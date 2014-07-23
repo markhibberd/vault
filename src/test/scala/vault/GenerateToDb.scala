@@ -25,7 +25,7 @@ object GenerateTbDb extends App {
 
 def template(n: Int) = s"""
   implicit def ToDbTuple${n}[${tcontext(n)}]: ToDb[${ttuple(n)}] =
-    (${paired(n)}).comap({
+    (${paired(n)}).contramap({
       case (${tvalues(n)}) => ${ltvalues(n)}
     })
 """

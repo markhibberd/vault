@@ -7,7 +7,7 @@ case class ToDb[A](private val run: (Int, Sql, A) => DbValue[Int]) {
         o.run(nn, s, b))
     })
 
-  def comap[B](f: B => A): ToDb[B] =
+  def contramap[B](f: B => A): ToDb[B] =
     ToDb((n, s, b) => run(n, s, f(b)))
 
   def execute(s: Sql, a: A): DbValue[Unit] =

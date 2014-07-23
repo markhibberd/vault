@@ -9,7 +9,7 @@ object Example {
     (FromDb.of[String] |@| FromDb.of[Int] |@| FromDb.of[String])(Person.apply)
 
   implicit def PersonToDb: ToDb[Person] =
-    ToDb.of[(String, Int, String)].comap((Person.unapply _) andThen (_.get))
+    ToDb.of[(String, Int, String)].contramap((Person.unapply _) andThen (_.get))
 
   /* A 'Db' represents a series of computations against a data base.
      they are generally run together as a single transaction */
