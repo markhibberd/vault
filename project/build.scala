@@ -1,9 +1,8 @@
 import sbt._
 import Keys._
-//import com.typesafe.sbt.pgp.PgpKeys._
 
 object build extends Build {
-  type Sett = Project.Setting[_]
+  type Sett = Def.Setting[_]
 
   lazy val publishSetting =
     publishTo <<= version.apply(v => {
@@ -19,17 +18,15 @@ object build extends Build {
   , base = file(".")
   , settings = Defaults.defaultSettings ++ Seq[Sett](
       name := "vault"
-    , organization := "vault"
-    , version := "4.0-SNAPSHOT"
-    , scalaVersion := "2.9.2"
-    , crossScalaVersions := Seq("2.9.2", "2.10.0")
+    , organization := "io.mth"
+    , version := "0.1"
+    , scalaVersion := "2.10.4"
     , publishSetting
     , publishMavenStyle := true
     , publishArtifact in Test := false
     , pomIncludeRepository := { _ => false }
     , licenses := Seq("BSD-3-Clause" -> url("http://www.opensource.org/licenses/BSD-3-Clause"))
-    , homepage := Some(url("http://vaultdb.io"))
-//    , useGpg := true
+    , homepage := Some(url("http://github.com/markhibberd/vault"))
     , pomExtra := (
       <scm>
         <url>git@github.com:markhibberd/vault.git</url>
@@ -54,10 +51,10 @@ object build extends Build {
           Seq())
       }
     , libraryDependencies ++= Seq(
-        "org.scalaz" %% "scalaz-core" % "7.0.0-M8"
-      , "machines" %% "machines" % "0.1-SNAPSHOT" changing()
-      , "org.scalacheck" %% "scalacheck" % "1.10.0" % "test" cross(CrossVersion.full)
-      , "org.hsqldb" % "hsqldb" % "2.0.0"
+        "org.scalaz" %% "scalaz-core" % "7.0.6"
+      , "org.scalaz.stream" %% "scalaz-stream"% "0.4.1"
+      , "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
+      , "org.hsqldb" % "hsqldb" % "2.3.0"
       )
     )
   )
@@ -76,7 +73,7 @@ object build extends Build {
       )
     , libraryDependencies ++= Seq(
         "org.hsqldb" % "hsqldb" % "2.0.0"
-      , "org.scalaz" %% "scalaz-core" % "7.0.0-M8"
+      , "org.scalaz" %% "scalaz-core" % "7.0.6"
       )
     )
   )

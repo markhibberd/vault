@@ -1,91 +1,52 @@
 package vault
 
-
-import com.clarifi.machines._
+import scalaz.stream._
 import java.sql.{Connection, SQLException}
-import scalaz._, Scalaz._
-import DbValue.{db, freedb}
-import DbProcess._
+import scalaz._, Scalaz._, effect._, Effect._, concurrent._
+import DbValue.db
 import Db._
 
 object Execute {
-  def get_[A: FromDb](sql: String): Db[Option[A]] =
-    get[Unit, A](sql, ())
+  def list[A: ToDb, B: FromDb](sql: String, a: A): Db[List[B]] =
+    Db.withConnectionX(conn =>
+      query[A, B](conn, sql, a).runLog.map(x => DbHistory.query(sql, a) -> x.toList.sequence))
 
   def list_[A: FromDb](sql: String): Db[List[A]] =
     list[Unit, A](sql, ())
 
-  def get[A: ToDb, B: FromDb](sql: String, a: A): Db[Option[B]] = Db(conn => {
-    val r = query(conn, sql, a, head[B]).foldLeftM(none[B])((_, b) => b)
-    WriterT.put(r)(Vector[String]())
-  })
+  def get[A: ToDb, B: FromDb](sql: String, a: A): Db[Option[B]] =
+    Db.withConnectionX(conn =>
+      query[A, B](conn, sql, a).pipe(process1.once).runLog.map(x => DbHistory.query(sql, a) -> x.headOption.sequence))
 
-  def list[A: ToDb, B: FromDb](sql: String, a: A): Db[List[B]] = Db(conn => {
-    val f = freedomlist(conn, sql, a)
+  def get_[A: FromDb](sql: String): Db[Option[A]] =
+    get[Unit, A](sql, ())
 
-    var buffer = scala.collection.mutable.ListBuffer[B]()
-    @scala.annotation.tailrec
-    def go(next: FreeDb[Vector[B]]): DbFailure \/ scala.collection.mutable.ListBuffer[B] = next.resume match {
-      case -\/(x) => x.toEither match {
-        case -\/(xx) => xx.left
-        case \/-(xx) => go(xx)
-      }
-      case \/-(x) => { buffer ++= x; buffer.right }
-    }
+  def update_(sql: String): Db[Int] =
+    update[Unit](sql, ())
 
-    val r = DbValue(go(f).map(_.toList))
-    WriterT.put(r)(Vector[String]())
-  })
+  def update[A: ToDb](sql: String, a: A): Db[Int] = Db.safe(conn =>
+    DbValue.db({
+      val stmt = conn.prepareStatement(sql)
+      stmt.executeUpdate
+    }))
 
+  def execute_(sql: String): Db[Boolean] =
+    execute[Unit](sql, ())
 
-  def query[A: ToDb, B: FromDb, C](conn: Connection, sql: String, a: A, m: Process[B, C]): Procedure[DbValue, C] =
-    new Procedure[DbValue, C] {
-      type K = B => Any
-      val machine = m
-      def withDriver[R](k: Driver[DbValue, K] => DbValue[R]): DbValue[R] = for {
-        s <- db { conn.prepareStatement(sql) }
-        _ <- ToDb.set[A].execute(Sql.jdbc(s), a)
-        rs <- db { s.executeQuery }
-        r <- k(new Driver [DbValue, K] {
-          val M = Monad[DbValue]
-          def apply(k: K) = for {
-            row_ <- db { if (rs.next) Row.jdbc(rs).some else none }
-            b <- row_ match {
-              case Some(row) =>
-                FromDb.get[B].perform(row).map(_.some)
-              case None =>
-                none.pure[DbValue]
-            }
-          } yield b
-        })
-      } yield r
-    }
+  def execute[A: ToDb](sql: String, a: A): Db[Boolean] =
+    Db.safeWithLog(conn =>
+      DbHistory.execute(sql, a) -> DbValue.db({
+        val stmt = conn.prepareStatement(sql);
+        ToDb.set[A].execute(Sql.jdbc(stmt), a);
+        stmt.execute
+      }))
 
-  def freedomlist[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): FreeDb[Vector[B]] =
-    freedom(conn, sql, a, Process.wrapping[B]).execute
+  def query[A: ToDb, B: FromDb](conn: Connection, sql: String, a: A): Process[Task, DbValue[B]] =
+    io.resource(Task.delay(conn.prepareStatement(sql)))(stmt => Task.delay(stmt.close)) { stmt =>
+      Task.now({
+        ToDb.set[A].execute(Sql.jdbc(stmt), a)
+        stmt.executeQuery
 
-  def freedom[A: ToDb, B: FromDb, C](conn: Connection, sql: String, a: A, m: Process[B, C]): Procedure[FreeDb, C] =
-    new Procedure[FreeDb, C] {
-      type K = B => Any
-      val machine = m
-      def withDriver[R](k: Driver[FreeDb, K] => FreeDb[R]): FreeDb[R] = for {
-        s <- freedb { conn.prepareStatement(sql) }
-        _ <- ToDb.set[A].execute(Sql.jdbc(s), a).free
-        rs <- freedb { s.executeQuery }
-        r <- k(new Driver [FreeDb, K] {
-          val M = Monad[FreeDb]
-          def apply(k: K) = for {
-            row_ <- freedb { if (rs.next) Row.jdbc(rs).some else none }
-            b <- (row_ match {
-              case Some(row) =>
-                FromDb.get[B].perform(row).map(_.some)
-              case None =>
-                none.pure[DbValue]
-            }).free
-          } yield b
-        })
-      } yield r
-    }
-
-
+      }).flatMap(rs => Task.delay { if (rs.next) Row.jdbc(rs) else throw Process.End })
+    }.map(row => FromDb.get[B].perform(row))
 }

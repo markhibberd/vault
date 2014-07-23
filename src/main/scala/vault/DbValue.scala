@@ -33,9 +33,6 @@ case class DbValue[+A](toEither: DbFailure \/ A) {
 
   def flatMap[B](f: A => DbValue[B]) =
     DbValue(toEither.flatMap(a => f(a).toEither))
-
-  def free: FreeDb[A] =
-    Suspend(map(Return(_)))
 }
 
 object DbValue {
@@ -56,9 +53,6 @@ object DbValue {
   } catch {
     case (e: SQLException) => DbValue.exception(e)
   }
-
-  def freedb[A](thunk: => A): Free[DbValue, A] =
-    db(thunk).free
 
   implicit def DbValueMonad: Monad[DbValue] = new Monad[DbValue] {
     def point[A](a: => A) = ok(a)
