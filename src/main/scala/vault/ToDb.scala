@@ -14,7 +14,7 @@ case class ToDb[A](private val run: (Int, Sql, A) => DbValue[Int]) {
     run(1, s, a) map (_ => ())
 }
 
-object ToDb {
+object ToDb extends GeneratedToDb {
   def of[A: ToDb] =
     implicitly[ToDb[A]]
 
@@ -44,19 +44,5 @@ object ToDb {
 
   implicit def ToDbBoolean: ToDb[Boolean] =
     toDbBind(_.boolean(_))
-
-  implicit def ToDbTuple2[A: ToDb, B: ToDb]: ToDb[(A, B)] =
-    of[A] |+| of[B]
-
-  implicit def ToDbTuple3[A: ToDb, B: ToDb, C: ToDb]: ToDb[(A, B, C)] =
-    (of[A] |+| of[B] |+| of[C]).comap({
-      case (a, b, c) => ((a, b), c)
-    })
-
-  implicit def ToDbTuple4[A: ToDb, B: ToDb, C: ToDb, D: ToDb]: ToDb[(A, B, C, D)] =
-    (of[A] |+| of[B] |+| of[C] |+| of[D]).comap({
-      case (a, b, c, d) => (((a, b), c), d)
-    })
-
 
 }

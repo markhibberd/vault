@@ -56,6 +56,11 @@ object build extends Build {
       , "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"
       , "org.hsqldb" % "hsqldb" % "2.3.0" % "test"
       )
+    , resolvers ++= Seq(
+        Resolver.sonatypeRepo("releases")
+      , Resolver.typesafeRepo("releases")
+      , "Scalaz Bintray Repo"   at "http://dl.bintray.com/scalaz/releases"
+      )
     )
   )
 }

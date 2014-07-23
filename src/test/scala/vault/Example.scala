@@ -3,6 +3,14 @@ package vault
 import scalaz._, Scalaz._, effect.IO
 
 object Example {
+  case class Person(name: String, age: Int, address: String)
+
+  implicit def PersonFromDb: FromDb[Person] =
+    (FromDb.of[String] |@| FromDb.of[Int] |@| FromDb.of[String])(Person.apply)
+
+  implicit def PersonToDb: ToDb[Person] =
+    ToDb.of[(String, Int, String)].comap((Person.unapply _) andThen (_.get))
+
   /* A 'Db' represents a series of computations against a data base.
      they are generally run together as a single transaction */
   def run: Db[Unit] = for {
@@ -39,6 +47,12 @@ object Example {
      */
     y <- Execute.get[String, (String, Int, String)]("SELECT name, age, address FROM person WHERE name = ?", "bob3")
     _ <- Db.liftIO { IO.putStrLn(y.shows) }
+
+    /*
+     * Also works with data types with ToDb/FromDb.
+     */
+    z <- Execute.get[String, Person]("SELECT name, age, address FROM person WHERE name = ?", "bob3")
+    _ <- Db.liftIO { IO.putStrLn(y.toString) }
 
   } yield ()
 

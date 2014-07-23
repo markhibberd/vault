@@ -18,7 +18,7 @@ help <https://github.com/markhibberd/vault/blob/master/src/test/scala/vault/Exam
 
 Experimental:
 
-    "io.mth" %% "vault" % "0.2"
+    "io.mth" %% "vault" % "0.3"
 
 ### Provenance
 
@@ -29,4 +29,3 @@ The library was open-sourced under a [BSD License](https://github.com/markhibber
 The initial developers have since left the employment of Ephox and now maintain this fork `markhibberd/vault`.
 
 It is expected that major releases will now come from this repository.
-
