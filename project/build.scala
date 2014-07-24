@@ -66,4 +66,19 @@ object build extends Build {
       )
     )
   )
+
+  lazy val benchmark = Project(
+    id = "benchmark"
+  , base = file("benchmark")
+  , settings = Defaults.defaultSettings ++ Seq[Sett](
+      name := "vault-benchmark"
+    , scalaVersion := "2.10.4"
+    , fork in run := true
+    , javaOptions in run <++= (fullClasspath in Runtime).map(cp => Seq("-cp", sbt.Attributed.data(cp).mkString(":")))
+    ) ++ Seq[Sett](libraryDependencies ++= Seq(
+        "com.google.caliper"   %  "caliper"         % "0.5-rc1")
+      )
+  )
+  .dependsOn(vault)
+
 }
