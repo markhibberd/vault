@@ -19,8 +19,9 @@ object build extends Build {
   , settings = Defaults.defaultSettings ++ Seq[Sett](
       name := "vault"
     , organization := "io.mth"
-    , version := "0.5"
+    , version := "0.5.1"
     , scalaVersion := "2.10.4"
+    , scalacOptions ++= Seq("-target:jvm-1.6", "-deprecation", "-unchecked", "-feature", "-language:_", "-Ywarn-all", "-Xlint", "-Xfatal-warnings", "-Yinline-warnings")
     , publishSetting
     , publishMavenStyle := true
     , publishArtifact in Test := false
@@ -55,6 +56,7 @@ object build extends Build {
       , "org.scalaz.stream" %% "scalaz-stream"       % "0.4.1"
       , "com.chuusai"       %% "shapeless"           % "2.0.0"            cross CrossVersion.full
       , "org.scalacheck"    %% "scalacheck"          % "1.10.1"  % "test"
+      , "org.specs2"        %% "specs2"              % "2.3.11"  % "test"
       , "org.hsqldb"        %  "hsqldb"              % "2.3.0"   % "test"
       )
     , resolvers ++= Seq(

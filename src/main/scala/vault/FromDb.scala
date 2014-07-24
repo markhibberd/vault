@@ -2,7 +2,6 @@ package vault
 
 import scala.language.experimental.macros
 import scalaz._, Scalaz._
-import shapeless._
 
 case class FromDb[+A](private val run: (Int, Row) => DbValue[(Int, Option[A])]) {
   def map[B](f: A => B): FromDb[B] =
@@ -40,50 +39,47 @@ object FromDb extends GeneratedFromDb {
   private def fromDbCell[A](run: Cell => DbValue[Option[A]]) =
     fromDb((n, r) => run(r.toCell(n)))
 
-  implicit def FromDbOption[A: FromDb]: FromDb[Option[A]] =
+  implicit def OptionFromDb[A: FromDb]: FromDb[Option[A]] =
     FromDb((n, r) => run[A](n, r) map {
       case (nn, None) => (nn, Some(None))
       case (nn, Some(a)) => (nn, Some(Some(a)))
     })
 
-  implicit def FromDbByte: FromDb[Byte] =
+  implicit def ByteFromDb: FromDb[Byte] =
     fromDbCell(_.byte)
 
-  implicit def FromDbShort: FromDb[Short] =
+  implicit def ShortFromDb: FromDb[Short] =
     fromDbCell(_.short)
 
-  implicit def FromDbInt: FromDb[Int] =
+  implicit def IntFromDb: FromDb[Int] =
     fromDbCell(_.int)
 
-  implicit def FromDbLong: FromDb[Long] =
+  implicit def LongFromDb: FromDb[Long] =
     fromDbCell(_.long)
 
-  implicit def FromDbFloat: FromDb[Float] =
+  implicit def FloatFromDb: FromDb[Float] =
     fromDbCell(_.float)
 
-  implicit def FromDbDouble: FromDb[Double] =
+  implicit def DoubleFromDb: FromDb[Double] =
     fromDbCell(_.double)
 
-  implicit def FromDbString: FromDb[String] =
+  implicit def StringFromDb: FromDb[String] =
     fromDbCell(_.string)
 
-  implicit def FromDbBoolean: FromDb[Boolean] =
+  implicit def BooleanFromDb: FromDb[Boolean] =
     fromDbCell(_.boolean)
 
-  implicit def FromDbBigDecimal: FromDb[BigDecimal] =
+  implicit def BigDecimalFromDb: FromDb[BigDecimal] =
     fromDbCell(_.bigdecimal)
 
-  implicit def FromDbDate: FromDb[java.util.Date] =
+  implicit def DateFromDb: FromDb[java.sql.Date] =
     fromDbCell(_.date)
 
-  implicit def FromDbTime: FromDb[java.sql.Time] =
+  implicit def TimeFromDb: FromDb[java.sql.Time] =
     fromDbCell(_.time)
 
-  implicit def FromDbTimestamp: FromDb[java.sql.Timestamp] =
+  implicit def TimestampFromDb: FromDb[java.sql.Timestamp] =
     fromDbCell(_.timestamp)
-
-  implicit def FromDbUrl: FromDb[java.net.URL] =
-    fromDbCell(_.url)
 
   implicit def FromDbMonad: Monad[FromDb] = new Monad[FromDb] {
     def point[A](a: => A) = value(a)
@@ -95,20 +91,21 @@ object FromDb extends GeneratedFromDb {
   def derive[A](implicit ev: ProductTypeClass[FromDb]): FromDb[A] =
     macro GenericMacros.deriveProductInstance[FromDb, A]
 
-  object auto {
-    implicit def AutoFromDb[A](implicit ev: ProductTypeClass[FromDb]): FromDb[A] =
-      macro GenericMacros.deriveProductInstance[FromDb, A]
-  }
 
   implicit def FromDbTypeClass: ProductTypeClass[FromDb] =
     new ProductTypeClass[FromDb] {
       def product[H, T <: HList](h: FromDb[H], t: FromDb[T]): FromDb[H :: T] =
         (h |@| t)(_ :: _)
 
-      def emptyProduct: FromDb[HNil] =
+      def emptyProduct: FromDb[HNil] = ???
         HNil.point[FromDb]
 
       def project[F, G](instance: => FromDb[G], to: F => G, from: G => F): FromDb[F] =
         instance.map(from)
     }
+
+  object auto {
+    implicit def AutoFromDb[A](implicit ev: ProductTypeClass[FromDb]): FromDb[A] =
+      macro GenericMacros.deriveProductInstance[FromDb, A]
+  }
 }

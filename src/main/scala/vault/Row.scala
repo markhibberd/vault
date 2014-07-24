@@ -16,7 +16,6 @@ trait Row {
   def date: Int => DbValue[Option[Date]]
   def time: Int => DbValue[Option[Time]]
   def timestamp: Int => DbValue[Option[Timestamp]]
-  def url: Int => DbValue[Option[URL]]
 
   def toCell(n: Int): Cell =
     Cell(n, this)
@@ -35,7 +34,6 @@ case class Cell(n: Int, row: Row) {
   def date = row.date(n)
   def time = row.time(n)
   def timestamp = row.timestamp(n)
-  def url = row.url(n)
 }
 
 object Row {
@@ -52,7 +50,6 @@ object Row {
     def date = get(_.getDate(_))
     def time = get(_.getTime(_))
     def timestamp = get(_.getTimestamp(_))
-    def url = get(_.getURL(_))
 
     /* Turn an unsafe get* on ResultSet into a safe one. */
     def get[A](f: (ResultSet, Int) => A): Int => DbValue[Option[A]] =

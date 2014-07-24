@@ -1,7 +1,6 @@
 package vault
 
 import java.sql._
-import java.net.URL
 
 trait Sql {
   def byte: Int => Byte => DbValue[Unit]
@@ -16,7 +15,7 @@ trait Sql {
   def date: Int => Date => DbValue[Unit]
   def time: Int => Time => DbValue[Unit]
   def timestamp: Int => Timestamp => DbValue[Unit]
-  def url: Int => URL => DbValue[Unit]
+  def nul: Int => Int => DbValue[Unit]
 
   def toBind(n: Int): BindParam =
     BindParam(n, this)
@@ -35,7 +34,7 @@ case class BindParam(n: Int, sql: Sql) {
   def date = sql.date(n)
   def time = sql.time(n)
   def timestamp = sql.timestamp(n)
-  def url = sql.url(n)
+  def nul = sql.nul(n)
 }
 
 object Sql {
@@ -52,7 +51,7 @@ object Sql {
     def date = set(_.setDate(_, _))
     def time = set(_.setTime(_, _))
     def timestamp = set(_.setTimestamp(_, _))
-    def url = set(_.setURL(_, _))
+    def nul = set(_.setNull(_, _))
 
     def set[A](f: (PreparedStatement, Int, A) => Unit): Int => A =>  DbValue[Unit] =
       n => a => try {
