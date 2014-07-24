@@ -19,7 +19,7 @@ object build extends Build {
   , settings = Defaults.defaultSettings ++ Seq[Sett](
       name := "vault"
     , organization := "io.mth"
-    , version := "0.4"
+    , version := "0.5"
     , scalaVersion := "2.10.4"
     , publishSetting
     , publishMavenStyle := true
