@@ -50,7 +50,10 @@ FromDb Spec
 
     case class Person(name: String, age: Int)
 
-//    FromDb.of[Person]
+//    FromDb.of[Person] // << this doesn't work but really should?
+
+    FromDb.of[Person](AutoFromDb[Person])
+
   }
 
   object derived {

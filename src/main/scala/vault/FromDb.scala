@@ -91,6 +91,10 @@ object FromDb extends GeneratedFromDb {
   def derive[A](implicit ev: ProductTypeClass[FromDb]): FromDb[A] =
     macro GenericMacros.deriveProductInstance[FromDb, A]
 
+  object auto {
+    implicit def AutoFromDb[A](implicit ev: ProductTypeClass[FromDb]): FromDb[A] =
+      macro GenericMacros.deriveProductInstance[FromDb, A]
+  }
 
   implicit def FromDbTypeClass: ProductTypeClass[FromDb] =
     new ProductTypeClass[FromDb] {
@@ -103,9 +107,4 @@ object FromDb extends GeneratedFromDb {
       def project[F, G](instance: => FromDb[G], to: F => G, from: G => F): FromDb[F] =
         instance.map(from)
     }
-
-  object auto {
-    implicit def AutoFromDb[A](implicit ev: ProductTypeClass[FromDb]): FromDb[A] =
-      macro GenericMacros.deriveProductInstance[FromDb, A]
-  }
 }
