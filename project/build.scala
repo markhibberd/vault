@@ -74,10 +74,11 @@ object build extends Build {
       name := "vault-benchmark"
     , scalaVersion := "2.10.4"
     , fork in run := true
-    , javaOptions in run <++= (fullClasspath in Runtime).map(cp => Seq("-cp", sbt.Attributed.data(cp).mkString(":")))
+    , javaOptions in run <++= (fullClasspath in Runtime).map(cp => Seq("-cp", sbt.Attributed.data(cp).mkString(":"), "-Xmx3G"))
     ) ++ Seq[Sett](libraryDependencies ++= Seq(
-        "com.google.caliper"   %  "caliper"         % "0.5-rc1")
-      )
+        "com.google.caliper"   %  "caliper"         % "0.5-rc1"
+      , "org.hsqldb"           %  "hsqldb"          % "2.3.0"
+      ))
   )
   .dependsOn(vault)
 

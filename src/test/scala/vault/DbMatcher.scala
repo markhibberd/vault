@@ -24,6 +24,7 @@ object DbMatcher extends ThrownExpectations {
         result(r.isSuccess, r.message, r.message, attempt)
       } finally {
         c.prepareStatement("SHUTDOWN").execute
+        c.close
       }
     }
   }

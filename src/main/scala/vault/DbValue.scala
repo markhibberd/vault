@@ -18,8 +18,12 @@ object DbFailure {
   }
 }
 
+sealed trait DbValue[+A] {
+  def toEither: DbFailure \/ A = this match {
+    case DbOk(a) => a.right[DbFailure]
+    case DbErr(e) => e.left[A]
+  }
 
-case class DbValue[+A](toEither: DbFailure \/ A) {
   def fold[X](
     fail: DbFailure => X,
     ok: A => X
@@ -28,19 +32,26 @@ case class DbValue[+A](toEither: DbFailure \/ A) {
   def toOption =
     toEither.toOption
 
-  def map[B](f: A => B) =
-    DbValue(toEither.map(f))
+  def map[B](f: A => B) = this match {
+    case DbOk(a) => DbOk(f(a))
+    case DbErr(e) => DbErr(e)
+  }
 
-  def flatMap[B](f: A => DbValue[B]) =
-    DbValue(toEither.flatMap(a => f(a).toEither))
+  def flatMap[B](f: A => DbValue[B]) = this match {
+    case DbOk(a) => f(a)
+    case DbErr(e) => DbErr(e)
+  }
 }
+
+case class DbOk[@specialized(Int, Long, Double) A](a: A) extends DbValue[A]
+case class DbErr[A](f: DbFailure) extends DbValue[A]
 
 object DbValue {
   def ok[A](v: A): DbValue[A] =
-    DbValue(v.right)
+    DbOk(v)
 
   def fail[A](f: DbFailure): DbValue[A] =
-    DbValue(f.left)
+    DbErr(f)
 
   def exception[A](e: SQLException): DbValue[A] =
     fail(DbException(e))

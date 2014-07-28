@@ -49,20 +49,31 @@ object Execute {
   def close[A <: java.lang.AutoCloseable]: A => Db[Unit] =
     a => Db.liftTask(Task.delay { a.close })
 
-  def process[A: ToDb, B: FromDb](sql: String, a: A): Process[Db, B] =
+  def process[A: ToDb, B: FromDb](sql: String, a: A, chunk: Int = 100): Process[Db, B] =
     resourceX(statement(sql))(close[PreparedStatement]) { s =>
       Db.value((resource(run(s, a))(close[ResultSet]) { rs =>
-        Db.delay { if (rs.next) Row.jdbc(rs) else throw Process.End  }
-      }).evalMap[Db, B](row => Db.safe(_ => FromDb.perform[B](row))))
+        val buffer = new scala.collection.mutable.ArrayBuffer[DbValue[B]](chunk)
+        var done = false
+        Db.delay {
+          if (done)
+            throw Process.End
+          buffer.clear
+          var i = 0; while (i < chunk && !done) {
+            if (rs.next) buffer += FromDb.perform[B](Row.jdbc(rs)) else done = true
+            i += 1
+          }
+          buffer
+        }
+      }).evalMap[Db, B](b => Db.safe(_ => b)))
     }.join
 
   def resource[R,O](acquire: Db[R])(
                     release: R => Db[Unit])(
-                    step: R => Db[O]): Process[Db,O] = {
+                    step: R => Db[Seq[O]]): Process[Db,O] = {
     import Process._
-    def go(step: Db[O], onExit: Process[Db,O]): Process[Db,O] =
-      await[Db,O,O](step) (
-        o => emit(o) ++ go(step, onExit) // Emit the value and repeat
+    def go(step: Db[Seq[O]], onExit: Process[Db,O]): Process[Db,O] =
+      await[Db,Seq[O],O](step) (
+        o => emitAll(o) ++ go(step, onExit) // Emit the value and repeat
       , onExit                           // Release resource when exhausted
       , onExit)                          // or in event of error
     await(acquire)(r => {
