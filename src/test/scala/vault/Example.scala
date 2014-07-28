@@ -2,6 +2,8 @@ package vault
 
 import scalaz._, Scalaz._, effect.IO
 
+import vault.Syntax._
+
 object Example {
   case class Person(name: String, age: Int, address: String)
 
@@ -19,8 +21,8 @@ object Example {
     /*
      * Just some setup for the example, but demonstrates executing arbitrary sql.
      */
-    _ <- Execute.execute_("DROP TABLE IF EXISTS person")
-    _ <- Execute.execute_("DROP TABLE IF EXISTS migrations")
+    _ <- q"DROP TABLE IF EXISTS person".execute
+    _ <- q"DROP TABLE IF EXISTS migrations".execute
 
     /*
      * The dummest (and most incomplete) migrations library ever.
@@ -33,13 +35,12 @@ object Example {
      * Insert some data, notice the argument gets unfolded into the params.
      */
     _ <- (1 to 300).toList.traverse(i =>
-      Execute.execute("INSERT INTO person(name, age, address) VALUES (?,?,?)",
-        ("bob" + i, 42, "71 BigHouse Street")))
+      q"INSERT INTO person(name, age, address) VALUES (${"bob" + i},${42},${"71 Big House Street"})".update)
 
     /*
      * Get multiple results from the db.
      */
-    x <- Execute.list_[(String, Int, String)]("SELECT name, age, address FROM person")
+    x <- q"SELECT name, age, address FROM person".list[(String, Int, String)]
     _ <- x.traverse(xx => Db.liftIO {
       IO.putStrLn(xx.shows)
     })
@@ -47,20 +48,29 @@ object Example {
     /*
      * Get a single result from the db - also demonstrating bind parameters.
      */
-    y <- Execute.get[String, (String, Int, String)]("SELECT name, age, address FROM person WHERE name = ?", "bob3")
+    y <- q"SELECT name, age, address FROM person WHERE name = ${"bob3"}".get[(String, Int, String)]
     _ <- Db.liftIO { IO.putStrLn(y.shows) }
 
     /*
      * Also works with data types with FromDb.
      */
-    z <- Execute.get[String, Person]("SELECT name, age, address FROM person WHERE name = ?", "bob4")
+    z <- q"SELECT name, age, address FROM person WHERE name = ${"bob3"}".get[Person]
     _ <- Db.liftIO { IO.putStrLn(z.toString) }
 
     /*
      * And for inserting with ToDb.
      */
-    _ <- Execute.execute[Person]("INSERT INTO person(name, age, address) VALUES (?,?,?)", Person("fred", 123, "street"))
-    z <- Execute.get[String, Person]("SELECT name, age, address FROM person WHERE name = ?", "fred")
+    p =  Person("fred", 123, "street")
+    _ <- q"INSERT INTO person(name, age, address) VALUES (${p})".update
+    z <- q"SELECT name, age, address FROM person WHERE name = ${"fred"}".get[Person]
+    _ <- Db.liftIO { IO.putStrLn(z.toString) }
+
+    /*
+     * Or more explicitly with bind.
+     */
+    p =  Person("fred", 123, "street")
+    _ <- q"INSERT INTO person(name, age, address) VALUES (?, ?, ?)".bind(p).update
+    z <- q"SELECT name, age, address FROM person WHERE name = ${"fred"}".get[Person]
     _ <- Db.liftIO { IO.putStrLn(z.toString) }
 
   } yield ()

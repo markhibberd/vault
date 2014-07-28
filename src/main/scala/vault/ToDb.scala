@@ -4,15 +4,15 @@ import scala.language.experimental.macros
 import scalaz._, Scalaz._
 import java.sql.Types
 
-case class ToDb[A](private val run: (Int, Sql, Option[A]) => DbValue[Int]) {
+case class ToDb[A](private val run: (Int, Sql, Option[A]) => DbValue[Int], arity: Int) {
   def |+|[B](o: ToDb[B]): ToDb[(A, B)] =
     ToDb((n, s, ab) => ab match {
       case Some((a, b)) => run(n, s, Some(a)).fold(DbValue.fail, nn => o.run(nn, s, Some(b)))
       case None => run(n, s, None).fold(DbValue.fail, nn => o.run(nn, s, None))
-    })
+    }, arity + o.arity)
 
   def contramap[B](f: B => A): ToDb[B] =
-    ToDb((n, s, b) => run(n, s, b.map(f)))
+    ToDb((n, s, b) => run(n, s, b.map(f)), arity)
 
   def execute(s: Sql, a: A): DbValue[Unit] =
     run(1, s, Option(a)) map (_ => ())
@@ -29,7 +29,7 @@ object ToDb extends GeneratedToDb {
     of[A].run(n, s, Option(a))
 
   private def toDb[A](run: (Int, Sql, Option[A]) => DbValue[Unit]) =
-    ToDb[A]((n, s, a) => run(n, s, a).map(_ => n + 1))
+    ToDb[A]((n, s, a) => run(n, s, a).map(_ => n + 1), 1)
 
   private def toDbBind[A](run: (BindParam, A) => DbValue[Unit], sqlType: Int) =
     toDb[A]((n, s, a) => a match {
@@ -38,7 +38,7 @@ object ToDb extends GeneratedToDb {
     })
 
   implicit def ToDbOption[A: ToDb]: ToDb[Option[A]] =
-    ToDb[Option[A]]((n, s, a) => of[A].run(n, s, a.flatten).map(_ => n + 1))
+    ToDb[Option[A]]((n, s, a) => of[A].run(n, s, a.flatten), of[A].arity)
 
   implicit def ByteToDb: ToDb[Byte] =
     toDbBind(_.byte(_), Types.SMALLINT)
@@ -77,7 +77,7 @@ object ToDb extends GeneratedToDb {
     toDbBind(_.timestamp(_), Types.TIMESTAMP)
 
   implicit def UnitToDb: ToDb[Unit] =
-    ToDb[Unit]((_, _, _) => DbValue.ok(0))
+    ToDb[Unit]((_, _, _) => DbValue.ok(0), 0)
 
   import shapeless._
 

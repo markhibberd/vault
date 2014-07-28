@@ -101,7 +101,7 @@ object FromDb extends GeneratedFromDb {
       def product[H, T <: HList](h: FromDb[H], t: FromDb[T]): FromDb[H :: T] =
         (h |@| t)(_ :: _)
 
-      def emptyProduct: FromDb[HNil] = ???
+      def emptyProduct: FromDb[HNil] =
         HNil.point[FromDb]
 
       def project[F, G](instance: => FromDb[G], to: F => G, from: G => F): FromDb[F] =

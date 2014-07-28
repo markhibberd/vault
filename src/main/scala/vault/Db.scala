@@ -39,8 +39,20 @@ object Db {
         WriterT[Task, DbHistory, DbValue[A]](
           f(connection))))
 
+  def raw[A](f: Connection => A): Db[A] =
+    safe(conn => DbValue.ok(f(conn)))
+
+  def connection: Db[Connection] =
+    raw(identity)
+
   def safe[A](f: Connection => DbValue[A]): Db[A] =
     safeWithLog(f.map(v => DbHistory.empty -> v))
+
+  def delay[A](a: => A): Db[A] =
+    liftTask(Task.delay { a })
+
+  def now[A](a: => A): Db[A] =
+    liftTask(Task.now { a })
 
   def safeWithLog[A](f: Connection => (DbHistory, DbValue[A])): Db[A] =
     Db.withConnectionX(connection =>
@@ -48,10 +60,25 @@ object Db {
 
   def liftIO[A](io: IO[A]) =
     Db.withConnectionX(_ =>
-      Task.delay { DbHistory.empty-> DbValue.ok(io.unsafePerformIO) } )
+      Task.delay { DbHistory.empty -> DbValue.ok(io.unsafePerformIO) } )
+
+  def liftTask[A](t: Task[A]) =
+    Db.withConnectionX(_ =>
+      t.map(a => DbHistory.empty -> DbValue.ok(a)))
 
   implicit def DbMonad: Monad[Db] = new Monad[Db] {
     def point[A](a: => A) = value(a)
     def bind[A, B](m: Db[A])(f: A => Db[B]) = m flatMap f
+  }
+
+  implicit def DbCatchable: Catchable[Db] = new Catchable[Db] {
+    def attempt[A](db: Db[A]): Db[Throwable \/ A] =
+      Db.withConnection(conn => DbValueT[Context__, Throwable \/ A](WriterT[Task, DbHistory, DbValue[Throwable \/ A]](db.run.run(conn).run.run.attempt.map({
+        case -\/(t) => DbHistory.empty -> DbValue.ok(t.left)
+        case \/-((h, v)) => h -> v.map(_.right[Throwable])
+}))))
+
+    def fail[A](err: Throwable): Db[A] =
+      liftTask(Task.fail(err))
   }
 }
