@@ -67,6 +67,8 @@ object Execute {
       }).evalMap[Db, B](b => Db.safe(_ => b)))
     }.join
 
+  // FIX generalize these hacky pieces of crap
+
   def resource[R,O](acquire: Db[R])(
                     release: R => Db[Unit])(
                     step: R => Db[Seq[O]]): Process[Db,O] = {
