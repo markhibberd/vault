@@ -19,7 +19,7 @@ object build extends Build {
   , settings = Defaults.defaultSettings ++ Seq[Sett](
       name := "vault"
     , organization := "io.mth"
-    , version := "0.5.1"
+    , version := "0.5.2"
     , scalaVersion := "2.10.4"
     , scalacOptions ++= Seq("-target:jvm-1.6", "-deprecation", "-unchecked", "-feature", "-language:_", "-Ywarn-all", "-Xlint", "-Xfatal-warnings", "-Yinline-warnings")
     , publishSetting

@@ -22,9 +22,9 @@ Db Spec
 
   def attempt = prop((t: Throwable) =>
     withConnection(connection =>
-      Catchable[Db].attempt(Db.liftTask(Task.delay(throw t))).run(connection).run.run.run must_== DbHistory.empty -> DbValue.ok(t.left)))
+      Catchable[Db].attempt(Db.liftTask(Task.delay(throw t))).run(DbRead.connect(connection)).run.run must_==  DbValue.ok(t.left)))
 
   def fail = prop((t: Throwable) =>
     withConnection(connection =>
-      Catchable[Db].fail(t).run(connection).run.run.attemptRun must_== t.left))
+      Catchable[Db].fail(t).run(DbRead.connect(connection)).run.attemptRun must_== t.left))
 }

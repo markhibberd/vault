@@ -13,9 +13,9 @@ object DbMatcher extends ThrownExpectations {
     def apply[S <: Db[A]](attempt: Expectable[S]) = {
       val c = Connector.hsqlmem(java.util.UUID.randomUUID.toString, "sa", "").create()
       try {
-        val r = attempt.value.run(c).run.run.attemptRun match {
+        val r = attempt.value.run(DbRead.connect(c)).run.attemptRun match {
           case -\/(error)     => error.printStackTrace; Failure(s"Db failed with <${error}>")
-          case \/-((log, a))  => a.toEither match {
+          case \/-(a)  => a.toEither match {
             case -\/(DbException(error))  => error.printStackTrace; Failure(s"DbResult failed with <${error}>")
             case -\/(error)               => Failure(s"DbResult failed with <${error}>")
             case \/-(aa)                  => check(aa)

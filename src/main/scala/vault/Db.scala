@@ -5,48 +5,49 @@ import java.sql.Connection
 
 case class Db[+A](run: Context[A]) {
   def runLogDb(c: Connector): IO[(DbHistory, DbValue[A])] = c.create() |> { connection => for {
-    r <- IO { run(connection).run.run.run }  onException (IO { connection.rollback })
+    b <- IO { scala.collection.mutable.ArrayBuffer[DbLog]() }
+    r <- IO { run(DbRead.capture(connection, b)).run.run }  onException (IO { connection.rollback })
+    _ <- IO { connection.commit }
+  } yield DbHistory(b.toVector) -> r }
+
+  def runDb(c: Connector): IO[DbValue[A]] = c.create() |> { connection => for {
+    r <- IO { run(DbRead.connect(connection)).run.run }  onException (IO { connection.rollback })
     _ <- IO { connection.commit }
   } yield r }
 
-  def runDb(c: Connector): IO[DbValue[A]] =
-    runLogDb(c).map(_._2)
-
   def testLogDb(c: Connector): IO[(DbHistory, DbValue[A])] =
-    c.create() |> { connection => IO { run(connection).run.run.run } ensuring (IO { connection.rollback }) }
+    c.create() |> { connection => for {
+      b <- IO { scala.collection.mutable.ArrayBuffer[DbLog]() }
+      r <- IO { run(DbRead.capture(connection, b)).run.run } ensuring (IO { connection.rollback })
+    } yield DbHistory(b.toVector) -> r }
 
   def testDb(c: Connector): IO[DbValue[A]] =
-    testLogDb(c).map(_._2)
+    c.create() |> { connection =>
+      IO { run(DbRead.connect(connection)).run.run } ensuring (IO { connection.rollback }) }
 
   def map[B](f: A => B): Db[B] =
     flatMap(a => Db.value(f(a)))
 
   def flatMap[B](f: A => Db[B]) =
-    Db.withConnection(connection => run(connection).flatMap(a =>
-      f(a).run(connection)))
+    Db.withDbRead(r => run(r).flatMap(a => f(a).run(r)))
 }
 
 object Db {
   def value[A](a: A): Db[A] =
     Db(a.pure[Context])
 
-  def withConnection[A](f: Connection => Context_[A]): Db[A] =
-    Db(Kleisli(connection => f(connection)))
+  def getChunkSize: Db[Int] =
+    withDbRead(r => DbValueT[Task, Int](Task.now(DbValue.ok(r.chunk))))
 
-  def withConnectionX[A](f: Connection => Task[(DbHistory, DbValue[A])]): Db[A] =
+  def withConnection[A](f: Connection => DbValueT[Task, A]): Db[A] =
+    withDbRead(r => f(r.connection))
+
+  def withDbRead[A](f: DbRead => DbValueT[Task, A]): Db[A] =
+    Db(Kleisli[Context_, DbRead, A](r => f(r)))
+
+  def withConnectionX[A](f: Connection => Task[DbValue[A]]): Db[A] =
     withConnection(connection =>
-      DbValueT[Context__, A](
-        WriterT[Task, DbHistory, DbValue[A]](
-          f(connection))))
-
-  def raw[A](f: Connection => A): Db[A] =
-    safe(conn => DbValue.ok(f(conn)))
-
-  def connection: Db[Connection] =
-    raw(identity)
-
-  def safe[A](f: Connection => DbValue[A]): Db[A] =
-    safeWithLog(f.map(v => DbHistory.empty -> v))
+      DbValueT[Task, A](f(connection)))
 
   def delay[A](a: => A): Db[A] =
     liftTask(Task.delay { a })
@@ -54,17 +55,17 @@ object Db {
   def now[A](a: => A): Db[A] =
     liftTask(Task.now { a })
 
-  def safeWithLog[A](f: Connection => (DbHistory, DbValue[A])): Db[A] =
-    Db.withConnectionX(connection =>
-      Task.delay { f(connection) } )
-
   def liftIO[A](io: IO[A]) =
-    Db.withConnectionX(_ =>
-      Task.delay { DbHistory.empty -> DbValue.ok(io.unsafePerformIO) } )
+    liftTask(Task.delay { DbValue.ok(io.unsafePerformIO) })
 
   def liftTask[A](t: Task[A]) =
-    Db.withConnectionX(_ =>
-      t.map(a => DbHistory.empty -> DbValue.ok(a)))
+    Db.withConnectionX(_ => t.map(DbValue.ok))
+
+  def liftDbValue[A](v: DbValue[A]) =
+    Db.withConnection(_ => DbValueT[Task, A](Task.now(v)))
+
+  def delayDbValue[A](v: => DbValue[A]) =
+    Db.withConnection(_ => DbValueT[Task, A](Task.delay(v)))
 
   implicit def DbMonad: Monad[Db] = new Monad[Db] {
     def point[A](a: => A) = value(a)
@@ -73,10 +74,10 @@ object Db {
 
   implicit def DbCatchable: Catchable[Db] = new Catchable[Db] {
     def attempt[A](db: Db[A]): Db[Throwable \/ A] =
-      Db.withConnection(conn => DbValueT[Context__, Throwable \/ A](WriterT[Task, DbHistory, DbValue[Throwable \/ A]](db.run.run(conn).run.run.attempt.map({
-        case -\/(t) => DbHistory.empty -> DbValue.ok(t.left)
-        case \/-((h, v)) => h -> v.map(_.right[Throwable])
-}))))
+      Db.withDbRead(r => DbValueT[Task, Throwable \/ A](db.run.run(r).run.attempt.map({
+        case -\/(e) => DbValue.ok(e.left[A])
+        case \/-(v) => v.map(_.right[Throwable])
+      })))
 
     def fail[A](err: Throwable): Db[A] =
       liftTask(Task.fail(err))

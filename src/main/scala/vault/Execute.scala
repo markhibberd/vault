@@ -22,81 +22,77 @@ object Execute {
   def update_(sql: String): Db[Int] =
     update[Unit](sql, ())
 
-  def update[A: ToDb](sql: String, a: A): Db[Int] = Db.safe(conn =>
+  def update[A: ToDb](sql: String, a: A): Db[Int] = Db.withConnectionX(conn => Task.delay {
     DbValue.db({
       val stmt = conn.prepareStatement(sql)
       ToDb.execute[A](Sql.jdbc(stmt), a);
       stmt.executeUpdate
-    }))
+    }) })
 
   def execute_(sql: String): Db[Boolean] =
     execute[Unit](sql, ())
 
   def execute[A: ToDb](sql: String, a: A): Db[Boolean] =
-    Db.safeWithLog(conn =>
-      DbHistory.execute(sql, a) -> DbValue.db({
+    Db.withConnectionX(conn => Task.delay {
+      DbValue.db({
         val stmt = conn.prepareStatement(sql);
         ToDb.execute[A](Sql.jdbc(stmt), a);
         stmt.execute
-      }))
+      }) })
 
-  def statement(sql: String): Db[PreparedStatement] =
-    Db.connection.flatMap(conn => Db.delay { conn.prepareStatement(sql) })
+  import Process._
 
-  def run[A: ToDb](statement: PreparedStatement, a: A): Db[ResultSet] =
-    Db.delay { ToDb.execute[A](Sql.jdbc(statement), a); statement.executeQuery }
+  /* this is horrible, and I need to fix it, but the hackery is currently required to get anything near decent performance out... */
+  def process[A: ToDb, B: FromDb](sql: String, a: A): Process[Db, B] = {
+    def statement(sql: String): Db[PreparedStatement] =
+      Db.withConnectionX(conn => Task.delay { DbValue.ok(conn.prepareStatement(sql)) })
 
-  def close[A <: java.lang.AutoCloseable]: A => Db[Unit] =
-    a => Db.liftTask(Task.delay { a.close })
+    def run[A: ToDb](statement: PreparedStatement, a: A): Db[ResultSet] =
+      Db.delay { ToDb.execute[A](Sql.jdbc(statement), a); statement.executeQuery }
 
-  def process[A: ToDb, B: FromDb](sql: String, a: A, chunk: Int = 100): Process[Db, B] =
-    resourceX(statement(sql))(close[PreparedStatement]) { s =>
-      Db.value((resource(run(s, a))(close[ResultSet]) { rs =>
-        val buffer = new scala.collection.mutable.ArrayBuffer[DbValue[B]](chunk)
-        var done = false
-        Db.delay {
-          if (done)
-            throw Process.End
-          buffer.clear
-          var i = 0; while (i < chunk && !done) {
-            if (rs.next) buffer += FromDb.perform[B](Row.jdbc(rs)) else done = true
-            i += 1
+    def close[A <: java.lang.AutoCloseable]: A => Db[Unit] =
+      a => Db.liftTask(Task.delay { a.close })
+
+    await(statement(sql))(s =>
+      await(run(s, a))(rs =>
+        await(Db.getChunkSize)(size => {
+
+          import scala.collection.mutable._
+
+          val buffer: ArrayBuffer[B] = new ArrayBuffer[B](size)
+          var failure: DbFailure = null
+          var done = false
+
+          def chunk: ArrayBuffer[B] = {
+            if (done)
+              throw Process.End
+
+            buffer.clear
+            var i = 0; while (i < size && !done) {
+              if (rs.next) {
+                FromDb.perform[B](Row.jdbc(rs)) match {
+                  case DbOk(b) => buffer += b
+                  case DbErr(f) => done = true; failure = f
+                }
+              } else done = true
+              i += 1
+            }
+            buffer
           }
-          buffer
+
+          def next = Db.delayDbValue {
+            val r = chunk
+            if (failure != null)
+              DbErr(failure)
+            else
+              DbOk(r)
+          }
+
+          def go: Process[Db, B] =
+            await(next)(bs => emitAll(bs) ++ go)
+
+          go
         }
-      }).evalMap[Db, B](b => Db.safe(_ => b)))
-    }.join
-
-  // FIX generalize these hacky pieces of crap
-
-  def resource[R,O](acquire: Db[R])(
-                    release: R => Db[Unit])(
-                    step: R => Db[Seq[O]]): Process[Db,O] = {
-    import Process._
-    def go(step: Db[Seq[O]], onExit: Process[Db,O]): Process[Db,O] =
-      await[Db,Seq[O],O](step) (
-        o => emitAll(o) ++ go(step, onExit) // Emit the value and repeat
-      , onExit                           // Release resource when exhausted
-      , onExit)                          // or in event of error
-    await(acquire)(r => {
-      val onExit = eval(release(r)).drain
-      go(step(r), onExit)
-    }, halt, halt)
+      ), eval(close(s)).drain, eval(close(s)).drain))
   }
-
-  def resourceX[R,O](acquire: Db[R])(
-                    release: R => Db[Unit])(
-                    step: R => Db[O]): Process[Db,O] = {
-    import Process._
-    def go(step: Db[O], onExit: Process[Db,O]): Process[Db,O] =
-      await[Db,O,O](step) (
-        o => emit(o)                     // Emit the value once
-      , onExit                           // Release resource when exhausted
-      , onExit)                          // or in event of error
-    await(acquire)(r => {
-      val onExit = await(Db.liftTask(Task.now {}))(_ => eval(release(r)).drain)
-      go(step(r), onExit)
-    }, halt, halt)
-  }
-
 }
